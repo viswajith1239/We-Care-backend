@@ -30,11 +30,11 @@ class AdminController {
         });
       }
   
-      // Set cookies for valid admin login
+     
       res.cookie("Admin_RefreshToken", adminResponse.refreshToken, {
-        httpOnly: true, // Makes the cookie inaccessible to JavaScript
+        httpOnly: true, 
         secure: true,
-        sameSite: "strict", // Protects against CSRF attacks
+        sameSite: "strict",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
       res.cookie("Admin_AccessToken", adminResponse.accessToken, {
@@ -50,7 +50,18 @@ class AdminController {
       });
     } catch (error: any) {
       console.error("Admin login controller error:", error);
-      next(error); // Pass error to global error handler
+      next(error); 
+    }
+  }
+
+  async getAllUsers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const allUsers = await this.adminService.getAllUsers();
+      res
+        .status(200)
+        .json({ message: "Fetch All users successfully", users: allUsers });
+    } catch (error) {
+      console.log(error);
     }
   }
 
@@ -110,6 +121,21 @@ class AdminController {
     res.status(500).json({ message: 'Failed to delete specialization' });
   }
 };
+
+async blockUnblockUser(req: Request, res: Response, next: NextFunction){
+  try{
+  const user_id=req.params.user_id
+  const userState=req.body.status
+
+  const responsestatus=await this.adminService.blockUnblockUser(user_id,userState)
+  console.log("response data issssss",responsestatus)
+  res.status(200).json({message:"user status updated successfully",data:responsestatus?.isBlocked})
+  
+
+  }catch(error){
+  console.log("Error in controller userblockunblock ",error)
+  }
+}
 
 
   

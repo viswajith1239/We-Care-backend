@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import AdminModel from "../../models/adminModel";
 import { LoginAdmin_interface } from "../../interface/admin/admin_interface";
 import SpecializationModel from "../../models/specializationModel";
+import userModel from "../../models/userModel";
 
 
 class AdminRepository{
@@ -9,6 +10,7 @@ class AdminRepository{
 
 private adminModel = AdminModel;
 private specializationModel=SpecializationModel;
+private userModel=userModel;
 
 async findAdmin(email:string):Promise<LoginAdmin_interface|null>{
     console.log("admin repo find ethi");
@@ -31,6 +33,11 @@ console.log("admin repo create");
    }
 }
 
+
+async fetchAllUsers(){
+  return await this.userModel.find()
+
+}
 async saveSpecialization({name,description}:{name:string,description:string}){
     
     try{
@@ -55,8 +62,7 @@ async getAllSpecializations() {
     }
 
   }
-  // src/repositories/specializationRepository.ts
- // Assuming your model is named 'Specialization'
+  
 
   deleteSpecializationRepository = async (id: string): Promise<void> => {
   const result = await this. specializationModel.findByIdAndDelete(id);
@@ -64,6 +70,12 @@ async getAllSpecializations() {
     throw new Error(`Specialization with id ${id} not found`);
   }
 };
+
+async blockUnblockUser(user_id:string,userState:boolean){
+    
+  return await this.userModel.findByIdAndUpdate({_id:user_id},{isBlocked:userState},{new:true})
+
+}
 
 }
 

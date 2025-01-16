@@ -67,6 +67,10 @@ class AdminService{
     }
   }
 
+  async getAllUsers(){
+    return await this.adminRepository.fetchAllUsers()
+  }
+
 
   async addSpecialization(specializationData:{name:string,description:string}){
     console.log("hello");
@@ -87,6 +91,12 @@ class AdminService{
      deleteSpecializationService =  async (id: string): Promise<void> => {
       await this.adminRepository.deleteSpecializationRepository(id);
     };
+
+
+    async blockUnblockUser(user_id:string,userState:boolean){
+      return await this.adminRepository.blockUnblockUser(user_id,userState)
+    
+    }
 }
 export default AdminService
   

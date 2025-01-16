@@ -45,7 +45,7 @@ class DoctorRepository{
       }
 
       async getOtpByEmail(email: string): Promise<IOtp[] | []> {
-        //////////OTPfetch
+       
         try {
           return await this.otpModel.find({ email });
         } catch (error) {
@@ -55,7 +55,7 @@ class DoctorRepository{
       }
       async createNewUser(doctorData: Interface_Doctor): Promise<void> {
         try {
-          console.log("trainer data have reached in repository",doctorData)
+          console.log("doctor data have reached in repository",doctorData)
           const userexisted = await this.existsDoctor(doctorData);
           if (userexisted) {
             throw new Error("Email already exists");
@@ -65,7 +65,7 @@ class DoctorRepository{
           console.log("Specializations before processing:", doctorData.specializations);
     
         if (doctorData.specializations && doctorData.specializations.length > 0) {
-          // Convert specialization names to ObjectIds
+        
           specializationIds = await Promise.all(
             doctorData.specializations.map(async (specName: any) => {
               const specialization = await SpecializationModel.findOne({ name: specName });
@@ -77,10 +77,10 @@ class DoctorRepository{
           );
         }
     
-          // Create and save the trainer
+         
         const trainer = new this.doctorModel({
           ...doctorData,
-          specializations: specializationIds, // Use ObjectIds for specializations
+          specializations: specializationIds, 
         });
             
           await trainer.save();

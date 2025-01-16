@@ -97,21 +97,24 @@ export class AuthController  {
         const user = await this.authService.login({ email, password });
        
         res.cookie("RefreshToken", user.refreshToken, {
-          httpOnly: true, // Makes the cookie inaccessible to JavaScript
+          httpOnly: true, 
           secure: true,
-          sameSite: "strict", // Protects against CSRF attacks
-          maxAge: 7 * 24 * 60 * 60 * 1000, // 21 days
+          sameSite: "strict", 
+          maxAge: 7 * 24 * 60 * 60 * 1000, //21 days
         });
         res.cookie("AccessToken", user.accessToken, {
-          httpOnly: true, // Makes the cookie inaccessible to JavaScript
+          httpOnly: true, 
           secure:true, 
-          sameSite: "strict", // Protects against CSRF attacks
+          sameSite: "strict",
           maxAge: 1 * 24 * 60 * 60 * 1000, // 7 days
         });
         res.status(HTTP_statusCode.OK).json({ message: "Login successful", user:user.user });
       } catch (error: any) {
-        if (error.message === "User is blocked") {
-          res.status(403).json({ message: "User is blocked" });
+        console.log("errrrrr",error);
+        
+        if (error.message === "userblocked") {
+
+          res.status(403).json({ message: "Your account is blocked." });
         } else if (error.message === "Invalid email or password") {
           res.status(401).json({ message: "Invalid email or password" });
         } else {

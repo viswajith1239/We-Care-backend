@@ -98,26 +98,25 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
       if (user) {
         const { accessToken, refreshToken } = user;
   
-        // Set Refresh token in the cookie
         res.cookie("refreshTokendoctor", refreshToken, {
-          httpOnly: true,  // Makes the cookie inaccessible to JavaScript
-          secure: true,    // Ensures the cookie is sent over HTTPS only
-          sameSite: "strict",  // Protects against CSRF attacks
-          maxAge: 7 * 24 * 60 * 60 * 1000,  // Expires in 7 days
+          httpOnly: true,  
+          secure: true,    
+          sameSite: "strict",  
+          maxAge: 7 * 24 * 60 * 60 * 1000,  //  7 days
         });
   
-        // Set Access token in the cookie
+       
         res.cookie("accessTokendoctor", accessToken, {
-          httpOnly: true,  // Makes the cookie inaccessible to JavaScript
-          secure: true,    // Ensures the cookie is sent over HTTPS only
-          sameSite: "strict",  // Protects against CSRF attacks
-          maxAge: 1 * 24 * 60 * 60 * 1000,  // Expires in 1 day
+          httpOnly: true, 
+          secure: true,   
+          sameSite: "strict", 
+          maxAge: 1 * 24 * 60 * 60 * 1000,  //  in 1 day
         });
   
-        // Send the response with user info and access token
+       
         res.status(200).json({
           message: "Login successful",
-          trainer: user.user,  // User details can be sent here
+          trainer: user.user, 
         });
       }
     } catch (error: any) {
@@ -128,7 +127,7 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
       } else if (error.message === "PasswordIncorrect") {
         res.status(401).json({ message: "Invalid credentials" });
       } else {
-        next(error);  // Passes any other error to the next middleware
+        next(error);  
       }
     }
   }

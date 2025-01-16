@@ -24,132 +24,142 @@ export class AuthService implements IAuthService {
    
     
     async signup(userData: {
-    
-        name: string;
-        email: string;
-        phone: string;
-        password: string;
-        confirmpassword: string;
-      }): Promise<any>  {
-        try {
-        console.log("reachedin service",userData)
-          const response = await this.authRepository.existUser(userData.email,userData.phone);
+      name: string;
+      email: string;
+      phone: string;
+      password: string;
+  }): Promise<any> {
+      try {
+          console.log("Reached in signup service with data:", userData);
+  
+          // Check if the user already exists by email or phone
+          const response = await this.authRepository.existUser(userData.email, userData.phone);
           if (response.existEmail) {
-            throw new Error("Email already in use");
+              throw new Error("Email already in use");
           }
           if (response.existPhone) {
-            throw new Error("Phone already in use");
+              throw new Error("Phone already in use");
           }
-    
-          let saltRounds: number = 10;
-    
+  
+          // Hash the user's password for secure storage
+          const saltRounds: number = 10;
           const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
-          console.log("hashed ",hashedPassword);
-          
-          
-    
+          console.log("Password hashed:", hashedPassword);
+  
+          // Generate a unique user ID
           const userId = uuidv4();
+  
+          // Create a user object for temporary storage
           this.userData = {
-            userId: userId,
-            name: userData.name,
-            email: userData.email,
-            phone: userData.phone,
-            password: hashedPassword,
-            // createdAt: new Date(),
+              userId: userId,
+              name: userData.name,
+              email: userData.email,
+              phone: userData.phone,
+              password: hashedPassword,
           };
-          console.log("------------userData",userData)
-
-         let responses=await this.authRepository.createUser(this.userData)
-         console.log("yes respone service response",responses)
-        // 
-         const Generated_OTP: string = Math.floor(
-          1000 + Math.random() * 9000
-        ).toString();
-        // const hashedOTP: string = await bcrypt.hash(Generated_OTP, saltRounds);
   
-        this.OTP = Generated_OTP;
+          console.log("Prepared user data:", this.userData);
   
-        let text = `Your OTP is ${Generated_OTP}`; 
-        console.log("otp is OTP is",text)
-        let subject = 'OTP Verification';
+          // Generate a random OTP for verification
+          const Generated_OTP: string = Math.floor(1000 + Math.random() * 9000).toString();
+          this.OTP = Generated_OTP;
   
-        const sendMailStatus: boolean = await sendMail(
-          userData.email,
-          subject,text
-        );
+          // Prepare the email content
+          const text = `Your OTP is ${Generated_OTP}`;
+           console.log(text);
+          
+          const subject = 'OTP Verification';
   
-        if (!sendMailStatus) {
-          throw new Error("Otp not send");
-        }
-        const Generated_time = new Date();
+          // Send the OTP email
+          const sendMailStatus: boolean = await sendMail(userData.email, subject, text);
+          console.log("OTP sent status:", sendMailStatus);
   
-        this.expiryOTP_time = new Date(Generated_time.getTime() + 60 * 1000);
+          if (!sendMailStatus) {
+              throw new Error("Failed to send OTP");
+          }
   
-        // const token = jwt.sign(
-        //   {
-        //     userData: this.userData,
-        //     OTP: this.OTP,
-        //     expirationTime: this.expiryOTP_time,
-        //   },
-        //   process.env.JWT_SECRET as string,
-        //   {
-        //     expiresIn: "1min",
-        //   }
-        // );
-        await this.authRepository.saveOTP(userData.email, this.OTP, this.expiryOTP_time);
-      console.log(`OTP will expire at: ${this.expiryOTP_time}`);
+          // Calculate OTP expiry time
+          const Generated_time = new Date();
+          this.expiryOTP_time = new Date(Generated_time.getTime() + 60 * 1000);
   
+          console.log(`OTP will expire at: ${this.expiryOTP_time}`);
   
+          // Save the OTP and its expiry time in the database
+          await this.authRepository.saveOTP(userData.email, this.OTP, this.expiryOTP_time);
   
-       // return { token };
-       return responses
-        //  
-        } catch (error: any) {
+          // Respond to the frontend
+          return {
+              success: true,
+              message: "Signup successful, OTP sent to email",
+          };
+      } catch (error: any) {
+          console.error("Error in signup service:", error.message);
           throw error;
-        }
       }
+  }
+  
 
-      async verifyOTP(userData: IUser, otp: string): Promise<any> {
-        console.log("otp verifying");
-    
-        try {
-            const validOtps = await this.authRepository.getOtpsByEmail(userData.email);
-            console.log("Fetched OTPs from DB:", validOtps); // Log fetched OTPs
-            console.log("Entered OTP:", otp); // Log user-entered OTP
-                 
-            if (validOtps.length === 0) {
-                console.log("No OTP found for this email");
-                throw new Error("No OTP found for this email");
-            }
-    
-            const latestOtp = validOtps.sort(
-                (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-            )[0];
-            console.log("Latest OTP from DB:", latestOtp.otp); // Log the latest OTP
-                  
-            if (latestOtp.otp === otp) {
-                if (latestOtp.expiresAt > new Date()) {
-                    const hashedPassword = await bcrypt.hash(userData.password, 10);
-                    const newUserData = { ...userData, password: hashedPassword };
-                    await this.authRepository.createNewUser(newUserData);
-    
-                    await this.authRepository.deleteOtpById(latestOtp._id);
-                } else {
-                    console.log("OTP has expired");
-                    await this.authRepository.deleteOtpById(latestOtp._id);
-                    throw new Error("OTP has expired");
-                }
-            } else {
-                console.log("Mismatch between entered OTP and DB OTP");
-                throw new Error("Invalid OTP");
-            }
-            return response
-        } catch (error) {
-            const errorMessage = (error as Error).message || "An unknown error occurred";
-            console.error("Error during OTP verification:", errorMessage);
-            throw error;
+  async verifyOTP(userData: IUser, otp: string): Promise<any> {
+    console.log("Verifying OTP...");
+    try {
+        // Fetch all OTPs associated with the email
+        const validOtps = await this.authRepository.getOtpsByEmail(userData.email);
+        console.log("Fetched OTPs from DB:", validOtps);
+
+        if (validOtps.length === 0) {
+            console.log("No OTP found for this email");
+            throw new Error("No OTP found for this email");
         }
+
+        // Get the latest OTP by sorting based on creation time
+        const latestOtp = validOtps.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+        console.log("Latest OTP from DB:", latestOtp.otp);
+
+        // Check if the entered OTP matches and is not expired
+        if (latestOtp.otp === otp) {
+            if (latestOtp.expiresAt > new Date()) {
+                console.log("OTP verified successfully");
+
+                // Hash the password
+                const hashedPassword = await bcrypt.hash(userData.password, 10);
+                console.log("Password hashed");
+
+                // Create a new user object with the hashed password
+                const newUserData = {
+                    userId: uuidv4(),
+                    name: userData.name,
+                    email: userData.email,
+                    phone: userData.phone,
+                    password: hashedPassword,
+                    isBlocked: false,
+                };
+
+                // Save the new user to the database
+                const userCreationResponse = await this.authRepository.createNewUser(newUserData);
+                console.log("User created successfully in DB:", userCreationResponse);
+
+                // Delete the used OTP from the database
+                await this.authRepository.deleteOtpById(latestOtp._id);
+                console.log("Used OTP deleted from DB");
+
+                // Return the created user or a success response
+                return { success: true, message: "User created successfully", user: userCreationResponse };
+            } else {
+                console.log("OTP has expired");
+                await this.authRepository.deleteOtpById(latestOtp._id);
+                throw new Error("OTP has expired");
+            }
+        } else {
+            console.log("Mismatch between entered OTP and DB OTP");
+            throw new Error("Invalid OTP");
+        }
+    } catch (error) {
+        const errorMessage = (error as Error).message || "An unknown error occurred";
+        console.error("Error during OTP verification:", errorMessage);
+        throw new Error(errorMessage);
     }
+}
+
 
     async resendOTP(email: string): Promise<void> {
       try {
@@ -179,7 +189,7 @@ export class AuthService implements IAuthService {
     const userData: IUser | null = await this.authRepository.findUser(email);
     if (userData) {
       if (userData.isBlocked) {
-        throw new Error("User is blocked");
+        throw new Error("userblocked");
       }
 
       const isPasswordMatch = await bcrypt.compare(password, userData.password || "");
@@ -188,7 +198,7 @@ export class AuthService implements IAuthService {
           throw new Error("User ID is missing");
         }
 
-        // Generate JWT tokens
+       
         const accessToken = jwt.sign(
           { id: userData._id.toString(), email: userData.email, role: "user" },
           process.env.JWT_SECRET as string,
@@ -216,6 +226,8 @@ export class AuthService implements IAuthService {
     }
     throw new Error("Invalid email or password");
   } catch (error) {
+    console.log(error);
+    
     throw error;
   }
 }

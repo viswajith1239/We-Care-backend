@@ -84,17 +84,17 @@ export class AuthRepository implements IAuthRepository {
 
 
   async getOtpsByEmail(email: string): Promise<IOtp[]> {
-    console.log("Getting OTP for email:", email); // Log the email being queried
+    console.log("Getting OTP for email:", email); 
     try {
-        const otps = await this.otpModel.find({ email: email }); // Use `find` to get an array of OTPs
+        const otps = await this.otpModel.find({ email: email }); 
         if (!otps || otps.length === 0) {
-            console.log("No OTPs found for the given email."); // Log when no OTPs are found
+            console.log("No OTPs found for the given email."); 
         } else {
-            console.log("Fetched OTPs:", otps); // Log the retrieved OTPs
+            console.log("Fetched OTPs:", otps); 
         }
-        return otps; // Return the OTPs
+        return otps; 
     } catch (error) {
-        console.error("Error in getOtpsByEmail:", error); // Log any errors
+        console.error("Error in getOtpsByEmail:", error); 
         throw error;
     }
 }

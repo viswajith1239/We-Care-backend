@@ -15,7 +15,7 @@ interface Iuser extends Document {
     password: string;
     DOB: Date;
     address: string;
-    image: IImage; // Updated type for image
+    image: IImage; 
     createdAt: Date;
     lastLogin: Date;
     referral?: string;
@@ -52,6 +52,10 @@ const userSchema = new Schema<Iuser>({
     },
     lastLogin: {
         type: Date 
+    },
+    image:{
+        type:String,
+        required:false
     },
     // DOB: {
     //     type: Date,

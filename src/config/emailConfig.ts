@@ -6,6 +6,7 @@ dotenv.config();
 const sendMail = async (email: string, subject: string, text: string): Promise<boolean> => {
     console.log("Sending email to:", email); 
   return new Promise((resolve, reject) => {
+   
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -13,6 +14,7 @@ const sendMail = async (email: string, subject: string, text: string): Promise<b
         pass: process.env.PASSWORD as string,
       },
     });
+   
     
     const mailOptions = {
       from: process.env.EMAIL as string,

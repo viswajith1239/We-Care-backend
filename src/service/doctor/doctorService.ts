@@ -52,7 +52,7 @@ constructor(doctorRepository: DoctorRepository) {
       await this.doctorRepository.saveOtp(doctorData.email,this.OTP,this.expiryOTP_time)
         
     } catch (error) {
-      console.error("Error in service:", );
+      console.error("Error in service:",error );
       throw new Error("Error in Doctor service");
     }
   }
@@ -70,9 +70,9 @@ constructor(doctorRepository: DoctorRepository) {
       }
       const sortedOtp = validateOtp.sort((a: { createdAt: { getTime: () => number; }; expiresAt: { getTime: () => number; }; }, b: { createdAt: { getTime: () => number; }; expiresAt: { getTime: () => number; }; }) => {
         if (b.createdAt.getTime() !== a.createdAt.getTime()) {
-            return b.createdAt.getTime() - a.createdAt.getTime(); // Sort by createdAt in descending order
+            return b.createdAt.getTime() - a.createdAt.getTime(); 
         } else {
-            return b.expiresAt.getTime() - a.expiresAt.getTime(); // If createdAt is the same, sort by expiresAt
+            return b.expiresAt.getTime() - a.expiresAt.getTime(); 
         }
     });
 
@@ -139,43 +139,43 @@ constructor(doctorRepository: DoctorRepository) {
 
   async LoginDoctor( email:string, password:string): Promise<any> {
     try {
-      // Find the doctor by email
+     
       const doctor: Interface_Doctor | null = await this.doctorRepository.findDoctor(email);
   
-      // If doctor is not found, throw an error
+      
       if (!doctor) {
         console.log("doctor not found");
-        throw new Error("Usernotfound"); // Custom error for trainer not found
+        throw new Error("Usernotfound"); 
       }
   
-      // Compare the provided password with the stored hashed password
+     
       const isPasswordMatch = await bcrypt.compare(password, doctor.password);
   
-      // If password doesn't match, throw an error
+      
       if (!isPasswordMatch) {
         throw new Error("PasswordIncorrect");
       }
   
-      // Ensure trainer ID exists
+      
       if (!doctor._id) {
         throw new Error("Doctor ID is missing");
       }
   
-      // Generate Access Token
+    
       const accessToken = jwt.sign(
         { id: doctor._id.toString(), email: doctor.email, role: "doctor" },
         process.env.JWT_SECRET as string,
         { expiresIn: "1h" }
       );
   
-      // Generate Refresh Token
+     
       const refreshToken = jwt.sign(
         { id: doctor._id.toString(), email: doctor.email, role: "doctor" },
         process.env.JWT_SECRET as string,
         { expiresIn: "7d" }
       );
   
-      // Return access token, refresh token, and trainer data
+      
       return {
         accessToken,
         refreshToken,
@@ -188,7 +188,7 @@ constructor(doctorRepository: DoctorRepository) {
       };
     } catch (error: any) {
       console.log("Error in login:", error);
-      throw error; // Re-throw the error to be handled by the calling function
+      throw error; 
     }
   }
   
