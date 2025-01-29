@@ -8,6 +8,7 @@ const doctorSchema = new Schema<Interface_Doctor>({
     password: { type: String, required: true },
     specializations: [{ type: Schema.Types.ObjectId, ref: 'Specialization' }],
     isBlocked: { type: Boolean, default: false },
+    kycStatus:{type:String,enum:["pending","approved","submitted","rejected"],default:"pending"}
   }, { timestamps: true ,collection: 'doctors'});
   
   const DoctorModel = model<Interface_Doctor>('Doctor', doctorSchema);  

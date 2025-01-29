@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import { Types } from "mongoose";
 import jwt from "jsonwebtoken"
+import { uploadToCloudinary } from "../../config/cloudinary";
 
 
 class Doctorservice{
@@ -191,6 +192,78 @@ constructor(doctorRepository: DoctorRepository) {
       throw error; 
     }
   }
+
+    async kycSubmit(formData: any, files: { [fieldname: string]: Express.Multer.File[] }): Promise<any> {
+      try {
+        console.log("fff",files);
+        
+        console.log("got....",formData)
+        const documents: { [key: string]: string | undefined } = {};
+    
+
+        if (files.profileImage?.[0]) {
+
+          const profileImageUrl:any = await uploadToCloudinary(
+            files.profileImage[0].buffer,
+            "doctor_profileImage"
+          );
+        
+          documents.profileImageUrl = profileImageUrl.secure_url;
+        }
+    
+        if (files.aadhaarFrontSide?.[0]) {
+          const aadhaarFrontSideUrl:any = await uploadToCloudinary(
+            files.aadhaarFrontSide[0].buffer,
+            "doctor_aadhaarFrontSide"
+          );
+          console.log("**********>>>>",aadhaarFrontSideUrl)
+          documents.aadhaarFrontSideUrl = aadhaarFrontSideUrl.secure_url;
+        }
+    
+        if (files.aadhaarBackSide?.[0]) {
+          const aadhaarBackSideUrl:any = await uploadToCloudinary(
+            files.aadhaarBackSide[0].buffer,
+            "doctor_aadhaarBackSide"
+          );
+          documents.aadhaarBackSideUrl = aadhaarBackSideUrl.secure_url;
+        }
+    
+        if (files.certificate?.[0]) {
+          const certificateUrl:any = await uploadToCloudinary(
+            files.certificate[0].buffer,
+            "doctor_certificate"
+          );
+          documents.certificateUrl = certificateUrl.secure_url;
+        }
+    
+        // Save KYC data in the repository
+        await this.doctorRepository.saveKyc(formData, documents);
+      
+    
+        // Change KYC status in the repository
+        return await this.doctorRepository.changeKycStatus(
+          formData.doctor_id,
+          documents.profileImageUrl
+        );
+      } catch (error) {
+        console.error("Error in kycSubmit service:", error);
+        throw new Error("Failed to submit KYC data");
+      }
+    }
+
+
+    async kycStatus(doctorId: string) {
+      console.log("reached in service")
+      console.log("doctor id is",doctorId)
+
+      try {
+        const kycStatus = await this.doctorRepository.getDoctorStatus(doctorId)
+        return kycStatus;
+      } catch (error) {
+        console.error("Error in kycStatus service:", error);
+        throw new Error("Failed to retrieve KYC status");
+      }
+    }
   
 }
 

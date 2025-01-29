@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import {ILoginUser} from "../../interface/userInterface/interface"
 import DoctorService from "../../service/doctor/doctorService"
 import {Interface_Doctor} from "../../interface/doctor/doctor_interface"
+import HTTP_statusCode from "../../enums/HttpStatusCode";
 
 
 
@@ -116,11 +117,11 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
        
         res.status(200).json({
           message: "Login successful",
-          trainer: user.user, 
+          doctor: user.user, 
         });
       }
     } catch (error: any) {
-      console.error("Error in loginTrainer:", error.message);
+      console.error("Error in loginDoctor:", error.message);
   
       if (error.message === "Usernotfound") {
         res.status(404).json({ message: "User not found" });
@@ -129,6 +130,49 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
       } else {
         next(error);  
       }
+    }
+  }
+
+
+  async kycSubmission(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const {  doctor_id,name, email, phone } = req.body;
+  
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+  
+      const formData = {
+        // trainer_id,
+        // specialization,
+        name,
+        email,
+        phone,
+        doctor_id
+      };
+       console.log("------------>>>>",formData)
+       console.log("---->>>-------->>>>",files)
+
+
+      // Pass formData and uploaded files to the service for KYC submission
+      const kycStatus = await this.doctorService.kycSubmit(formData, files);
+  
+      // Return success response with KYC status
+      res.status(HTTP_statusCode.OK).json({ message: "KYC submitted successfully", kycStatus });
+    } catch (error) {
+      console.error("Error in KYC submission:", error);
+      next(error);
+    }
+  }
+
+
+  async doctorKycStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const doctorId = req.params.doctorId;
+      const kycStatus = await this.doctorService.kycStatus(doctorId);
+
+      res.status(HTTP_statusCode.OK).json({ kycStatus });
+    } catch (error) {
+      console.error("Error fetching trainer KYC status:", error);
+      next(error)
     }
   }
   

@@ -18,5 +18,8 @@ router.get('/specialization',  adminController.getAllSpecializations.bind(adminC
 router.patch('/:user_id/block-unblock',adminController.blockUnblockUser.bind(adminController))
 router.put("/specialization/:id",adminController.updatespecialisation.bind(adminController))
 router.delete("/specializations/:id",adminController.deleteSpecialization.bind(adminController))
+router.get("/doctor/kyc",adminController.getAllDoctorKycDatas.bind(adminController))
+router.get('/doctors/kyc/:doctor_id', adminController.doctorsKycData.bind(adminController));
+router.patch('/kyc-status-update/:doctor_id', adminController.changeKycStatus.bind(adminController));
 
 export default router; 

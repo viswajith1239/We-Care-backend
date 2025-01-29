@@ -1,4 +1,6 @@
  import AdminRepository from "../../repositories/admin/adminRepository"
+ import sendMail from "../../config/emailConfig";
+ import { kyTemplate } from "../../config/kyTemplate";
 
 import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
@@ -97,6 +99,71 @@ class AdminService{
       return await this.adminRepository.blockUnblockUser(user_id,userState)
     
     }
+
+    async DoctorsKycData():Promise<any> {
+      try {
+        const allDoctorsKycData =
+          await this.adminRepository.getAllDoctorsKycDatas();
+        // console.log('allTrainersKycDatas',allTrainersKycDatas);
+  
+        return allDoctorsKycData;
+      } catch (error) {
+        console.error("Error fetching doctors KYC data:", error);
+        throw error;
+      }
+    }
+
+    async fetchKycData(doctorId: string):Promise<any>{
+      try {
+        let response = await this.adminRepository.fetchKycData(doctorId);
+        console.log("casual checking", response);
+        return response;
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    async updateKycStatus(
+      status: string,
+      doctor_id: string,
+      rejectionReason: string | null
+    ): Promise<void> {
+      try {
+        const updatedKyc = await this.adminRepository.updateKycStatus(
+          status,
+          doctor_id,
+          rejectionReason
+        );
+        console.log("simply checkingggg datas", updatedKyc);
+  
+        if (status === "approved" || status === "rejected") {
+          await this.adminRepository.deleteKyc(doctor_id);
+          console.log(`KYC data deleted for trainer ID: ${doctor_id}`);
+        }
+  
+        if (status === "approved") {
+          console.log("simply checkingggg approved", updatedKyc);
+          const email_Ht = kyTemplate(
+            "your Kyc approved successfully",
+            updatedKyc || "user",
+            status
+          );
+          await sendMail("approve", updatedKyc, email_Ht);
+        } else {
+          console.log("simply checkingggg", updatedKyc.trainerMail);
+          const email_Ht = kyTemplate(
+            updatedKyc.reason,
+            updatedKyc.trainerMai || "user",
+            status
+          );
+  
+          await sendMail("reject", updatedKyc.trainerMail, email_Ht);
+        }
+      } catch (error) {
+        console.error("Error updating KYC status:", error);
+      }
+    }
+
 }
 export default AdminService
   

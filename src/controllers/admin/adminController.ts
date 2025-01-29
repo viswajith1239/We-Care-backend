@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import AdminService from "../../service/admin/adminService";
 import { LoginAdmin_interface } from "../../interface/admin/admin_interface";
+import HTTP_statusCode from "../../enums/HttpStatusCode";
 
 
 
@@ -134,6 +135,51 @@ async blockUnblockUser(req: Request, res: Response, next: NextFunction){
 
   }catch(error){
   console.log("Error in controller userblockunblock ",error)
+  }
+}
+
+
+async getAllDoctorKycDatas(req: Request, res: Response, next: NextFunction) {
+  try {
+
+    const allDoctorsKycData = await this.adminService.DoctorsKycData();
+    // console.log(allTrainersKycData);
+
+    res.status(HTTP_statusCode.OK).json({ message: "Trainers KYC data fetched successfully", data: allDoctorsKycData });
+  } catch (error) {
+    console.error("Error fetching KYC data:", error);
+    next(error)
+  }
+}
+
+  async doctorsKycData(req: Request, res: Response, next: NextFunction):Promise<any>{
+    try {
+      const doctorId = req.params.doctor_id;
+      const doctorKycDetails = await this.adminService.fetchKycData(doctorId);
+      console.log("response check",doctorKycDetails)
+      return res.json({ kycData: doctorKycDetails });
+
+
+    } catch (error) {
+      console.log("error in controller",error)
+      
+    }
+
+  
+}
+
+async changeKycStatus(req: Request, res: Response, next: NextFunction) {
+  try {
+    const status = String(req.body.status);
+    const doctor_id = req.params.doctor_id;
+    const rejectionReason = req.body.rejectionReason || null;
+
+    await this.adminService.updateKycStatus(status, doctor_id, rejectionReason);
+
+    res.status(HTTP_statusCode.OK).json({ message: 'Trainer status updated successfully', status });
+  } catch (error) {
+    console.error('Error updating trainer status:', error);
+    next(error)
   }
 }
 
