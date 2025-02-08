@@ -249,5 +249,30 @@ async googleSignUpUser(decodedToken: JwtPayload): Promise<any> {
   }
 }
 
+async fetchSpecialization(){
+    
+  try {
+    const response=this.authRepository.fetchSpecializations()
+    return response
+  } catch (error) {
+    console.log("Error in fetchingspecializations userservice",error)
+  }
+}
+
+async getAllDoctors(){
+  console.log("In service");
+  try {
+    const doctors = await this.authRepository.getAllDoctors() // Convert to plain objects
+    const validDoctors = doctors?.filter((doctor) => 
+      (doctor as any).isBlocked === false && (doctor as any).kycStatus === "approved"
+    ) || [];
+      
+    return validDoctors
+  } catch (error) {
+    console.log("Fetching doctors error in service", error);
+  }
+}
+
+
     
 }

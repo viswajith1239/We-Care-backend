@@ -5,6 +5,8 @@ import { IAuthRepository } from "../../interface/user/Auth.repository.interface"
 import { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
 import OtpModel from "../../models/otpModel";
+import DoctorModel from "../../models/doctorModel";
+import SpecializationModel from "../../models/specializationModel";
 
 
 
@@ -13,6 +15,8 @@ const ObjectId = mongoose.Types.ObjectId;
 export class AuthRepository implements IAuthRepository {
   private otpModel = OtpModel;
   private userModel = userModel;
+  private doctorModel=DoctorModel
+  private specializationModel=SpecializationModel
   async existUser(email: string,phone: string): Promise<{ existEmail: boolean; existPhone: boolean }> {
     try {
 
@@ -129,6 +133,30 @@ export class AuthRepository implements IAuthRepository {
     } catch (error) {
       console.log("Error finding user:", error);
       return null;
+    }
+  }
+
+  async fetchSpecializations(){
+    try {
+      
+      const response=await this.specializationModel.find({})
+    
+    return response
+    } catch (error) {
+      console.log("Error in fetching specialization repository",error)
+    }
+  }
+
+  async getAllDoctors(){
+    console.log("ïn repo")
+    try{
+    const Doctors=await this.doctorModel.find({}).populate("specializations","name")
+    
+    
+    return Doctors
+    }
+    catch(error){
+   console.log("error fetching doctors in repository",error)
     }
   }
   

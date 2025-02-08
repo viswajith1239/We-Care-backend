@@ -10,6 +10,7 @@ export interface Interface_Doctor{
     isBlocked?: boolean;
     kycStatus:String,
     specializations?: Types.ObjectId[];
+    profileImage:string
 
 
 }

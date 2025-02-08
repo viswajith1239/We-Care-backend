@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+//TODO:IloginAdminInterface
 export interface LoginAdmin_interface {
     _id?: mongoose.Types.ObjectId;
       id?: string;

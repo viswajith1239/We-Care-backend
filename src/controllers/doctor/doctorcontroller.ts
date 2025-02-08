@@ -141,7 +141,7 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
   
       const formData = {
-        // trainer_id,
+        
         // specialization,
         name,
         email,

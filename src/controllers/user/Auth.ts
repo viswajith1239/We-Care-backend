@@ -138,6 +138,32 @@ export class AuthController  {
       
       }
       }
+
+      async fetchAllSpecializations(req: Request, res: Response, next: NextFunction){
+
+        try {
+          const response=await this.authService.fetchSpecialization()
+          
+          res.status(HTTP_statusCode.OK).json(response)
+        } catch (error) {
+          console.log("Error in fetching specialization data in controller",error)
+        }
+      }
+
+
+      async getAllDoctors(req:Request,res:Response,next:NextFunction){
+        console.log("ïn controller")
+        try {
+          const allTrainers=await this.authService.getAllDoctors()
+          
+          res.status(HTTP_statusCode.OK).json(allTrainers)
+          
+        } catch (error) {
+          console.log("Error fetching Trainers",error)
+          
+        }
+      
+      }
 }
 
 

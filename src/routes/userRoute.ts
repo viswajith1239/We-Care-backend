@@ -16,5 +16,7 @@ route.post('/verifyotp', AuthControllerInstance.verifyOtp.bind(AuthControllerIns
 route.post('/resend-otp', AuthControllerInstance.resendOtp.bind(AuthControllerInstance));
 route.post('/login', AuthControllerInstance.login.bind(AuthControllerInstance));
 route.post('/googlesignup', AuthControllerInstance.googleSignUpUser.bind(AuthControllerInstance));
+route.get("/specializations",AuthControllerInstance.fetchAllSpecializations.bind(AuthControllerInstance))
+route.get("/doctors",AuthControllerInstance.getAllDoctors.bind(AuthControllerInstance))
     
 export default route;
