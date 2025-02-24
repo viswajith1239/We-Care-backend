@@ -1,16 +1,21 @@
 
 import SpecializationModel from "../../models/specializationModel";
-import {Interface_Doctor, IOtp} from "../../interface/doctor/doctor_interface"
+import {Interface_Doctor, IOtp,IAppoinment} from "../../interface/doctor/doctor_interface"
 import DoctorModel from "../../models/doctorModel";
 import OtpModel from "../../models/otpModel";
 import KYCModel from "../../models/kycModel";
 import mongoose, { Types } from "mongoose";
+import AppoinmentModel from "../../models/appoinmentModel";
+import moment from "moment";
+import BookingModel from "../../models/bookingModel";
 
 class DoctorRepository{
     private specializationModel = SpecializationModel;
     private doctorModel=DoctorModel
     private otpModel=OtpModel
     private kycModel = KYCModel;
+    private appoinmentModel=AppoinmentModel
+    private bookingModel=BookingModel
     
     async findAllSpecializations() {
         try {
@@ -183,7 +188,7 @@ class DoctorRepository{
 
 
   async getDoctorStatus(doctorId: string) {
-    console.log("get repository to getstatus><><><>,",doctorId)
+    console.log("gggg",doctorId)
     try {
       const doctor = await this.doctorModel.findById(doctorId).select("kycStatus")
       console.log(",,,,,,,,,,,,,,,,,,",doctor)
@@ -203,6 +208,125 @@ class DoctorRepository{
       throw new Error("Failed to fetch doctor KYC status");
     }
   }
+  async createUsers(user: {
+    email: string;
+    name: string;
+    password: string | null;
+    isKycApproved?: boolean;
+  }): Promise<any> {
+    const users = new this.doctorModel({ ...user, isKycApproved: false });
+    return await users.save();
+  }
+
+  async existingUser(email: string): Promise<Interface_Doctor | null> {
+      try {
+        return await this.doctorModel.findOne({ email });
+      } catch (error) {
+        throw error;
+      }
+    }
+
+
+    async getSpecialization(doctorid:string){
+      try {
+        if(!doctorid){
+          console.log("doctor id is not found")
+          return
+        }
+        const specialisations=await this.doctorModel.findById(doctorid).populate("specializations")
+        console.log("specialisation sare....",specialisations?.specializations)
+        return specialisations
+      } catch (error) {
+        console.log("Error in Repository specialisation fetch",error)
+      }
+  
+    }
+    async createNewAppoinment(appoinmentData: IAppoinment) {
+      try {
+        // Find doctor
+        const findDoctor = await this.doctorModel.findById(appoinmentData.doctorId);
+        console.log("Checking doctor ID:", appoinmentData.doctorId);
+        console.log("Doctor found:", findDoctor);
+        
+        if (!findDoctor) {
+          throw new Error("Doctor not found");
+        }
+    
+        // Fetch existing appointments for the same doctor and date
+        const existingAppointments = await this.appoinmentModel.find({
+          doctorId: appoinmentData.doctorId,
+          selectedDate: appoinmentData.selectedDate, // Ensure this matches frontend
+          $or: [
+            { startTime: { $lt: appoinmentData.endTime }, endTime: { $gt: appoinmentData.startTime } }
+          ],
+        });
+    
+        // Conflict checking
+        const hasConflict = existingAppointments.some((existingApp) => {
+          const existingStartTime = moment(existingApp.startTime, "HH:mm");
+          const existingEndTime = moment(existingApp.endTime, "HH:mm");
+    
+          const newStartTime = moment(appoinmentData.startTime, "HH:mm");
+          const newEndTime = moment(appoinmentData.endTime, "HH:mm");
+    
+          // Check time overlap
+          return newStartTime.isBefore(existingEndTime) && newEndTime.isAfter(existingStartTime);
+        });
+    
+        if (hasConflict) {
+          throw new Error("Time conflict with an existing session.");
+        }
+    
+        // Ensure price is a number
+        appoinmentData.price = Number(appoinmentData.price);
+    
+        // Create appointment
+        const createdSessionData = await this.appoinmentModel.create(appoinmentData);
+        return createdSessionData.populate("specializationId");
+    
+      } catch (error) {
+        console.log("Error in Repository", error);
+        throw error;
+      }
+    }
+    
+
+    async fetchAppoinmentData(doctor_id: string) {
+      try {
+        const appoinmentData = await this.appoinmentModel
+          .find({
+            doctorId: doctor_id,
+          })
+          .populate("specializationId")
+          .sort({ createdAt: -1 });
+  
+        return appoinmentData;
+      } catch (error) {
+        throw error;
+      }
+    }
+
+
+    async fecthBookingDetails(doctorId: string){
+      try {
+        
+        
+        const bookingDetails=await  this.bookingModel.find({doctorId}).populate("userId","name").exec()
+        
+        const response = bookingDetails.map((booking: any) => {
+          return {
+            ...booking.toObject(),  
+            userName: booking.userId ? booking.userId.name : 'user not found',
+          
+          };
+        });
+        
+        return bookingDetails
+       
+      } catch (error) {
+        console.log("ërror in fetching booking dewtails",error)
+      }
+        }
 
 
     

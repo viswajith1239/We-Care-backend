@@ -7,8 +7,10 @@ import { userType } from "../../interface/userInterface/interface";
 import { AuthRepository } from "../../repositories/user/AuthRepository";
 import jwt from "jsonwebtoken"
 import sendMail from "../../config/emailConfig";
-import { IUser, ILoginUser,JwtPayload} from "../../interface/userInterface/interface";
+import { IUser, ILoginUser,JwtPayload,IBooking} from "../../interface/userInterface/interface";
 import { response } from "express";
+import stripeClient from "../../config/stripeClients";
+import mongoose from "mongoose";
 
 
 export class AuthService implements IAuthService {
@@ -249,6 +251,99 @@ async googleSignUpUser(decodedToken: JwtPayload): Promise<any> {
   }
 }
 
+async forgotpassword(UserEmail: string): Promise<any> {
+  try {
+    console.log("checccc", UserEmail);
+
+    const userResponse = await this.authRepository.findUserEmail(UserEmail);
+    if (!userResponse) {
+      console.log("user not already exist", userResponse);
+      throw new Error("Invalid email Address");
+    }
+    const generateOtp = Math.floor(1000 + Math.random() * 9000).toString();
+    this.OTP = generateOtp;
+    console.log("Generated OTP is", this.OTP);
+
+    //send otp to the email:
+    const isMailSet = await sendMail( UserEmail,"otp", this.OTP);
+    
+    if (!isMailSet) {
+      throw new Error("Email not sent");
+    }
+
+    const OTP_createdTime = new Date();
+    this.expiryOTP_time = new Date(OTP_createdTime.getTime() + 1 * 60 * 1000);
+    //store OTP IN db
+
+    console.log("Saving OTP:", {
+      email: UserEmail,
+      otp: this.OTP,
+      expiresAt: this.expiryOTP_time
+  });
+    await this.authRepository.saveOTP(
+      UserEmail,
+      this.OTP,
+      this.expiryOTP_time
+    );
+    console.log(`OTP will expire at: ${this.expiryOTP_time}`);
+
+    return userResponse;
+  } catch (error) {
+    console.log("Error in userservice forgot password", error);
+  }
+}
+async verifyForgotOTP(userData: string, otp: string): Promise<void> {
+  try {
+    const validateOtp = await this.authRepository.getOtpsByEmail(userData);
+    console.log("the validateOtp is..", validateOtp);
+    if (validateOtp.length === 0) {
+      console.log("there is no otp in email");
+      throw new Error("no OTP found for this email");
+    }
+    const latestOtp = validateOtp.sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    )[0];
+    if (latestOtp.otp === otp) {
+      if (latestOtp.expiresAt > new Date()) {
+        console.log("otp expiration not working");
+
+        console.log("OTP is valid and verified", latestOtp.expiresAt);
+
+        await this.authRepository.deleteOtpById(latestOtp._id);
+      } else {
+        console.log("OTP has expired");
+        await this.authRepository.deleteOtpById(latestOtp._id);
+        throw new Error("OTP has expired");
+      }
+    } else {
+      console.log("Invalid OTP");
+      throw new Error("Invalid OTP");
+    }
+  } catch (error) {
+    const errorMessage =
+      (error as Error).message || "An unknown error occurred";
+    console.error("Error in OTP verification:", errorMessage);
+    throw error;
+  }
+}
+
+async resetapassword(userData: string, payload: { newPassword: string }) {
+  console.log("got pay load", payload, userData);
+  try {
+    const { newPassword }: { newPassword: string } = payload;
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    console.log("hashed", hashedPassword);
+    const response = await this.authRepository.saveResetPassword(
+      userData,
+      hashedPassword
+    );
+    console.log("response check in userservice ", response);
+    return response;
+  } catch (error) {
+    console.log("Error is",error)
+  }
+}
+
 async fetchSpecialization(){
     
   try {
@@ -270,6 +365,130 @@ async getAllDoctors(){
     return validDoctors
   } catch (error) {
     console.log("Fetching doctors error in service", error);
+  }
+}
+
+async getDoctor(doctorId: string) {
+  try {
+    return await this.authRepository.getDoctor(doctorId);
+  } catch (error) {
+    console.log("error is",error)
+  }
+}
+
+async getUserStatus(userId: string) {
+  const user = await this.authRepository.findUserById(userId);
+  if (!user) {
+    throw new Error("User not found");
+  }
+  return { isBlocked: user.isBlocked };
+}
+
+async getAppoinmentSchedules() {
+  try {
+    return await this.authRepository.fetchAllAppoinmentschedules();
+  } catch (error) {
+    console.log("Error is",error)
+  }
+}
+
+async checkoutPayment(appoinmentid: string, userId: string) {
+  try {
+    console.log("hello checkout ");
+    
+    const appoinmentData = await this.authRepository.findSessionDetails(appoinmentid);
+    if (!appoinmentData || !appoinmentData.doctorId || !appoinmentData.price) {
+      throw new Error("Missing session data, trainer ID, or price");
+    }
+    // const doctorid = appoinmentData.doctorId.toString();
+    // const doctorData = await this.authRepository.findTrainerDetails(doctorid);
+
+    // if (!doctorData) {
+    //   throw new Error("Doctor data not found");
+    // }
+    const lineItems = [
+      {
+        price_data: {
+          currency: "INR",
+          unit_amount: appoinmentData.price * 100,
+          product_data: {
+            name: appoinmentData.type || "Appointment Booking", 
+            description: appoinmentData.startTime && appoinmentData.endTime 
+              ? `Description: Appointment from ${appoinmentData.startTime} to ${appoinmentData.endTime}`
+              : "Description: Appointment booking", 
+          },
+        },
+        quantity: 1,
+      },
+    ];
+    const session = await stripeClient.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: lineItems,
+      mode: 'payment',
+      success_url: `http://localhost:5173/paymentSuccess?session_id=${appoinmentData._id}&user_id=${userId}&stripe_session_id={CHECKOUT_SESSION_ID}`,
+      // cancel_url: `http://localhost:5173/paymentFailed`,
+    });
+    return session;  
+  } catch (error) {
+    console.error("Error creating Stripe session:", error);
+    throw error;
+  }
+}
+
+async findBookingDetails(session_id: string, user_id: string, stripe_session_id: string) {
+    
+  try {
+    const session = await this.authRepository.findSessionDetails(session_id);
+
+
+    if (session) {
+      session.status = "Confirmed";
+      await session.save();
+    }
+    const doctorId = session?.doctorId;
+    if (!doctorId) {
+      throw new Error("Trainer ID is not available in the session.");
+    }
+    
+    
+    const Doctor = await this.getDoctor(doctorId.toString());
+    const sessionData = await stripeClient.checkout.sessions.retrieve(stripe_session_id)
+
+      if (!Doctor || Doctor.length === 0) {
+      throw new Error("Trainer not found.");
+    }
+     const bookingDetails: IBooking = {
+      appoinmentId: new mongoose.Types.ObjectId(session._id),
+       doctorId: new mongoose.Types.ObjectId(Doctor[0]._id),
+       userId: new mongoose.Types.ObjectId(user_id),
+      //  sessionType: session.type,
+       bookingDate: new Date(),
+       startDate: session.selectedDate || session.startDate,
+      //  endDate: session.endDate,
+       startTime: session.startTime,
+       endTime: session.endTime,
+       amount: session.price,
+       paymentStatus: "Confirmed",
+       createdAt: new Date(),
+       updatedAt: new Date(),
+       payment_intent: sessionData.payment_intent ? sessionData.payment_intent.toString() : undefined,
+       
+     };
+    const existingBooking = await this.authRepository.findExistingBooking(bookingDetails);
+    if (existingBooking) {
+      console.log("Booking already exists.");
+      return existingBooking
+     // throw new Error("Booking already exists.");
+    }
+    const bookingData=await this.authRepository.createBooking(bookingDetails)
+    // await this._userRepository.createNotification(bookingData)
+
+    
+    return bookingData
+
+    
+  } catch (error) {
+    console.log("error in fetching userservice",error)
   }
 }
 

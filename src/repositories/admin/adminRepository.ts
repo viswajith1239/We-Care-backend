@@ -79,8 +79,13 @@ async getAllSpecializations() {
 
 async blockUnblockUser(user_id:string,userState:boolean){
     
-  return await this.userModel.findByIdAndUpdate({_id:user_id},{isBlocked:userState},{new:true})
+  const updatedUser = await this.userModel.findByIdAndUpdate(
+    { _id: user_id },
+    { isBlocked: userState },
+    { new: true }
+);
 
+return updatedUser;
 }
 
 async getAllDoctorsKycDatas() {

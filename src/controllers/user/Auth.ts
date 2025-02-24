@@ -5,7 +5,9 @@ import { AuthService } from "../../service/user/Auth";
 import {ILoginUser,JwtPayload} from "../../interface/userInterface/interface"
 import {jwtDecode} from "jwt-decode"
 
-
+interface CustomRequest extends Request {
+  authData?: { id: string; email: string; role: string };
+}
 
 export class AuthController  {
    // private authService: IAuthService;
@@ -66,6 +68,32 @@ export class AuthController  {
           res.status(404).json({ message: "No OTP found for this email" });
         } else {
           next(error);
+        }
+      }
+    }
+
+
+    async verifyForgotOtp(req: Request, res: Response, next: NextFunction) {
+      console.log("verify otp controller");
+      try {
+         console.log("verify otp controller");
+        const { userData, otp } = req.body;
+        
+        await this.authService.verifyForgotOTP(userData, otp);
+  
+        res
+          .status(HTTP_statusCode.OK)
+          .json({ message: "OTP verified successfully", user: userData });
+      } catch (error) {
+        console.error("OTP Verification Controller error:", error);
+        if ((error as Error).message === "OTP has expired") {
+          res.status(HTTP_statusCode.BadRequest).json({ message: "OTP has expired" });
+        } else if ((error as Error).message === "Invalid OTP") {
+          res.status(HTTP_statusCode.BadRequest).json({ message: "Invalid OTP" });
+        } else if ((error as Error).message === "No OTP found for this email") {
+          res.status(HTTP_statusCode.NotFound).json({ message: "No OTP found for this email" });
+        } else {
+         next(error)
         }
       }
     }
@@ -139,6 +167,46 @@ export class AuthController  {
       }
       }
 
+      async forgotpassword(req:Request,res:Response,next:NextFunction):Promise<any>{
+        try {
+          const {emailData}=req.body
+          console.log("got email from body",emailData)
+          const response=await this.authService.forgotpassword(emailData)
+          console.log("noll",response)
+          if(!response){
+            return res.status(HTTP_statusCode.BadRequest).json({message:"email not found"})
+      
+          }
+          return res.status(HTTP_statusCode.OK).json({message:"email vrified successfully",statusCode:HTTP_statusCode.OK})
+      
+        } catch (error) {
+          console.log("Error in Forgot password",error)
+        }
+      }
+
+      async resetPassword(req:Request,res:Response,next:NextFunction):Promise<any>{
+        try {
+          console.log("Request body:", req.body); 
+           const{userData,payload}=req.body
+           console.error("Missing required fields:", { userData, payload });
+          
+           const result=await this.authService.resetapassword(userData,payload)
+           console.log("what is the response got?",result)
+           if(result?.modifiedCount===1){
+            return res.status(HTTP_statusCode.OK).json({ message: "Password reset successfully" });
+      
+           }else{
+            return res.status(HTTP_statusCode.BadRequest).json({ message: "Failed To Reset Password" });
+      
+           }
+      
+        } catch (error) {
+          console.log("User Controller Error",error)
+          return res.status(HTTP_statusCode.InternalServerError).json({ message: "Server Error" });
+      
+        }
+      }
+
       async fetchAllSpecializations(req: Request, res: Response, next: NextFunction){
 
         try {
@@ -159,11 +227,97 @@ export class AuthController  {
           res.status(HTTP_statusCode.OK).json(allTrainers)
           
         } catch (error) {
-          console.log("Error fetching Trainers",error)
+          console.log("Error fetching Doctors",error)
           
         }
       
       }
+
+      async getDoctor(req: Request, res: Response, next: NextFunction) {
+
+        try {
+          
+          const doctorId = req.params.doctorId;
+      
+          if (!doctorId) {
+            res.status(HTTP_statusCode.BadRequest).json({ message: "doctor ID is required" });
+          }
+      
+          const doctor = await this.authService.getDoctor(doctorId);
+          // console.log(trainer);
+      
+          if (!doctor) {
+            res.status(HTTP_statusCode.NotFound).json({ message: "doctor not found" });
+          }
+      
+          res.status(HTTP_statusCode.OK).json(doctor);
+        } catch (error) {
+          console.error("Error in getdoctor controller:", error);
+         next(error)
+        }
+      }
+
+      public async getUserStatus(req: CustomRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+          if (!req.authData) {
+            res.status(401).json({ message: "Unauthorized access" });
+            return;
+          }
+      
+          const userId = req.authData.id;
+          const userStatus = await this.authService.getUserStatus(userId);
+          
+          res.status(200).json(userStatus);
+        } catch (error) {
+          console.error("Error fetching user status:", error);
+          next(error); // Ensure Express handles the error
+        }
+      }
+
+      async getAppoinmentSchedules(req: Request, res: Response, next: NextFunction) {
+        try {
+          const sessionSchedules = await this.authService.getAppoinmentSchedules();
+          res.status(HTTP_statusCode.OK).json(sessionSchedules);
+        } catch (error) {
+          next(error)
+        }
+      }
+
+      async checkoutPayment(req: Request, res: Response, next: NextFunction){
+        try {
+          const userId=req.body.userData.id
+          const appoinmentID=req.params.appoinmentId
+          
+          const paymentResponse=await this.authService.checkoutPayment( appoinmentID,userId)
+          
+          res.status(HTTP_statusCode.OK).json({ id: paymentResponse?.id });
+        } catch (error) {
+          console.log("error while payment in controller",error)
+        }
+      
+      }
+
+      async createBooking(req: Request, res: Response, next: NextFunction){
+  
+        try {
+         
+          const { sessionId, userId , stripe_session_id} = req.body;
+          
+          const bookingDetails = await this.authService.findBookingDetails(
+            sessionId,
+            userId,
+            stripe_session_id
+          );
+          
+          
+          res.status(200).json(bookingDetails);
+        } catch (error) {
+          console.log("Error in create booking in controller",error);
+        }
+      
+      }
+      
+      
 }
 
 

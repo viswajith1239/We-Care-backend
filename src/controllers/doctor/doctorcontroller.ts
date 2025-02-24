@@ -3,6 +3,7 @@ import {ILoginUser} from "../../interface/userInterface/interface"
 import DoctorService from "../../service/doctor/doctorService"
 import {Interface_Doctor} from "../../interface/doctor/doctor_interface"
 import HTTP_statusCode from "../../enums/HttpStatusCode";
+import {jwtDecode, JwtPayload} from "jwt-decode"
 
 
 
@@ -175,6 +176,124 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
       next(error)
     }
   }
+
+  async googleSignUpUser(req:Request,res:Response,next:NextFunction){
+        try {
+          const token=req.body.token
+        
+         
+          const decodedToken:JwtPayload=jwtDecode(token)
+          const response=await this.doctorService.googleSignUpUser(decodedToken)
+           res.status(200).json({message:"user signed successfully"})
+           res.status(200).json({
+  message: "User signed up successfully",
+  user: response,
+  token: token,
+})
+        } catch (error) {
+           console.error("Error during Google Sign Up:", error);
+          // return res.status(500).json({ message: 'Internal server error' });
+        
+        }
+        }
+
+
+        async getSpecialization(req:Request,res:Response,next:NextFunction){
+        
+          try {
+            const doctorId=req.params.doctorId
+            console.log("doctor id for specialization",doctorId)
+            const specialisations=await this.doctorService.getSpecialization(doctorId)
+            
+             res.status(HTTP_statusCode.OK).json({message:"specialisation fetched successfully",data:specialisations})
+            
+          } catch (error) {
+            console.log("Error in contoller",error)
+            next(error)
+            
+          }
+        }
+
+
+        async storeAppoinmentData(req:Request,res:Response,next:NextFunction){
+          console.log("reached in appoinmnet place")
+          try{
+
+            const {selectedDate,startTime,endTime,specialization,price,status} =req.body
+
+          
+            const doctorId=req.params.doctorId
+            const appoinmentData:any={}
+           
+
+              appoinmentData.selectedDate=selectedDate,
+              appoinmentData.startTime=startTime,
+              appoinmentData.endTime=endTime,
+              appoinmentData.specialization=specialization
+              appoinmentData.price=price
+              appoinmentData.doctorId=doctorId
+           
+          const apponmentscreated=await this.doctorService.storeAppoinmentData(appoinmentData)
+          res
+          .status(HTTP_statusCode.updated)
+          .json({ message: "Appoinment created successfully.", apponmentscreated });
+
+          }catch(error:any){
+            if (error.message === "Time conflict with an existing appoinment.") {
+              res
+                .status(HTTP_statusCode.BadRequest)
+                .json({ message: "Time conflict with an existing session." });
+            }  else if (error.message === "End time must be after start time") {
+              res.status(HTTP_statusCode.BadRequest).json({ message: "End time must be after start time" });
+            } else if (
+              error.message === "Appoinment duration must be at least 30 minutes"
+            ) {
+              res
+                .status(HTTP_statusCode.BadRequest)
+                .json({ message: " Appoinment duration must be at least 30 minutes" });
+            } else {
+              console.error("Detailed server error:", error);
+              next(error)
+            }
+          }
+          
+
+
+      }
+
+
+      async getAppoinmentSchedules(req: Request, res: Response, next: NextFunction) {
+        try {
+          const doctor_id = req.params.doctorId;
+          const sheduleData = await this.doctorService.getAppoinmentSchedules(
+            doctor_id
+          );
+          console.log('sheduleData',sheduleData);
+    
+          res
+            .status(HTTP_statusCode.OK)
+            .json({ message: "Session data feched sucessfully", sheduleData });
+        } catch (error) {
+          console.error("Error saving session data:", error);
+         next(error)
+        }
+      }
+
+      async fetchbookingDetails(req: Request, res: Response, next: NextFunction){
+        try {
+          
+          const doctor_id = req.params.doctorId;
+          const bookingDetails=await this.doctorService.fetchBookingDetails(doctor_id)
+          
+          res.status(HTTP_statusCode.OK).json({data:bookingDetails})
+        } catch (error) {
+          console.error("Error fetching booking details:", error);
+
+          res.status(500).json({ error: "Failed to fetch booking details." });
+
+          
+        }
+      }
   
 }
 

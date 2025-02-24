@@ -71,4 +71,26 @@ export interface User {
     iat: number;
     exp: number;
   }
+
+  export interface IBooking {
+    _id?: mongoose.Types.ObjectId;
+    appoinmentId: mongoose.Types.ObjectId;
+    doctorId: mongoose.Types.ObjectId;
+    userId: mongoose.Types.ObjectId |  { name: string; email: string }
+    specialization?: string;
+    // sessionType: string;
+    bookingDate: Date;
+    startDate: Date;
+    // endDate: Date; 
+    startTime: string;
+    endTime: string;
+    amount: number | undefined;
+   paymentStatus: "Confirmed" | "Cancelled" | "Completed";
+    createdAt: Date; 
+  updatedAt: Date; 
+  payment_intent?: string;
+  // dietPlan?: string,
+  
+
+  }
   

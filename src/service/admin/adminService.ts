@@ -95,10 +95,10 @@ class AdminService{
     };
 
 
-    async blockUnblockUser(user_id:string,userState:boolean){
-      return await this.adminRepository.blockUnblockUser(user_id,userState)
-    
-    }
+    async blockUnblockUser(user_id: string, userState: boolean) {
+      return await this.adminRepository.blockUnblockUser(user_id, userState);
+  }
+  
 
     async DoctorsKycData():Promise<any> {
       try {

@@ -10,7 +10,8 @@ export interface Interface_Doctor{
     isBlocked?: boolean;
     kycStatus:String,
     specializations?: Types.ObjectId[];
-    profileImage:string
+    profileImage:string,
+    isKycApproved:boolean
 
 
 }
@@ -35,4 +36,29 @@ export interface IOtp {
     rejectionReason: string
     kycSubmissionDate: Date;
     kycComments: string;
+  }
+
+  export interface IAppoinment {
+    _id: number;
+    save(): unknown;
+    doctorId: Types.ObjectId;
+    specializationId: Types.ObjectId;
+    startDate: Date;
+    endDate: Date;
+    selectedDate: Date;
+    startTime: string;
+    endTime: string;
+    // isSingleSession: boolean;
+    type:string
+    // SessionType:string
+    numberOfAppoinments: number;
+    price: number | undefined
+    isBooked: boolean,
+    status: 'Pending' | 'Confirmed' | 'Completed' | 'Cancelled' | 'InProgress';
+    paymentIntentId?: string; 
+  }
+
+  export interface ISpecialization {
+    _id: Types.ObjectId;
+    name: string;
   }

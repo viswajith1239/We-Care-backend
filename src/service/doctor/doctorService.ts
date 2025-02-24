@@ -1,11 +1,11 @@
 import DoctorRepository from "../../repositories/doctor/doctorRepository"
 import sendMail from "../../config/emailConfig"
-import {Interface_Doctor} from "../../interface/doctor/doctor_interface"
+import {Interface_Doctor,IAppoinment} from "../../interface/doctor/doctor_interface"
 import { response } from "express";
 import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import { Types } from "mongoose";
-import jwt from "jsonwebtoken"
+import jwt, { JwtPayload } from "jsonwebtoken"
 import { uploadToCloudinary } from "../../config/cloudinary";
 
 
@@ -264,6 +264,93 @@ constructor(doctorRepository: DoctorRepository) {
         throw new Error("Failed to retrieve KYC status");
       }
     }
+    async googleSignUpUser(decodedToken: JwtPayload): Promise<any> {
+      const email = decodedToken.email;
+      const name = decodedToken.name;
+      let existedemail = await this.doctorRepository.existingUser(email);
+      if (!existedemail) {
+        try {
+          const newUser = { email, name, password: null };
+          const createdUser = await this.doctorRepository.createUsers(newUser);
+          console.log("hhhh",createdUser);
+          
+          return createdUser;
+        } catch (error) {
+          console.error("Error creating user:", error);
+          throw new Error("User creation failed");
+        }
+      } else {
+        return existedemail;
+      }
+    }
+
+    async getSpecialization(doctorId:string){
+
+      try {
+         return await this.doctorRepository.getSpecialization(doctorId)
+      } catch (error) {
+       console.log("Error in service while specialization fetching",error)
+      }
+      }
+
+
+      async storeAppoinmentData(appoinmentData:IAppoinment){
+        console.log("yes no problem here")
+        try{
+          const startTimeInput = appoinmentData.startTime;
+          const endTimeInput = appoinmentData.endTime;
+  
+          const startTime = new Date(`1970-01-01T${startTimeInput}`);
+          const endTime = new Date(`1970-01-01T${endTimeInput}`);
+    
+          if (startTime >= endTime) {
+            throw new Error("End time must be after start time");
+          }
+  
+          const MINIMUM_SESSION_DURATION = 30;
+        const duration = (endTime.getTime() - startTime.getTime()) / (1000 * 60);
+  
+        if (duration < MINIMUM_SESSION_DURATION) {
+          throw new Error("Session duration must be at least 30 minutes");
+        }
+       return  await this.doctorRepository.createNewAppoinment(appoinmentData)
+  
+        }catch(error:any){
+          if (error.message.includes("Daily session limit")) {
+            throw new Error(error.message);
+          } else if (error.message === "Time conflict with an existing session.") {
+            throw new Error("Time conflict with an existing session.");
+          } else if (error.message === "End time must be after start time") {
+            throw new Error("End time must be after start time");
+          } else if (
+            error.message === "Session duration must be at least 30 minutes"
+          ) {
+            throw new Error("Session duration must be at least 30 minutes");
+          } else {
+            throw new Error("Error creating new session");
+          }      }
+        
+  
+       }
+
+       async getAppoinmentSchedules(doctor_id: string) {
+        try {
+          return await this.doctorRepository.fetchAppoinmentData(doctor_id)
+        } catch (error) {
+          throw new Error("Error getting sessin shedule data");
+        }
+      }
+
+
+      async fetchBookingDetails(doctor_id:string){
+        try {
+          
+          const response=await this.doctorRepository.fecthBookingDetails(doctor_id)
+          return response
+        } catch (error) {
+          console.log("Error fect booking details",error)
+        }
+      }
   
 }
 

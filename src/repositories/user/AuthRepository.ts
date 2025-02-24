@@ -1,12 +1,15 @@
 
 import userModel from "../../models/userModel"
-import { UserProfile, userType,IOtp,IUser } from "../../interface/userInterface/interface";
+import { UserProfile, userType,IOtp,IUser,IBooking } from "../../interface/userInterface/interface";
 import { IAuthRepository } from "../../interface/user/Auth.repository.interface";
 import { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
 import OtpModel from "../../models/otpModel";
 import DoctorModel from "../../models/doctorModel";
 import SpecializationModel from "../../models/specializationModel";
+import AppoinmentModel from "../../models/appoinmentModel";
+import { ISpecialization } from "../../interface/doctor/doctor_interface"
+import BookingModel from "../../models/bookingModel";
 
 
 
@@ -17,6 +20,8 @@ export class AuthRepository implements IAuthRepository {
   private userModel = userModel;
   private doctorModel=DoctorModel
   private specializationModel=SpecializationModel
+  private appoinmetModel=AppoinmentModel
+  private bookingModel=BookingModel
   async existUser(email: string,phone: string): Promise<{ existEmail: boolean; existPhone: boolean }> {
     try {
 
@@ -136,6 +141,40 @@ export class AuthRepository implements IAuthRepository {
     }
   }
 
+  async findUserEmail(email: string) {
+    try {
+      return await this.userModel.findOne({ email });
+    } catch (error) {
+      console.log("error finding user login:", error);
+      return null;
+    }
+  }
+
+  async saveResetPassword(email: string, hashedPassword: string) {
+    console.log("hee", email);
+    console.log("reset reached in repos", hashedPassword);
+    try {
+      const user = await this.userModel.findOne({ email });
+      if (!user) {
+        console.log("User Not found  for this email", email);
+      }
+      const result = await this.userModel.updateOne(
+        { email },
+        { $set: { password: hashedPassword } }
+      );
+      if (result.modifiedCount === 0) {
+        console.error("Failed to update password for email:", email);
+        throw new Error("Password update failed.");
+      }
+
+      console.log("Password reset successfully for email:", email);
+      return result;
+    } catch (error) {
+      console.log("Error in Resetting password", error);
+      throw error;
+    }
+  }
+
   async fetchSpecializations(){
     try {
       
@@ -159,6 +198,119 @@ export class AuthRepository implements IAuthRepository {
    console.log("error fetching doctors in repository",error)
     }
   }
+
+  async getDoctor(doctorId: string) {
+    try {
+      const doctor = await this.doctorModel
+        .find({ _id: doctorId })
+        .populate("specializations");
+      
+
+      return doctor;
+    } catch (error) {}
+  }
+
+  async findUserById(userId: string) {
+    return await this.userModel.findById(userId);
+  }
+
+  async fetchAllAppoinmentschedules():Promise<any> {
+    try {
+      const schedules = await this.appoinmetModel.find({}).populate('specializationId')
+      return schedules;
+    } catch (error) {console.log("Error",error)}
+  }
+
+  async findSessionDetails(appoinmentid: string) {
+    
+    const response=await this.appoinmetModel.findById(appoinmentid).populate<{specializationId:ISpecialization}>("specializationId")
+    
+    return response
+  }
   
+
+  async findExistingBooking(bookingDetails: IBooking) {
+    try {
+      // Find existing booking for the same session and user
+      const existingBooking = await this.bookingModel.findOne({
+        sessionId: bookingDetails.appoinmentId,
+        userId: bookingDetails.userId,
+      });
+  
+      if (existingBooking) {
+        console.log("Booking already exists.");
+  
+        // If the existing booking was cancelled, only update the status
+        if (existingBooking.paymentStatus === "Cancelled") {
+          await this.bookingModel.updateOne(
+            { _id: existingBooking._id },
+            { $set: { paymentStatus: "Confirmed" ,} }
+          );
+          await this.appoinmetModel.updateMany({_id:existingBooking.appoinmentId},{$set:{isBooked:true}})
+          return { ...existingBooking.toObject(), paymentStatus: "Confirmed" };
+        }
+  
+        return existingBooking;
+      }
+  
+      // If no existing booking, mark the session as booked
+      await this.appoinmetModel.findByIdAndUpdate(
+        bookingDetails.appoinmentId,
+        { isBooked: true },
+        { new: true }
+      );
+  
+      return null; // No existing booking, proceed with new booking
+    } catch (error) {
+      console.log("Error in existing booking repository", error);
+      return null;
+    }
+  }
+
+
+  async createBooking(bookingDetails:IBooking){   
+    try {
+      console.log("booking details is",bookingDetails)
+      const bookingnew =await this.bookingModel.create(bookingDetails)
+      //calculating 90% an storing into wallet
+      if (!bookingDetails.amount) {
+        console.warn("Booking amount is undefined. Skipping wallet update.");
+        return bookingnew
+  
+      }
+      // const transactionAmount=0.9*bookingDetails.amount
+      // const transactionId = "txn_" + Date.now() + Math.floor(Math.random() * 10000);
+  
+      // let wallet = await this._walletModel.findOne({ trainerId: bookingDetails.trainerId });
+      // const transaction: ITransaction = {
+      //   amount: transactionAmount,
+      //   transactionId: transactionId,
+      //   transactionType: "credit",
+      //   bookingId: bookingnew._id.toString(),
+      //   date: new Date(),
+      // };
+      // if (wallet) {
+        
+      //   wallet.transactions.push(transaction);
+      //   wallet.balance += transactionAmount;
+      //   await wallet.save();
+      // } else {
+        
+      //   wallet = new WalletModel({
+      //     trainerId: bookingDetails.trainerId,
+      //     balance: transactionAmount,
+      //     transactions: [transaction],
+      //   });
+      //   await wallet.save();
+      // }
+      
+  
+      return bookingnew
+    } catch (error) {
+      console.error("Error creating booking:", error);
+        throw new Error("Failed to create booking.");
+    }
+  
+  }
 }
 

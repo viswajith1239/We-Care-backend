@@ -8,6 +8,7 @@ interface CustomRequest extends Request {
 const authMiddleware = (roles: string[] = []) => {
   return (req: CustomRequest, res: Response, next: NextFunction): void => {
     const token = req.header("Authorization")?.split(" ")[1];
+    console.log("token checkinhhhh",token)
     if (!token) {
       res.status(401).json({ message: "Access Denied, token Missing" });
       return; // Early return after response, no need to continue
