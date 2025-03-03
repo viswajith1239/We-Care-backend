@@ -6,9 +6,11 @@ import userModel from "../../models/userModel";
 import KYCModel from "../../models/kycModel";
 import DoctorModel from "../../models/doctorModel";
 import KycRejectionReasonModel from "../../models/KycRejectionReason";
+import { IAdminRepository } from "../../interface/admin/Admin.repository.interface";
+import { IUser } from "../../interface/common";
+type IUserDocument = IUser & Document;
 
-
-class AdminRepository{
+class AdminRepository implements IAdminRepository{
 
 
 private adminModel = AdminModel;
@@ -40,10 +42,10 @@ console.log("admin repo create");
 }
 
 
-async fetchAllUsers(){
-  return await this.userModel.find()
-
+async fetchAllUsers(): Promise<IUserDocument[] | undefined> {
+  return await this.userModel.find().lean<IUserDocument[]>(); 
 }
+
 async saveSpecialization({name,description}:{name:string,description:string}){
     
     try{
@@ -77,16 +79,20 @@ async getAllSpecializations() {
   }
 };
 
-async blockUnblockUser(user_id:string,userState:boolean){
-    
+async blockUnblockUser(user_id: string, userState: boolean): Promise<IUser> {
   const updatedUser = await this.userModel.findByIdAndUpdate(
-    { _id: user_id },
-    { isBlocked: userState },
-    { new: true }
-);
+      user_id,  // No need for { _id: user_id }
+      { isBlocked: userState },
+      { new: true }
+  ).lean<IUser>();
 
-return updatedUser;
+  if (!updatedUser) {
+      throw new Error("User not found");  // Ensure function never returns null
+  }
+
+  return updatedUser;
 }
+
 
 async getAllDoctorsKycDatas() {
   return await this.doctorModel.aggregate([

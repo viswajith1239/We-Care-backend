@@ -11,15 +11,16 @@ import { IUser, ILoginUser,JwtPayload,IBooking} from "../../interface/userInterf
 import { response } from "express";
 import stripeClient from "../../config/stripeClients";
 import mongoose from "mongoose";
+import { IAuthRepository } from "../../interface/user/Auth.repository.interface";
 
 
 export class AuthService implements IAuthService {
-    private authRepository: AuthRepository;
+    private authRepository: IAuthRepository;
     private userData: userType | null = null;
     private OTP: string | null = null;
     private expiryOTP_time: Date | null = null;
   
-    constructor(authRepository: AuthRepository) {
+    constructor(authRepository: IAuthRepository) {
       this.authRepository = authRepository;
     }
 
@@ -186,7 +187,7 @@ export class AuthService implements IAuthService {
       }
     }
 
-   async login({ email, password }: ILoginUser): Promise<any> {
+   async login( email:string, password:string ): Promise<any> {
   try {
     const userData: IUser | null = await this.authRepository.findUser(email);
     if (userData) {
@@ -235,6 +236,8 @@ export class AuthService implements IAuthService {
 }
 async googleSignUpUser(decodedToken: JwtPayload): Promise<any> {
   const email = decodedToken.email;
+   console.log(">>>>>>>>>>.email",email)
+
   const name = decodedToken.name;
   let existedemail = await this.authRepository.existingUser(email);
   if (!existedemail) {
@@ -358,7 +361,7 @@ async getAllDoctors(){
   console.log("In service");
   try {
     const doctors = await this.authRepository.getAllDoctors() // Convert to plain objects
-    const validDoctors = doctors?.filter((doctor) => 
+    const validDoctors = doctors?.filter((doctor: any) => 
       (doctor as any).isBlocked === false && (doctor as any).kycStatus === "approved"
     ) || [];
       

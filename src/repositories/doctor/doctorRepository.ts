@@ -8,8 +8,9 @@ import mongoose, { Types } from "mongoose";
 import AppoinmentModel from "../../models/appoinmentModel";
 import moment from "moment";
 import BookingModel from "../../models/bookingModel";
+import { IDoctorRepository } from "../../interface/doctor/Doctor.repository.interface";
 
-class DoctorRepository{
+class DoctorRepository implements IDoctorRepository{
     private specializationModel = SpecializationModel;
     private doctorModel=DoctorModel
     private otpModel=OtpModel

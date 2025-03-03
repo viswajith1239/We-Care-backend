@@ -4,23 +4,19 @@
 
 import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
+import { IAdminRepository } from "../../interface/admin/Admin.repository.interface";
+import { IAdminService } from "../../interface/admin/Admin.service.interface";
+import { IUser } from "../../interface/common";
 dotenv.config();
 
-class AdminService{
-    private adminRepository: AdminRepository;
+class AdminService implements IAdminService {
+    private adminRepository: IAdminRepository;
 
-  constructor(adminRepository: AdminRepository) {
+  constructor(adminRepository: IAdminRepository) {
 
     this.adminRepository = adminRepository;
   }
-  async adminLogin({
-    
-    email,
-    password,
-  }: {
-    email: string;
-    password: string;
-  }) {
+  async adminLogin(email: string,password: string) {
     try {
         console.log("admin servicil ethi");
         
@@ -87,6 +83,7 @@ class AdminService{
     }
 
     async updatespecialisation(name:string,description:string,specializationId:string){
+      
       const specializationresponse=await this.adminRepository.saveupdatespecialization(name,description,specializationId)
       return specializationresponse
     }
@@ -95,7 +92,7 @@ class AdminService{
     };
 
 
-    async blockUnblockUser(user_id: string, userState: boolean) {
+    async blockUnblockUser(user_id: string, userState: boolean):Promise<any> {
       return await this.adminRepository.blockUnblockUser(user_id, userState);
   }
   

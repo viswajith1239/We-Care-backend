@@ -62,3 +62,11 @@ export interface IOtp {
     _id: Types.ObjectId;
     name: string;
   }
+  
+  export interface IDoctorKYC extends Document {
+    _id: Types.ObjectId;
+    name: string;
+    email: string;
+    kycData: IKYC; // Embedded KYC data
+  }
+  

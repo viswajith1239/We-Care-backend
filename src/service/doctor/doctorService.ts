@@ -7,15 +7,17 @@ import mongoose from "mongoose";
 import { Types } from "mongoose";
 import jwt, { JwtPayload } from "jsonwebtoken"
 import { uploadToCloudinary } from "../../config/cloudinary";
+import { IDoctorService } from "../../interface/doctor/Doctor.Srevice.interface";
+import { IDoctorRepository } from "../../interface/doctor/Doctor.repository.interface";
 
 
-class Doctorservice{
-private doctorRepository:DoctorRepository
+class Doctorservice implements IDoctorService{
+private doctorRepository:IDoctorRepository
 private OTP: string | null = null;
     private expiryOTP_time:Date | null=null
 
 
-constructor(doctorRepository: DoctorRepository) {
+constructor(doctorRepository: IDoctorRepository) {
     this.doctorRepository = doctorRepository;
   }
 
@@ -311,23 +313,23 @@ constructor(doctorRepository: DoctorRepository) {
         const duration = (endTime.getTime() - startTime.getTime()) / (1000 * 60);
   
         if (duration < MINIMUM_SESSION_DURATION) {
-          throw new Error("Session duration must be at least 30 minutes");
+          throw new Error("appoinment duration must be at least 30 minutes");
         }
        return  await this.doctorRepository.createNewAppoinment(appoinmentData)
   
         }catch(error:any){
-          if (error.message.includes("Daily session limit")) {
+          if (error.message.includes("Daily appoinment limit")) {
             throw new Error(error.message);
-          } else if (error.message === "Time conflict with an existing session.") {
-            throw new Error("Time conflict with an existing session.");
+          } else if (error.message === "Time conflict with an existing appoinment.") {
+            throw new Error("Time conflict with an existing appoinment.");
           } else if (error.message === "End time must be after start time") {
             throw new Error("End time must be after start time");
           } else if (
-            error.message === "Session duration must be at least 30 minutes"
+            error.message === "appoinment duration must be at least 30 minutes"
           ) {
-            throw new Error("Session duration must be at least 30 minutes");
+            throw new Error("appoinment duration must be at least 30 minutes");
           } else {
-            throw new Error("Error creating new session");
+            throw new Error("Error creating new appoinment");
           }      }
         
   

@@ -6,10 +6,11 @@ import HTTP_statusCode from "../../enums/HttpStatusCode";
 
 
 import { jwtDecode } from "jwt-decode";
+import { IAdminService } from "../../interface/admin/Admin.service.interface";
 
 class AdminController {
-  private adminService: AdminService;
-  constructor(adminService: AdminService) {
+  private adminService: IAdminService;
+  constructor(adminService: IAdminService) {
     this.adminService = adminService;
   }
 
@@ -19,10 +20,7 @@ class AdminController {
     try {
       const { email, password }: LoginAdmin_interface = req.body;
   
-      const adminResponse = await this.adminService.adminLogin({
-        email,
-        password,
-      });
+      const adminResponse = await this.adminService.adminLogin(email,password);
   
       // Handle invalid credentials
       if (adminResponse.status === 401) {
@@ -100,7 +98,7 @@ class AdminController {
        const specializationId=req.params.id
      const response= await this.adminService.updatespecialisation(name,description,specializationId)
   // const specialization={name: response?.name,description: response?.description,}
-     console.log("response what",response?.name,response?.description)
+    //  console.log("response what",response?.name,response?.description)
      const specialization=response
      res.status(200).json({message:"updatedsuccessfully",specialization})
      
@@ -110,8 +108,6 @@ class AdminController {
 }
 
  deleteSpecialization =  async (req: Request, res: Response,next: NextFunction) => {
- 
-
   try {
     const { id } = req.params;
     const response=await this.adminService.deleteSpecializationService(id);

@@ -23,7 +23,7 @@ route.post("/resetpassword",AuthControllerInstance.resetPassword.bind(AuthContro
 route.get("/specializations",AuthControllerInstance.fetchAllSpecializations.bind(AuthControllerInstance))
 route.get("/doctors",AuthControllerInstance.getAllDoctors.bind(AuthControllerInstance))
 route.get("/doctors/:doctorId",AuthControllerInstance.getDoctor.bind(AuthControllerInstance))
-route.get("/status",authMiddleware(["user"]),AuthControllerInstance.getUserStatus.bind(AuthControllerInstance));
+route.get("/status",AuthControllerInstance.getUserStatus.bind(AuthControllerInstance));
 route.get("/schedules",AuthControllerInstance.getAppoinmentSchedules.bind(AuthControllerInstance))
 route.post("/payment/:appoinmentId",AuthControllerInstance.checkoutPayment.bind(AuthControllerInstance))
 route.post("/bookings",AuthControllerInstance.createBooking.bind(AuthControllerInstance))

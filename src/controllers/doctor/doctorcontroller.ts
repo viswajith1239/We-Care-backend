@@ -4,14 +4,16 @@ import DoctorService from "../../service/doctor/doctorService"
 import {Interface_Doctor} from "../../interface/doctor/doctor_interface"
 import HTTP_statusCode from "../../enums/HttpStatusCode";
 import {jwtDecode, JwtPayload} from "jwt-decode"
+import { IDoctorService } from "../../interface/doctor/Doctor.Srevice.interface";
+import { JwtPayloads } from "../../interface/common";
 
 
 
 
 class DoctorController{
-private doctorService:DoctorService
+private doctorService:IDoctorService
 
-constructor(doctorService: DoctorService) {
+constructor(doctorService: IDoctorService) {
     this.doctorService = doctorService;
   }
 
@@ -182,7 +184,7 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
           const token=req.body.token
         
          
-          const decodedToken:JwtPayload=jwtDecode(token)
+          const decodedToken:JwtPayloads=jwtDecode(token)
           const response=await this.doctorService.googleSignUpUser(decodedToken)
            res.status(200).json({message:"user signed successfully"})
            res.status(200).json({

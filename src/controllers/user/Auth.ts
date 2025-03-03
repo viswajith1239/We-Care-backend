@@ -10,8 +10,8 @@ interface CustomRequest extends Request {
 }
 
 export class AuthController  {
-   // private authService: IAuthService;
-    private authService:AuthService
+   private authService: IAuthService;
+    // private authService:AuthService
     
   
     constructor(authService: AuthService) {
@@ -122,7 +122,7 @@ export class AuthController  {
     async login(req: Request, res: Response, next: NextFunction): Promise<void> {
       try {
         const { email, password }: ILoginUser = req.body;
-        const user = await this.authService.login({ email, password });
+        const user = await this.authService.login( email, password );
        
         res.cookie("RefreshToken", user.refreshToken, {
           httpOnly: true, 

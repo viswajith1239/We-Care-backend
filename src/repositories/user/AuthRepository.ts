@@ -10,6 +10,7 @@ import SpecializationModel from "../../models/specializationModel";
 import AppoinmentModel from "../../models/appoinmentModel";
 import { ISpecialization } from "../../interface/doctor/doctor_interface"
 import BookingModel from "../../models/bookingModel";
+import { IUsers } from "../../interface/common";
 
 
 
@@ -210,7 +211,7 @@ export class AuthRepository implements IAuthRepository {
     } catch (error) {}
   }
 
-  async findUserById(userId: string) {
+  async findUserById(userId: string): Promise<IUsers | null>  {
     return await this.userModel.findById(userId);
   }
 
