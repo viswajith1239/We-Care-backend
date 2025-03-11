@@ -30,13 +30,13 @@ class AdminController {
       }
   
      
-      res.cookie("Admin_RefreshToken", adminResponse.refreshToken, {
+      res.cookie("RefreshToken", adminResponse.refreshToken, {
         httpOnly: true, 
         secure: true,
         sameSite: "strict",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
-      res.cookie("Admin_AccessToken", adminResponse.accessToken, {
+      res.cookie("AccessToken", adminResponse.accessToken, {
         httpOnly: true,
         secure: true,
         sameSite: "strict",

@@ -4,6 +4,7 @@ import DoctorRepository from "../repositories/doctor/doctorRepository"
 import DoctorService from "../service/doctor/doctorService";
 import DoctorController from "../controllers/doctor/doctorcontroller";
 import authMiddlewares from "../middlewares/authmiddleware";
+import { verifyToken } from "../config/JwtConfig";
 
 const uploadDoctorDataFiles = upload.fields([
     { name: 'profileImage', maxCount: 1 },
@@ -28,16 +29,12 @@ router.post('/logindoctor',doctorController.loginDoctor.bind(doctorController))
 router.post('/googlesignup', doctorController.googleSignUpUser.bind(doctorController));
 router.post('/kyc',uploadDoctorDataFiles,doctorController.kycSubmission.bind(doctorController))
 router.get('/kycStatus/:doctorId',doctorController.doctorKycStatus.bind(doctorController))
-router.get("/specializations/:doctorId",doctorController.getSpecialization.bind(doctorController))
-router.post('/appoinments/:doctorId', (req, res, next) => {
-  console.log("🔹 Received doctorId from request params:", req.params.doctorId);
-  console.log("🔹 Received request body:", req.body);
-  next();
-}, doctorController.storeAppoinmentData.bind(doctorController));
+router.get("/specializations/:doctorId",verifyToken('doctor'),doctorController.getSpecialization.bind(doctorController))
+router.post('/appoinments/:doctorId',verifyToken('doctor'), doctorController.storeAppoinmentData.bind(doctorController));
 
-router.get('/shedules/:doctorId', doctorController.getAppoinmentSchedules.bind(doctorController))
+router.get('/shedules/:doctorId',verifyToken('doctor'), doctorController.getAppoinmentSchedules.bind(doctorController))
 
-router.get(`/bookingdetails/:doctorId`,doctorController.fetchbookingDetails.bind(doctorController))
+router.get(`/bookingdetails/:doctorId`,verifyToken('doctor'),doctorController.fetchbookingDetails.bind(doctorController))
 
 
 

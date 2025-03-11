@@ -13,13 +13,14 @@ interface Iuser extends Document {
     email: string;
     phone: string;
     password: string;
-    DOB: Date;
+    dob: String;
     address: string;
     image: IImage; 
     createdAt: Date;
     lastLogin: Date;
     referral?: string;
     isBlocked: boolean;
+    gender:String
 }
 
 const userSchema = new Schema<Iuser>({
@@ -27,7 +28,7 @@ const userSchema = new Schema<Iuser>({
         type: String, 
         required: true,
         unique: true ,
-        default: uuidv4, // Automatically generate a unique ID
+        default: uuidv4, 
 
     },
     name: { 
@@ -57,10 +58,10 @@ const userSchema = new Schema<Iuser>({
         type:String,
         required:false
     },
-    // DOB: {
-    //     type: Date,
-    //     default: null
-    // },
+    dob: {
+        type: String,
+        required: false
+    },
     // address: {
     //     type: String,
     //     default: null
@@ -79,6 +80,10 @@ const userSchema = new Schema<Iuser>({
         type: Boolean, 
         default: false 
     },
+    gender:{
+        type:String,
+        required:false
+    }
 });
 
 const userModel = model<Iuser>("User", userSchema);

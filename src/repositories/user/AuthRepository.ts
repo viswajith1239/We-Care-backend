@@ -1,6 +1,6 @@
 
 import userModel from "../../models/userModel"
-import { UserProfile, userType,IOtp,IUser,IBooking } from "../../interface/userInterface/interface";
+import { UserProfile, userType,IOtp,IUser,IBooking, User } from "../../interface/userInterface/interface";
 import { IAuthRepository } from "../../interface/user/Auth.repository.interface";
 import { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
@@ -312,6 +312,109 @@ export class AuthRepository implements IAuthRepository {
         throw new Error("Failed to create booking.");
     }
   
+  }
+  async fetchUserData(userId:string):Promise<User|null>{
+    console.log(">>>>>>");
+    
+    try {
+      console.log("sssssss");
+     const user= await this.userModel.findById(userId)
+     console.log("vvv",user);
+     
+     return user as User | null; 
+  
+    } catch (error) {
+      console.log("Error in Fetching User Data in Repository",error)
+      return null
+    
+    }
+  }
+
+
+  async editUserData(userId:string,userData:User){
+    try {
+      console.log("Received userData for update:", userData); 
+      const response=await this.userModel.findByIdAndUpdate(userId,{$set:{...userData}},{new:true})
+      console.log("updated",response);
+      
+      return response
+    } catch (error) {
+      console.log("Error in UserEdit in Repository",error)
+    }
+  
+  }
+  async fetchBookings(user_id:string){
+    try {
+      
+  
+      const bookings=await this.bookingModel.find({userId:user_id}).populate("doctorId","name profileImage").exec()
+      const response = bookings.map((booking: any) => {
+        return {
+          ...booking.toObject(),  
+          doctorName: booking.doctorId ? booking.doctorId.name : 'Doctor not found',
+          profileImage:booking.doctorId ? booking.doctorId.profileImage:"Doctor not found"
+        };
+      });
+    
+  
+      return response
+  
+    } catch (error) {
+      console.log("Error in fetching userData in repository",error)
+    }
+  }
+
+  async cancelAppoinment(bookId:string,userId:string,doctorId:string){
+  
+
+    try {
+    const bookingDetails=  await this.bookingModel.findOne({_id:bookId, doctorId:doctorId, userId:userId})
+  
+    if(bookingDetails?.paymentStatus==="Cancelled"){
+      throw new Error('session is already cancelled');
+  }
+    if(bookingDetails?.paymentStatus==="Confirmed"){
+      bookingDetails.paymentStatus="Cancelled"
+      await bookingDetails.save()
+       await this.appoinmetModel.updateOne(
+          { _id: bookingDetails.appoinmentId }, 
+          { $set: { status: "Cancelled", isBooked: false } }
+        );
+        // const wallet = await this._walletModel.findOne({ trainerId });
+  
+        // if (wallet) {
+        //   const refundAmount = 0.9 * (bookingDetails.amount??0); // Deduct the 90% credited amount
+  
+        //   // Ensure balance is not negative after refund
+        //   if (wallet.balance >= refundAmount) {
+        //     wallet.balance -= refundAmount;
+        //   } else {
+        //     wallet.balance = 0;
+        //   }
+  
+        //   // Add transaction record for refund
+        //   const refundTransaction: ITransaction = {
+        //     amount: -refundAmount,
+        //     transactionId: "txn_refund_" + Date.now() + Math.floor(Math.random() * 10000),
+        //     transactionType: "debit",
+        //     bookingId: bookId,
+        //     date: new Date(),
+        //   };
+  
+        //   wallet.transactions.push(refundTransaction);
+        //   await wallet.save();
+        // }
+  
+  
+      }
+          
+  return bookingDetails
+    
+    
+    } catch (error) {
+      console.log("cancel booking details",error)
+      
+    }
   }
 }
 

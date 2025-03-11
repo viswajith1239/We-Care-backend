@@ -102,7 +102,7 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
       if (user) {
         const { accessToken, refreshToken } = user;
   
-        res.cookie("refreshTokendoctor", refreshToken, {
+        res.cookie("RefreshToken", refreshToken, {
           httpOnly: true,  
           secure: true,    
           sameSite: "strict",  
@@ -110,7 +110,7 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
         });
   
        
-        res.cookie("accessTokendoctor", accessToken, {
+        res.cookie("AccessToken", accessToken, {
           httpOnly: true, 
           secure: true,   
           sameSite: "strict", 

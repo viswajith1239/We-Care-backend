@@ -17,6 +17,8 @@ export interface User {
     phone : string;
     email: string;
     isBlocked: boolean;
+    dob?:string
+    gender?: string,
     
   
   }

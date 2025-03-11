@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 
 //
 import { IAuthService } from "../../interface/user/Auth.service.inerface";
-import { userType } from "../../interface/userInterface/interface";
+import { User, userType } from "../../interface/userInterface/interface";
 import { AuthRepository } from "../../repositories/user/AuthRepository";
 import jwt from "jsonwebtoken"
 import sendMail from "../../config/emailConfig";
@@ -458,7 +458,7 @@ async findBookingDetails(session_id: string, user_id: string, stripe_session_id:
     const sessionData = await stripeClient.checkout.sessions.retrieve(stripe_session_id)
 
       if (!Doctor || Doctor.length === 0) {
-      throw new Error("Trainer not found.");
+      throw new Error("Doctor not found.");
     }
      const bookingDetails: IBooking = {
       appoinmentId: new mongoose.Types.ObjectId(session._id),
@@ -495,6 +495,64 @@ async findBookingDetails(session_id: string, user_id: string, stripe_session_id:
   }
 }
 
+
+async fechtUserData(userId:string):Promise<User|null>{
+  console.log("nnnn");
+  
+  try {
+    console.log("gggg");
+   return  await this.authRepository.fetchUserData(userId) 
+  } catch (error) {
+    console.log("Error in fetch Data",error)
+    return null
+  }
+}
+
+
+async editUserData( userId: string,userData: User,) {
+  try {
+    return await this.authRepository.editUserData(userId,userData);
+  } catch (error: any) {
+    console.log(error);
+    throw new Error(error);
+  }
+}
+async getAllBookings(user_id: string) {
+  try {
+    return await this.authRepository.fetchBookings(user_id);
+  } catch (error) {
+    console.log(error);
+  }
+}
+async cancelAppoinment(bookId:string,userId:string,doctorId:string){
+    
+  try {
+    const bookedsession=await this.authRepository.cancelAppoinment(bookId,userId,doctorId)
+    
+
+    //refund all amount into user account
+    // const refund = await stripeClient.refunds.create({
+    //   payment_intent:   bookedsession.payment_intent,
+    //   amount: bookedsession.Amount
+    // });
+    // if (refund.status === 'succeeded') {
+    //   return {
+    //     success: true,
+    //     message: 'Refund processed successfully',
+    //   };
+    // } else {
+    //   throw new Error('Refund processing failed');
+    // }
+    console.log("hhh",bookedsession);
+    
+ 
+    return bookedsession
+
+  } catch (error) {
+    console.log("Error cancel and refund",error)
+  }
+
+ }
 
     
 }

@@ -316,6 +316,62 @@ export class AuthController  {
         }
       
       }
+
+      async getUser(req: Request, res: Response, next: NextFunction){
+        console.log("bbbbb");
+        
+        try {
+          console.log("rrrr");
+          
+          const userId=req.params.userId
+          console.log("wwww",userId);
+          
+
+         const response= await this.authService.fechtUserData(userId)
+          res.status(HTTP_statusCode.OK).json({data:response})
+        } catch (error) {
+          
+        }
+      
+      }
+
+      async updateUserData(req: Request, res: Response, next: NextFunction) {
+        try {
+          console.log("jjjjj");
+          
+          const userData = req.body;
+          const userId = req.body._id;
+          await this.authService.editUserData(userData, userId);
+          res.status(200).json({ message: "User Updated Successfully" });
+        } catch (error) {
+          next(error);
+        }
+      }
+
+      async getAllBookings(req: Request, res: Response, next: NextFunction) {
+        try {
+          const user_id = req.params.user_id;
+          const bookings = await this.authService.getAllBookings(user_id);
+          res.status(200).json(bookings);
+        } catch (error) {
+          next(error);
+        }
+      }
+
+
+      async cancelAppoinment(req: Request, res: Response, next: NextFunction){
+  
+        try {
+             
+          const { appoinmentId, userId , doctorId} = req.body;
+          
+          const cancelAndRefund = await this.authService.cancelAppoinment(appoinmentId,userId,doctorId);
+          res.status(HTTP_statusCode.OK).json(cancelAndRefund)
+        } catch (error) {
+          console.log("Error in cancel appoinment",error)
+        }
+      
+      }
       
       
 }

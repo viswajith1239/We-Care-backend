@@ -1,5 +1,5 @@
 import { Document } from "mongoose";
-import { userType,} from "../userInterface/interface";
+import { User, userType,} from "../userInterface/interface";
 import { IUser,IOtp,IBooking,IUsers} from "../common";
 import mongoose, { Types } from "mongoose";
 import { Interface_Doctor, IAppoinment } from "../doctor/doctor_interface";
@@ -26,5 +26,9 @@ export interface IAuthRepository {
     findExistingBooking(bookingDetails:IBooking):Promise<any>
     createBooking(bookingDetails:IBooking):Promise<IBooking>
     fetchSpecializations():Promise<any>
+    fetchUserData(userId:string):Promise<User|null>
+    editUserData(userId:string,userData:User):Promise<any>
+    fetchBookings(user_id:string):Promise<any>
+    cancelAppoinment(bookId:string,userId:string,doctorId:string):Promise<any>
     
  };

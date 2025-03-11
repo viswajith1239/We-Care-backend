@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload, TokenExpiredError } from "jsonwebtoken";
 
 interface CustomRequest extends Request {
   authData?: { id: string; email: string; role: string };
@@ -8,27 +8,42 @@ interface CustomRequest extends Request {
 const authMiddleware = (roles: string[] = []) => {
   return (req: CustomRequest, res: Response, next: NextFunction): void => {
     const token = req.header("Authorization")?.split(" ")[1];
-    console.log("token checkinhhhh",token)
+
+    console.log("Checking Token:", token); // Debugging
+
     if (!token) {
-      res.status(401).json({ message: "Access Denied, token Missing" });
-      return; // Early return after response, no need to continue
+      res.status(401).json({ message: "Access Denied, Token Missing" });
+      return;
     }
 
     try {
-      const decoded: any = jwt.verify(token, process.env.JWT_SECRET as string) as CustomRequest["authData"];
-      req.authData = decoded;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
 
-      // Role check
-      if (roles.length && !roles.includes(decoded.role)) {
-        res.status(403).json({ message: "Access Denied, Role Insufficient" });
-        return; // Early return after response
+      if (!decoded || typeof decoded !== "object") {
+        res.status(401).json({ message: "Invalid Token Structure" });
+        return;
       }
 
-      // Proceed to next middleware or route handler
-      next();
+      req.authData = {
+        id: decoded.id as string,
+        email: decoded.email as string,
+        role: decoded.role as string,
+      };
+
+      // Role check
+      if (roles.length && !roles.includes(req.authData.role)) {
+        res.status(403).json({ message: "Access Denied, Role Insufficient" });
+        return;
+      }
+
+      return next(); // Ensure middleware flow control
     } catch (error) {
-      res.status(401).json({ message: "Invalid or Expired Token" });
-      return; // Early return after response
+      if (error instanceof TokenExpiredError) {
+        res.status(401).json({ message: "Token Expired, Please Login Again" });
+      } else {
+        res.status(401).json({ message: "Invalid Token" });
+      }
+      return;
     }
   };
 };
