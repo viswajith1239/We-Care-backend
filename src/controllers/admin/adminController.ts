@@ -22,7 +22,7 @@ class AdminController {
   
       const adminResponse = await this.adminService.adminLogin(email,password);
   
-      // Handle invalid credentials
+      
       if (adminResponse.status === 401) {
         return res.status(401).json({
           message: "Invalid credentials. Login failed.",
@@ -34,13 +34,13 @@ class AdminController {
         httpOnly: true, 
         secure: true,
         sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: 7 * 24 * 60 * 60 * 1000, 
       });
       res.cookie("AccessToken", adminResponse.accessToken, {
         httpOnly: true,
         secure: true,
         sameSite: "strict",
-        maxAge: 1 * 24 * 60 * 60 * 1000, // 1 day
+        maxAge: 1 * 24 * 60 * 60 * 1000, 
       });
   
       return res.status(200).json({
@@ -139,7 +139,7 @@ async getAllDoctorKycDatas(req: Request, res: Response, next: NextFunction) {
   try {
 
     const allDoctorsKycData = await this.adminService.DoctorsKycData();
-    // console.log(allTrainersKycData);
+    // 
 
     res.status(HTTP_statusCode.OK).json({ message: "Trainers KYC data fetched successfully", data: allDoctorsKycData });
   } catch (error) {

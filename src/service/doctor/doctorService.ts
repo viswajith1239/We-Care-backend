@@ -44,7 +44,7 @@ constructor(doctorRepository: IDoctorRepository) {
        console.log("the otp is:...",this.OTP)
        let text = `Your OTP is ${generateOtp}`; 
        let subject = 'OTP Verification';
-    //    const email_Ht=otpEmailTemplate(this.OTP,trainerData.name||"user")
+    
     console.log("Doctor email is:", doctorData.email)
        const sentEmail=await sendMail(doctorData.email,subject,text)
        if(!sentEmail){throw new Error("Email not sent")}
@@ -238,11 +238,11 @@ constructor(doctorRepository: IDoctorRepository) {
           documents.certificateUrl = certificateUrl.secure_url;
         }
     
-        // Save KYC data in the repository
+        
         await this.doctorRepository.saveKyc(formData, documents);
       
     
-        // Change KYC status in the repository
+       
         return await this.doctorRepository.changeKycStatus(
           formData.doctor_id,
           documents.profileImageUrl

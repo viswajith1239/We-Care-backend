@@ -232,7 +232,7 @@ export class AuthRepository implements IAuthRepository {
 
   async findExistingBooking(bookingDetails: IBooking) {
     try {
-      // Find existing booking for the same session and user
+      
       const existingBooking = await this.bookingModel.findOne({
         sessionId: bookingDetails.appoinmentId,
         userId: bookingDetails.userId,
@@ -241,7 +241,7 @@ export class AuthRepository implements IAuthRepository {
       if (existingBooking) {
         console.log("Booking already exists.");
   
-        // If the existing booking was cancelled, only update the status
+        
         if (existingBooking.paymentStatus === "Cancelled") {
           await this.bookingModel.updateOne(
             { _id: existingBooking._id },
@@ -254,14 +254,14 @@ export class AuthRepository implements IAuthRepository {
         return existingBooking;
       }
   
-      // If no existing booking, mark the session as booked
+      
       await this.appoinmetModel.findByIdAndUpdate(
         bookingDetails.appoinmentId,
         { isBooked: true },
         { new: true }
       );
   
-      return null; // No existing booking, proceed with new booking
+      return null; 
     } catch (error) {
       console.log("Error in existing booking repository", error);
       return null;
@@ -273,7 +273,7 @@ export class AuthRepository implements IAuthRepository {
     try {
       console.log("booking details is",bookingDetails)
       const bookingnew =await this.bookingModel.create(bookingDetails)
-      //calculating 90% an storing into wallet
+     
       if (!bookingDetails.amount) {
         console.warn("Booking amount is undefined. Skipping wallet update.");
         return bookingnew
@@ -424,7 +424,7 @@ export class AuthRepository implements IAuthRepository {
       .find({ userId })
       .populate("doctorId");
 
-    // Extract doctor IDs and remove duplicates
+    
     const uniqueDoctors = new Map();
 
     bookings.forEach((booking) => {

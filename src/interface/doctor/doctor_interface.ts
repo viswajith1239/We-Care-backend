@@ -48,9 +48,9 @@ export interface IOtp {
     selectedDate: Date;
     startTime: string;
     endTime: string;
-    // isSingleSession: boolean;
+   
     type:string
-    // SessionType:string
+  
     numberOfAppoinments: number;
     price: number | undefined
     isBooked: boolean,
@@ -67,6 +67,6 @@ export interface IOtp {
     _id: Types.ObjectId;
     name: string;
     email: string;
-    kycData: IKYC; // Embedded KYC data
+    kycData: IKYC; 
   }
   

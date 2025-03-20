@@ -52,7 +52,6 @@ import { Document } from "mongoose";
       doctorId: mongoose.Types.ObjectId;
       userId: mongoose.Types.ObjectId |  { name: string; email: string }
       specialization?: string;
-      // sessionType: string;
       bookingDate: Date;
       startDate: Date;
       // endDate: Date; 
@@ -63,7 +62,7 @@ import { Document } from "mongoose";
       createdAt: Date; 
     updatedAt: Date; 
     payment_intent?: string;
-    // dietPlan?: string,
+  
   }
 
   export interface IMessage {

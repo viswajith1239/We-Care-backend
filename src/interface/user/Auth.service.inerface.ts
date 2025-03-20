@@ -19,7 +19,7 @@ export interface IAuthService {
     fetchSpecialization():Promise<any>
     fechtUserData(userId:string):Promise<User|null>
     // getBookedsessionData(userId:string|undefined):Promise<any>
-    // findBookings(user_id:string,trainer_id:string):Promise<any>
+    // findBookings(user_id:string,doctor_id:string):Promise<any>
     getUserStatus(userId: string): Promise<{ isBlocked: boolean }>;
     editUserData(userId:string,userData:User):Promise<any>
     getAllBookings(user_id:string|undefined):Promise<any>

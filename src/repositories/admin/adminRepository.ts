@@ -81,13 +81,13 @@ async getAllSpecializations() {
 
 async blockUnblockUser(user_id: string, userState: boolean): Promise<IUser> {
   const updatedUser = await this.userModel.findByIdAndUpdate(
-      user_id,  // No need for { _id: user_id }
+      user_id,  
       { isBlocked: userState },
       { new: true }
   ).lean<IUser>();
 
   if (!updatedUser) {
-      throw new Error("User not found");  // Ensure function never returns null
+      throw new Error("User not found"); 
   }
 
   return updatedUser;
@@ -160,7 +160,7 @@ async updateKycStatus(status: string, doctor_id: string, rejectionReason: string
       if (updatedKyc) {
         console.log('KYC model status updated successfully:', updatedKyc);
 
-        // Save the rejection reason if the status is 'rejected'
+       
         if (status === 'rejected' && rejectionReason) {
          const reason =  await this.kycRejectionReasonModel.create({
           doctorId: doctor_id,
@@ -190,7 +190,7 @@ async updateKycStatus(status: string, doctor_id: string, rejectionReason: string
         return null;
       }
     } else {
-      console.log('Trainer not found with the given ID:', doctor_id);
+      console.log('Doctor not found with the given ID:', doctor_id);
       return null;
     }
   } catch (error) {
@@ -207,7 +207,7 @@ async deleteKyc(doctor_id: string) {
     if (result) {
       console.log('KYC record deleted successfully:', result);
     } else {
-      console.log('No KYC record found for deletion with trainer ID:', doctor_id);
+      console.log('No KYC record found for deletion with doctor ID:', doctor_id);
     }
   } catch (error) {
     console.error('Error deleting KYC record:', error);

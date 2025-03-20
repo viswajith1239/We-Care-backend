@@ -5,7 +5,7 @@ const bookingSchema=new Schema<IBooking>({
     doctorId:{type:Schema.Types.ObjectId,ref:"Doctor"},
     userId:{type:Schema.Types.ObjectId,ref:"User"},
     specialization: { type: String, required: false },
-    // sessionType: { type: String, required: true },
+   
     bookingDate: { type: Date, default: Date.now }, 
     startDate: { type: Date, required: true }, 
     // endDate: { type: Date, required: false }, 
@@ -14,7 +14,7 @@ const bookingSchema=new Schema<IBooking>({
     amount: { type: Number, required: true },
     paymentStatus: { type: String, enum: [ "Confirmed", "Cancelled", "Completed"], default: "Confirmed" }, 
     payment_intent: {type: String, required: false },
-    // dietPlan: {type: String, required: false}
+    
 
 })
 const BookingModel =model<IBooking>("Booking",bookingSchema)

@@ -8,7 +8,7 @@ const otpSchema = new Schema<IOtp>({
     expiresAt: { type: Date, required: true },
 }, { timestamps: true });
 
-// TTL index to automatically remove documents after 'expiresAt'
+
 otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 const OtpModel = model<IOtp>('otp', otpSchema);

@@ -78,7 +78,7 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
     res: Response, next: NextFunction): Promise<void> {
     try {
       const { email } = req.body;
-      // console.log(email,'trainer cont');
+      
 
       await this.doctorService.resendOTP(email);
       res.status(200).json({ message: "OTP resent successfully" });
@@ -96,7 +96,7 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
     try {
       const { email, password }: ILoginUser = req.body;
   
-      // Assuming this.trainerService.LoginTrainer handles the authentication
+      
       const user = await this.doctorService.LoginDoctor(email, password);
   
       if (user) {
@@ -106,7 +106,7 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
           httpOnly: true,  
           secure: true,    
           sameSite: "strict",  
-          maxAge: 7 * 24 * 60 * 60 * 1000,  //  7 days
+          maxAge: 7 * 24 * 60 * 60 * 1000,  
         });
   
        
@@ -114,7 +114,7 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
           httpOnly: true, 
           secure: true,   
           sameSite: "strict", 
-          maxAge: 1 * 24 * 60 * 60 * 1000,  //  in 1 day
+          maxAge: 1 * 24 * 60 * 60 * 1000, 
         });
   
        
@@ -145,7 +145,7 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
   
       const formData = {
         
-        // specialization,
+       
         name,
         email,
         phone,
@@ -155,10 +155,9 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
        console.log("---->>>-------->>>>",files)
 
 
-      // Pass formData and uploaded files to the service for KYC submission
       const kycStatus = await this.doctorService.kycSubmit(formData, files);
   
-      // Return success response with KYC status
+      
       res.status(HTTP_statusCode.OK).json({ message: "KYC submitted successfully", kycStatus });
     } catch (error) {
       console.error("Error in KYC submission:", error);

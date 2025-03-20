@@ -101,7 +101,7 @@ class AdminService implements IAdminService {
       try {
         const allDoctorsKycData =
           await this.adminRepository.getAllDoctorsKycDatas();
-        // console.log('allTrainersKycDatas',allTrainersKycDatas);
+        
   
         return allDoctorsKycData;
       } catch (error) {

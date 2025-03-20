@@ -80,7 +80,7 @@ export interface User {
     doctorId: mongoose.Types.ObjectId;
     userId: mongoose.Types.ObjectId |  { name: string; email: string }
     specialization?: string;
-    // sessionType: string;
+    
     bookingDate: Date;
     startDate: Date;
     // endDate: Date; 
@@ -91,7 +91,7 @@ export interface User {
     createdAt: Date; 
   updatedAt: Date; 
   payment_intent?: string;
-  // dietPlan?: string,
+ 
   
 
   }

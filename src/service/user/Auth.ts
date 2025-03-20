@@ -1,7 +1,6 @@
 import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 
-//
 import { IAuthService } from "../../interface/user/Auth.service.inerface";
 import { User, userType } from "../../interface/userInterface/interface";
 import { AuthRepository } from "../../repositories/user/AuthRepository";
@@ -35,7 +34,7 @@ export class AuthService implements IAuthService {
       try {
           console.log("Reached in signup service with data:", userData);
   
-          // Check if the user already exists by email or phone
+        
           const response = await this.authRepository.existUser(userData.email, userData.phone);
           if (response.existEmail) {
               throw new Error("Email already in use");
@@ -44,15 +43,14 @@ export class AuthService implements IAuthService {
               throw new Error("Phone already in use");
           }
   
-          // Hash the user's password for secure storage
           const saltRounds: number = 10;
           const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
           console.log("Password hashed:", hashedPassword);
   
-          // Generate a unique user ID
+          
           const userId = uuidv4();
   
-          // Create a user object for temporary storage
+         
           this.userData = {
               userId: userId,
               name: userData.name,
@@ -63,17 +61,17 @@ export class AuthService implements IAuthService {
   
           console.log("Prepared user data:", this.userData);
   
-          // Generate a random OTP for verification
+         
           const Generated_OTP: string = Math.floor(1000 + Math.random() * 9000).toString();
           this.OTP = Generated_OTP;
   
-          // Prepare the email content
+        
           const text = `Your OTP is ${Generated_OTP}`;
            console.log(text);
           
           const subject = 'OTP Verification';
   
-          // Send the OTP email
+          
           const sendMailStatus: boolean = await sendMail(userData.email, subject, text);
           console.log("OTP sent status:", sendMailStatus);
   
@@ -81,16 +79,16 @@ export class AuthService implements IAuthService {
               throw new Error("Failed to send OTP");
           }
   
-          // Calculate OTP expiry time
+          
           const Generated_time = new Date();
           this.expiryOTP_time = new Date(Generated_time.getTime() + 60 * 1000);
   
           console.log(`OTP will expire at: ${this.expiryOTP_time}`);
   
-          // Save the OTP and its expiry time in the database
+         
           await this.authRepository.saveOTP(userData.email, this.OTP, this.expiryOTP_time);
   
-          // Respond to the frontend
+         
           return {
               success: true,
               message: "Signup successful, OTP sent to email",
@@ -105,7 +103,7 @@ export class AuthService implements IAuthService {
   async verifyOTP(userData: IUser, otp: string): Promise<any> {
     console.log("Verifying OTP...");
     try {
-        // Fetch all OTPs associated with the email
+        
         const validOtps = await this.authRepository.getOtpsByEmail(userData.email);
         console.log("Fetched OTPs from DB:", validOtps);
 
@@ -114,20 +112,20 @@ export class AuthService implements IAuthService {
             throw new Error("No OTP found for this email");
         }
 
-        // Get the latest OTP by sorting based on creation time
+        
         const latestOtp = validOtps.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
         console.log("Latest OTP from DB:", latestOtp.otp);
 
-        // Check if the entered OTP matches and is not expired
+        
         if (latestOtp.otp === otp) {
             if (latestOtp.expiresAt > new Date()) {
                 console.log("OTP verified successfully");
 
-                // Hash the password
+               
                 const hashedPassword = await bcrypt.hash(userData.password, 10);
                 console.log("Password hashed");
 
-                // Create a new user object with the hashed password
+                
                 const newUserData = {
                     userId: uuidv4(),
                     name: userData.name,
@@ -137,15 +135,15 @@ export class AuthService implements IAuthService {
                     isBlocked: false,
                 };
 
-                // Save the new user to the database
+          
                 const userCreationResponse = await this.authRepository.createNewUser(newUserData);
                 console.log("User created successfully in DB:", userCreationResponse);
 
-                // Delete the used OTP from the database
+          
                 await this.authRepository.deleteOtpById(latestOtp._id);
                 console.log("Used OTP deleted from DB");
 
-                // Return the created user or a success response
+              
                 return { success: true, message: "User created successfully", user: userCreationResponse };
             } else {
                 console.log("OTP has expired");
@@ -276,7 +274,7 @@ async forgotpassword(UserEmail: string): Promise<any> {
 
     const OTP_createdTime = new Date();
     this.expiryOTP_time = new Date(OTP_createdTime.getTime() + 1 * 60 * 1000);
-    //store OTP IN db
+ 
 
     console.log("Saving OTP:", {
       email: UserEmail,
@@ -360,7 +358,7 @@ async fetchSpecialization(){
 async getAllDoctors(){
   console.log("In service");
   try {
-    const doctors = await this.authRepository.getAllDoctors() // Convert to plain objects
+    const doctors = await this.authRepository.getAllDoctors() 
     const validDoctors = doctors?.filter((doctor: any) => 
       (doctor as any).isBlocked === false && (doctor as any).kycStatus === "approved"
     ) || [];

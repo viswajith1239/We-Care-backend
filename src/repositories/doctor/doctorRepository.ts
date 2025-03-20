@@ -159,7 +159,7 @@ class DoctorRepository implements IDoctorRepository{
 
             async changeKycStatus(doctorId: string, profileImage: string | undefined): Promise<string | undefined> {
               try {
-                // Update the doctors profile image and KYC status
+                
                 const doctorUpdate = await this.doctorModel.findByIdAndUpdate(
                   doctorId,
                   {
@@ -244,7 +244,7 @@ class DoctorRepository implements IDoctorRepository{
     }
     async createNewAppoinment(appoinmentData: IAppoinment) {
       try {
-        // Find doctor
+       
         const findDoctor = await this.doctorModel.findById(appoinmentData.doctorId);
         console.log("Checking doctor ID:", appoinmentData.doctorId);
         console.log("Doctor found:", findDoctor);
@@ -253,16 +253,16 @@ class DoctorRepository implements IDoctorRepository{
           throw new Error("Doctor not found");
         }
     
-        // Fetch existing appointments for the same doctor and date
+       
         const existingAppointments = await this.appoinmentModel.find({
           doctorId: appoinmentData.doctorId,
-          selectedDate: appoinmentData.selectedDate, // Ensure this matches frontend
+          selectedDate: appoinmentData.selectedDate, 
           $or: [
             { startTime: { $lt: appoinmentData.endTime }, endTime: { $gt: appoinmentData.startTime } }
           ],
         });
     
-        // Conflict checking
+        
         const hasConflict = existingAppointments.some((existingApp) => {
           const existingStartTime = moment(existingApp.startTime, "HH:mm");
           const existingEndTime = moment(existingApp.endTime, "HH:mm");
@@ -270,7 +270,7 @@ class DoctorRepository implements IDoctorRepository{
           const newStartTime = moment(appoinmentData.startTime, "HH:mm");
           const newEndTime = moment(appoinmentData.endTime, "HH:mm");
     
-          // Check time overlap
+       
           return newStartTime.isBefore(existingEndTime) && newEndTime.isAfter(existingStartTime);
         });
     
@@ -278,10 +278,10 @@ class DoctorRepository implements IDoctorRepository{
           throw new Error("Time conflict with an existing session.");
         }
     
-        // Ensure price is a number
+       
         appoinmentData.price = Number(appoinmentData.price);
     
-        // Create appointment
+       
         const createdSessionData = await this.appoinmentModel.create(appoinmentData);
         return createdSessionData.populate("specializationId");
     

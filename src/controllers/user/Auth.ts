@@ -129,13 +129,13 @@ export class AuthController  {
           httpOnly: true, 
           secure: true,
           sameSite: "strict", 
-          maxAge: 7 * 24 * 60 * 60 * 1000, //21 days
+          maxAge: 7 * 24 * 60 * 60 * 1000, 
         });
         res.cookie("AccessToken", user.accessToken, {
           httpOnly: true, 
           secure:true, 
           sameSite: "strict",
-          maxAge: 1 * 24 * 60 * 60 * 1000, // 7 days
+          maxAge: 1 * 24 * 60 * 60 * 1000, 
         });
         res.status(HTTP_statusCode.OK).json({ message: "Login successful", user:user.user });
       } catch (error: any) {
@@ -271,7 +271,7 @@ export class AuthController  {
           res.status(200).json(userStatus);
         } catch (error) {
           console.error("Error fetching user status:", error);
-          next(error); // Ensure Express handles the error
+          next(error); 
         }
       }
 
