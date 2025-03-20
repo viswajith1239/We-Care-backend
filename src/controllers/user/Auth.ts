@@ -5,6 +5,7 @@ import { AuthService } from "../../service/user/Auth";
 import {ILoginUser,JwtPayload} from "../../interface/userInterface/interface"
 import {jwtDecode} from "jwt-decode"
 
+
 interface CustomRequest extends Request {
   authData?: { id: string; email: string; role: string };
 }
@@ -372,6 +373,24 @@ export class AuthController  {
         }
       
       }
+      async getbookedDoctor(req: Request, res: Response, next: NextFunction):Promise<any>{
+        try {
+          const {userId}=req.params
+          console.log("????????",userId)
+          const doctors=await this.authService.getbookedDoctor(userId)
+          console.log("***********",doctors)
+          return res.status(200).json(doctors);
+
+        } catch (error) {
+          console.error("Error fetching booked doctors:", error);
+
+          return res.status(500).json({ message: "Internal server error" });
+
+        }
+      }
+      
+
+    
       
       
 }

@@ -35,6 +35,7 @@ router.post('/appoinments/:doctorId',verifyToken('doctor'), doctorController.sto
 router.get('/shedules/:doctorId',verifyToken('doctor'), doctorController.getAppoinmentSchedules.bind(doctorController))
 
 router.get(`/bookingdetails/:doctorId`,verifyToken('doctor'),doctorController.fetchbookingDetails.bind(doctorController))
+router.get('/fetchusers/:doctorId',doctorController.fetchusers.bind(doctorController))
 
 
 

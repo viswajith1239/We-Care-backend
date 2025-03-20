@@ -416,5 +416,27 @@ export class AuthRepository implements IAuthRepository {
       
     }
   }
+  async getbookedDoctor(userId: string) {
+  try {
+    console.log("reached repo", userId);
+
+    const bookings = await this.bookingModel
+      .find({ userId })
+      .populate("doctorId");
+
+    // Extract doctor IDs and remove duplicates
+    const uniqueDoctors = new Map();
+
+    bookings.forEach((booking) => {
+      uniqueDoctors.set(booking.doctorId._id.toString(), booking.doctorId);
+    });
+
+    return Array.from(uniqueDoctors.values());
+  } catch (error) {
+    console.error("Error fetching booked doctors:", error);
+    throw new Error("Could not fetch booked doctors");
+  }
+}
+
 }
 

@@ -16,5 +16,6 @@ export interface IDoctorService{
     storeAppoinmentData(appoinmentData:IAppoinment):Promise<IAppoinment>
     fetchBookingDetails(doctor_id:string):Promise<IBooking>
     googleSignUpUser(decodedToken: JwtPayloads):Promise<any>
+    fetchusers(doctorId:string):Promise<any>
 
 }

@@ -330,7 +330,28 @@ class DoctorRepository implements IDoctorRepository{
         }
 
 
+   async fetchusers(doctorId: string) {
+  try {
+    console.log("doctor reposs",doctorId);
     
+    const bookedUsers = await BookingModel.find({ doctorId }).populate("userId");
+    const uniqueUsersMap = new Map<string, any>();
+    bookedUsers.forEach((booking) => {
+      const user = booking.userId as { _id: string; name: string; email: string; profileImage: string };
+
+      if (user && user._id) {
+        uniqueUsersMap.set(user._id.toString(), user);
+      }
+    })
+    
+
+    return Array.from(uniqueUsersMap.values());
+
+    
+  } catch (error) {
+    
+  }
+} 
 
 
 }

@@ -354,6 +354,13 @@ constructor(doctorRepository: IDoctorRepository) {
         }
       }
   
+      async fetchusers(doctorId:any){
+        try {
+          return await this.doctorRepository.fetchusers(doctorId)
+        } catch (error) {
+          
+        }
+      }
 }
 
 export default Doctorservice

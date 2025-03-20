@@ -296,6 +296,19 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
           
         }
       }
+
+      async fetchusers(req: Request, res: Response, next: NextFunction):Promise<any>{
+      try {
+        const {doctorId}=req.params
+        console.log("hh",doctorId);
+        const users=await this.doctorService.fetchusers(doctorId)
+        console.log("cccccccccccc",users)
+        return res.status(200).json(users);
+      } catch (error) {
+        
+      }
+        
+      }
   
 }
 

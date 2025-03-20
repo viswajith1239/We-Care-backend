@@ -8,6 +8,7 @@ import adminRoute from "./src/routes/adminRoute"
 import doctorRoute from "./src/routes/doctorRoute"
 import { createServer } from 'http';
 import ConnectDB from './src/config/db';
+import messageRoute from './src/routes/messageRoute';
 
 
 dotenv.config()
@@ -37,6 +38,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use('/user', userRoute);
 app.use('/admin',adminRoute)
 app.use('/doctor',doctorRoute)
+app.use('/messages',messageRoute)
 server.listen(process.env.PORT || 3000, () => {
   console.log(`Server is running on port ${process.env.PORT || 3000}`);
 });   

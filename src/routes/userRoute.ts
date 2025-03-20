@@ -32,6 +32,9 @@ route.get('/users/:userId',AuthControllerInstance.getUser.bind(AuthControllerIns
 route.patch('/update-user', AuthControllerInstance.updateUserData.bind(AuthControllerInstance)); 
 route.get('/bookings-details/:user_id', AuthControllerInstance.getAllBookings.bind(AuthControllerInstance)); 
 route.post("/cancel-appoinment",AuthControllerInstance.cancelAppoinment.bind(AuthControllerInstance))
+route.get("/fetchdoctors/:userId", verifyToken('user'),AuthControllerInstance.getbookedDoctor.bind(AuthControllerInstance))
+
+
 
     
 export default route;

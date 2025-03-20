@@ -24,6 +24,7 @@ export interface IAuthService {
     editUserData(userId:string,userData:User):Promise<any>
     getAllBookings(user_id:string|undefined):Promise<any>
     cancelAppoinment(appoinmentId:string,userId:string,doctorId:string):Promise<any>
+    getbookedDoctor(userId:string):Promise<any>
 
     
     

@@ -65,3 +65,11 @@ import { Document } from "mongoose";
     payment_intent?: string;
     // dietPlan?: string,
   }
+
+  export interface IMessage {
+    senderId: string;
+    receiverId: string;
+    message: string;
+    createdAt?: Date;
+  }
+  

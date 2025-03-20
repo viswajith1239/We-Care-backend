@@ -19,4 +19,5 @@ export interface IDoctorRepository{
     fecthBookingDetails(doctor_id: string):Promise<any>
     existingUser(email: string): Promise<Interface_Doctor | null>;
     createUsers(user: {email: string; name: string; password: string | null; }):Promise<any>
+    fetchusers(doctorId:string):Promise<any>
 }

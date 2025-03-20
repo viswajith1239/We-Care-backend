@@ -553,6 +553,13 @@ async cancelAppoinment(bookId:string,userId:string,doctorId:string){
   }
 
  }
+ async getbookedDoctor(userId:any){
+  try {
+    return await this.authRepository.getbookedDoctor(userId)
+  } catch (error) {
+    
+  }
+ }
 
     
 }
