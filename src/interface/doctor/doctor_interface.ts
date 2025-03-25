@@ -1,4 +1,4 @@
-import mongoose, { Types } from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 
 export interface Interface_Doctor{
     _id?: Types.ObjectId;
@@ -38,25 +38,44 @@ export interface IOtp {
     kycComments: string;
   }
 
+  // export interface IAppoinment {
+  //   _id: number;
+  //   save(): unknown;
+  //   doctorId: Types.ObjectId;
+  //   specializationId: Types.ObjectId;
+  //   startDate: Date;
+  //   endDate: Date;
+  //   selectedDate: Date;
+  //   startTime: string;
+  //   endTime: string;
+   
+  //   type:string
+  
+  //   numberOfAppoinments: number;
+  //   price: number | undefined
+  //   isBooked: boolean,
+  //   status: 'Pending' | 'Confirmed' | 'Completed' | 'Cancelled' | 'InProgress';
+  //   paymentIntentId?: string; 
+  // }
+
   export interface IAppoinment {
-    _id: number;
-    save(): unknown;
-    doctorId: Types.ObjectId;
-    specializationId: Types.ObjectId;
-    startDate: Date;
-    endDate: Date;
+    doctorId: Schema.Types.ObjectId;
+    specializationId?: Schema.Types.ObjectId;
     selectedDate: Date;
     startTime: string;
     endTime: string;
-   
-    type:string
-  
-    numberOfAppoinments: number;
-    price: number | undefined
-    isBooked: boolean,
-    status: 'Pending' | 'Confirmed' | 'Completed' | 'Cancelled' | 'InProgress';
-    paymentIntentId?: string; 
-  }
+    price: number;
+    isBooked?: boolean;
+    status?: "Pending" | "Confirmed" | "Completed" | "Cancelled" | "InProgress";
+    paymentIntentId?: string;
+    
+    // New recurring appointment fields
+    isRecurring?: boolean;
+    recurrenceType?: "None" | "Daily" | "Weekly" | "Monthly";
+    recurrenceInterval?: number;
+    recurrenceEnd?: Date;
+    daysOfWeek?: number[];
+}
 
   export interface ISpecialization {
     _id: Types.ObjectId;

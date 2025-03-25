@@ -33,6 +33,7 @@ route.patch('/update-user', AuthControllerInstance.updateUserData.bind(AuthContr
 route.get('/bookings-details/:user_id', AuthControllerInstance.getAllBookings.bind(AuthControllerInstance)); 
 route.post("/cancel-appoinment",AuthControllerInstance.cancelAppoinment.bind(AuthControllerInstance))
 route.get("/fetchdoctors/:userId", verifyToken('user'),AuthControllerInstance.getbookedDoctor.bind(AuthControllerInstance))
+route.patch('/reset-password/:user_id', AuthControllerInstance.resetPasswords.bind(AuthControllerInstance)); 
 
 
 

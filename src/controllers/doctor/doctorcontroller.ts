@@ -6,6 +6,8 @@ import HTTP_statusCode from "../../enums/HttpStatusCode";
 import {jwtDecode, JwtPayload} from "jwt-decode"
 import { IDoctorService } from "../../interface/doctor/Doctor.Srevice.interface";
 import { JwtPayloads } from "../../interface/common";
+import { RRule, RRuleSet, rrulestr } from 'rrule';
+import moment from 'moment';
 
 
 
@@ -216,51 +218,225 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
         }
 
 
-        async storeAppoinmentData(req:Request,res:Response,next:NextFunction){
-          console.log("reached in appoinmnet place")
-          try{
+      //   async storeAppoinmentData(req:Request,res:Response,next:NextFunction){
+      //     console.log("reached in appoinmnet place")
+      //     try{
 
-            const {selectedDate,startTime,endTime,specialization,price,status} =req.body
+      //       const {selectedDate,startTime,endTime,specialization,price,status} =req.body
 
           
-            const doctorId=req.params.doctorId
-            const appoinmentData:any={}
+      //       const doctorId=req.params.doctorId
+      //       const appoinmentData:any={}
            
 
-              appoinmentData.selectedDate=selectedDate,
-              appoinmentData.startTime=startTime,
-              appoinmentData.endTime=endTime,
-              appoinmentData.specialization=specialization
-              appoinmentData.price=price
-              appoinmentData.doctorId=doctorId
+      //         appoinmentData.selectedDate=selectedDate,
+      //         appoinmentData.startTime=startTime,
+      //         appoinmentData.endTime=endTime,
+      //         appoinmentData.specialization=specialization
+      //         appoinmentData.price=price
+      //         appoinmentData.doctorId=doctorId
            
-          const apponmentscreated=await this.doctorService.storeAppoinmentData(appoinmentData)
-          res
-          .status(HTTP_statusCode.updated)
-          .json({ message: "Appoinment created successfully.", apponmentscreated });
+      //     const apponmentscreated=await this.doctorService.storeAppoinmentData(appoinmentData)
+      //     res
+      //     .status(HTTP_statusCode.updated)
+      //     .json({ message: "Appoinment created successfully.", apponmentscreated });
 
-          }catch(error:any){
-            if (error.message === "Time conflict with an existing appoinment.") {
-              res
-                .status(HTTP_statusCode.BadRequest)
-                .json({ message: "Time conflict with an existing session." });
-            }  else if (error.message === "End time must be after start time") {
-              res.status(HTTP_statusCode.BadRequest).json({ message: "End time must be after start time" });
-            } else if (
-              error.message === "Appoinment duration must be at least 30 minutes"
-            ) {
-              res
-                .status(HTTP_statusCode.BadRequest)
-                .json({ message: " Appoinment duration must be at least 30 minutes" });
-            } else {
-              console.error("Detailed server error:", error);
-              next(error)
-            }
-          }
+      //     }catch(error:any){
+      //       if (error.message === "Time conflict with an existing appoinment.") {
+      //         res
+      //           .status(HTTP_statusCode.BadRequest)
+      //           .json({ message: "Time conflict with an existing session." });
+      //       }  else if (error.message === "End time must be after start time") {
+      //         res.status(HTTP_statusCode.BadRequest).json({ message: "End time must be after start time" });
+      //       } else if (
+      //         error.message === "Appoinment duration must be at least 30 minutes"
+      //       ) {
+      //         res
+      //           .status(HTTP_statusCode.BadRequest)
+      //           .json({ message: " Appoinment duration must be at least 30 minutes" });
+      //       } else {
+      //         console.error("Detailed server error:", error);
+      //         next(error)
+      //       }
+      //     }
           
 
 
+      // }
+
+     
+
+
+
+  async storeAppoinmentData(req: Request, res: Response, next: NextFunction): Promise<any>  {
+
+    console.log("ssss")
+    try {
+      const {
+        selectedDate,
+        startTime,
+        endTime,
+        specialization,
+        price,
+        status,
+        isRecurring,
+        recurrenceType,
+        recurrenceInterval,
+        recurrenceEnd,
+        daysOfWeek
+      } = req.body;
+
+      const doctorId = req.params.doctorId;
+      
+      if (isRecurring) {
+        
+        const appointments = this.generateRecurringAppointments({
+          doctorId,
+          selectedDate,
+          startTime,
+          endTime,
+          specialization,
+          price,
+          status,
+          recurrenceType,
+          recurrenceInterval,
+          recurrenceEnd,
+          daysOfWeek
+        });
+
+        console.log("nnnn",appointments);
+        
+        const apponmentscreated = await this.doctorService.storeMultipleAppointments(appointments);
+
+        return res
+          .status(201)
+          .json({ 
+            message: "Recurring appointments created successfully.", 
+            apponmentscreated 
+          });
+      } else {
+       
+        const appoinmentData:any={
+          selectedDate,
+        startTime,
+        endTime,
+        specialization,
+        price,
+        doctorId,
+        status: status || 'Pending',
+        isRecurring: false,
+        recurrenceType: 'None',
+        recurrenceInterval: 1,
+        daysOfWeek: []
+        }
+
+        const apponmentscreated = await this.doctorService.storeAppoinmentData(appoinmentData);
+        
+        return res
+          .status(201)
+          .json({ 
+            message: "Appointment created successfully.", 
+            apponmentscreated 
+          });
       }
+    } catch (error: any) {
+      this.handleAppointmentErrors(error, res, next);
+    }
+  }
+
+  private generateRecurringAppointments(config: {
+    doctorId: string,
+    selectedDate: string,
+    startTime: string,
+    endTime: string,
+    specialization: string,
+    price: number,
+    status: string,
+    recurrenceType: string,
+    recurrenceInterval: number,
+    recurrenceEnd: string,
+    daysOfWeek?: number[]
+  }): any[] {
+    const {
+      doctorId,
+      selectedDate,
+      startTime,
+      endTime,
+      specialization,
+      price,
+      status,
+      recurrenceType,
+      recurrenceInterval,
+      recurrenceEnd,
+      daysOfWeek
+    } = config;
+
+    
+    let rruleOptions: any = {
+      dtstart: new Date(selectedDate),
+      until: new Date(recurrenceEnd),
+      interval: recurrenceInterval
+    };
+    console.log('RRule Options Before:', rruleOptions);
+
+    switch (recurrenceType) {
+      case 'Daily':
+        rruleOptions.freq = RRule.DAILY;
+        break;
+      case 'Weekly':
+        rruleOptions.freq = RRule.WEEKLY;
+        if (daysOfWeek && daysOfWeek.length > 0) {
+          rruleOptions.byweekday = daysOfWeek;
+        }else {
+          rruleOptions.byweekday = [0, 1, 2, 3, 4]; 
+        }
+        break;
+      case 'Monthly':
+        rruleOptions.freq = RRule.MONTHLY;
+        break;
+      default:
+        throw new Error('Invalid recurrence type');
+    }
+    console.log('RRule Options After:', rruleOptions);
+
+    const rule = new RRule(rruleOptions);
+    const dates = rule.all();
+    console.log('Generated Dates:', dates);
+
+    const  appoinments=dates.map(date => ({
+      selectedDate: moment(date).format('YYYY-MM-DD'),
+      startTime,
+      endTime,
+      specialization,
+      price,
+      doctorId,
+      status: status || 'Pending'
+    }));
+    console.log('Generated Appointments:', appoinments);
+return appoinments
+  }
+
+  private handleAppointmentErrors(error: any, res: Response, next: NextFunction) {
+    if (error.message === "Time conflict with an existing appointment.") {
+      return res
+        .status(400)
+        .json({ message: "Time conflict with an existing session." });
+    } else if (error.message === "End time must be after start time") {
+      return res
+        .status(400)
+        .json({ message: "End time must be after start time" });
+    } else if (error.message === "Appointment duration must be at least 30 minutes") {
+      return res
+        .status(400)
+        .json({ message: "Appointment duration must be at least 30 minutes" });
+    } else {
+      console.error("Detailed server error:", error);
+      next(error);
+    }
+  }
+
+
+
 
 
       async getAppoinmentSchedules(req: Request, res: Response, next: NextFunction) {
@@ -308,6 +484,17 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
       }
         
       }
+
+      async getAllBookings(req: Request, res: Response, next: NextFunction):Promise<any>{
+        try {
+            const doctor_id = req.params.doctor_id; // Get doctorId from request params
+            const bookings = await this.doctorService.getAllBookings(doctor_id);
+            res.status(200).json(bookings);
+        } catch (error) {
+            next(error);
+        }
+    }
+    
   
 }
 

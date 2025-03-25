@@ -20,4 +20,7 @@ export interface IDoctorRepository{
     existingUser(email: string): Promise<Interface_Doctor | null>;
     createUsers(user: {email: string; name: string; password: string | null; }):Promise<any>
     fetchusers(doctorId:string):Promise<any>
+    getAllBookings(doctor_Id:string):Promise<any>
+    createMultipleAppointments(appointments: IAppoinment[]): Promise<IAppoinment[]>;
+    findConflictingAppointments(appointmentData: Partial<IAppoinment>): Promise<IAppoinment[]>;
 }

@@ -31,5 +31,7 @@ export interface IAuthRepository {
     fetchBookings(user_id:string):Promise<any>
     cancelAppoinment(bookId:string,userId:string,doctorId:string):Promise<any>
     getbookedDoctor(userId:string):Promise<any>
+    fetchUser(userId:string):Promise<any>
+    
     
  };

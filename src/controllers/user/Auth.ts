@@ -329,7 +329,7 @@ export class AuthController  {
           
 
          const response= await this.authService.fechtUserData(userId)
-          res.status(HTTP_statusCode.OK).json({data:response})
+          res.status(HTTP_statusCode.OK).json({response})
         } catch (error) {
           
         }
@@ -391,7 +391,22 @@ export class AuthController  {
       
 
     
-      
+      async resetPasswords(req: Request, res: Response, next: NextFunction) {
+        try {
+          const { user_id } = req.params;
+          const { currentPassword, newPassword } = req.body;
+          await this.authService.resetPasswords(
+            user_id,
+            currentPassword,
+            newPassword
+          );
+          res.status(HTTP_statusCode.OK).json({ message: "Password changed successfully" });
+        } catch (error) {
+          next(error);
+        }
+      }
+    
+    
       
 }
 

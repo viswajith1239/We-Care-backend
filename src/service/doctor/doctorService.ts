@@ -296,44 +296,126 @@ constructor(doctorRepository: IDoctorRepository) {
       }
 
 
-      async storeAppoinmentData(appoinmentData:IAppoinment){
-        console.log("yes no problem here")
-        try{
-          const startTimeInput = appoinmentData.startTime;
-          const endTimeInput = appoinmentData.endTime;
+      // async storeAppoinmentData(appoinmentData:IAppoinment){
+      //   console.log("yes no problem here")
+      //   try{
+      //     const startTimeInput = appoinmentData.startTime;
+      //     const endTimeInput = appoinmentData.endTime;
   
-          const startTime = new Date(`1970-01-01T${startTimeInput}`);
-          const endTime = new Date(`1970-01-01T${endTimeInput}`);
+      //     const startTime = new Date(`1970-01-01T${startTimeInput}`);
+      //     const endTime = new Date(`1970-01-01T${endTimeInput}`);
     
-          if (startTime >= endTime) {
-            throw new Error("End time must be after start time");
-          }
+      //     if (startTime >= endTime) {
+      //       throw new Error("End time must be after start time");
+      //     }
   
-          const MINIMUM_SESSION_DURATION = 30;
-        const duration = (endTime.getTime() - startTime.getTime()) / (1000 * 60);
+      //     const MINIMUM_SESSION_DURATION = 30;
+      //   const duration = (endTime.getTime() - startTime.getTime()) / (1000 * 60);
   
-        if (duration < MINIMUM_SESSION_DURATION) {
-          throw new Error("appoinment duration must be at least 30 minutes");
-        }
-       return  await this.doctorRepository.createNewAppoinment(appoinmentData)
+      //   if (duration < MINIMUM_SESSION_DURATION) {
+      //     throw new Error("appoinment duration must be at least 30 minutes");
+      //   }
+      //  return  await this.doctorRepository.createNewAppoinment(appoinmentData)
   
-        }catch(error:any){
-          if (error.message.includes("Daily appoinment limit")) {
-            throw new Error(error.message);
-          } else if (error.message === "Time conflict with an existing appoinment.") {
-            throw new Error("Time conflict with an existing appoinment.");
-          } else if (error.message === "End time must be after start time") {
-            throw new Error("End time must be after start time");
-          } else if (
-            error.message === "appoinment duration must be at least 30 minutes"
-          ) {
-            throw new Error("appoinment duration must be at least 30 minutes");
-          } else {
-            throw new Error("Error creating new appoinment");
-          }      }
+      //   }catch(error:any){
+      //     if (error.message.includes("Daily appoinment limit")) {
+      //       throw new Error(error.message);
+      //     } else if (error.message === "Time conflict with an existing appoinment.") {
+      //       throw new Error("Time conflict with an existing appoinment.");
+      //     } else if (error.message === "End time must be after start time") {
+      //       throw new Error("End time must be after start time");
+      //     } else if (
+      //       error.message === "appoinment duration must be at least 30 minutes"
+      //     ) {
+      //       throw new Error("appoinment duration must be at least 30 minutes");
+      //     } else {
+      //       throw new Error("Error creating new appoinment");
+      //     }      }
         
   
-       }
+      //  }
+
+      async storeAppoinmentData(appointmentData: any) {
+        console.log("single service");
+        
+        try {
+          
+          const validatedAppointment = await this.validateSingleAppointment(appointmentData);
+          
+       
+          const createdAppointment = await this.doctorRepository.createNewAppoinment(validatedAppointment);
+          
+          return createdAppointment;
+        } catch (error) {
+          console.error('Error storing single appointment:', error);
+          throw error;
+        }
+      }
+    
+      async storeMultipleAppointments(appointments: any[]) {
+        console.log("multiple service");
+        console.log("tttt",appointments);
+        
+        try {
+     
+          const validAppointments = await this.validateAppointments(appointments);
+          
+       
+          const createdAppointments = await this.doctorRepository.createMultipleAppointments(validAppointments);
+          
+          return createdAppointments;
+        } catch (error) {
+          console.error('Error storing multiple appointments:', error);
+          throw error;
+        }
+      }
+    
+      private async validateAppointments(appointments: any[]) {
+        const validAppointments: any[] = [];
+    
+        for (const appointment of appointments) {
+          try {
+           
+            await this.validateSingleAppointment(appointment);
+            validAppointments.push(appointment);
+          } catch (error) {
+            console.warn('Skipping appointment due to validation error:', error);
+           
+          }
+        }
+    
+        return validAppointments;
+      }
+    
+      private async validateSingleAppointment(appointmentData: any) {
+        
+        const startTimeInput = appointmentData.startTime;
+        const endTimeInput = appointmentData.endTime;
+    
+        const startTime = new Date(`1970-01-01T${startTimeInput}`);
+        const endTime = new Date(`1970-01-01T${endTimeInput}`);
+    
+        if (startTime >= endTime) {
+          throw new Error("End time must be after start time");
+        }
+    
+        const MINIMUM_SESSION_DURATION = 30;
+        const duration = (endTime.getTime() - startTime.getTime()) / (1000 * 60);
+    
+        if (duration < MINIMUM_SESSION_DURATION) {
+          throw new Error("Appointment duration must be at least 30 minutes");
+        }
+    
+        
+        const existingAppointments = await this.doctorRepository.findConflictingAppointments(appointmentData);
+    
+        if (existingAppointments.length > 0) {
+          throw new Error("Time conflict with an existing appointment.");
+        }
+    
+        return appointmentData;
+      }
+    
 
        async getAppoinmentSchedules(doctor_id: string) {
         try {
@@ -361,6 +443,15 @@ constructor(doctorRepository: IDoctorRepository) {
           
         }
       }
+
+      async getAllBookings(doctor_id: string) {
+        try {
+            return await this.doctorRepository.getAllBookings(doctor_id);
+        } catch (error) {
+            console.log("Error in fetching doctor's bookings:", error);
+        }
+    }
+    
 }
 
 export default Doctorservice

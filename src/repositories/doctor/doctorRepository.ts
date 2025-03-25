@@ -242,53 +242,142 @@ class DoctorRepository implements IDoctorRepository{
       }
   
     }
-    async createNewAppoinment(appoinmentData: IAppoinment) {
+    // async createNewAppoinment(appoinmentData: IAppoinment) {
+    //   try {
+       
+    //     const findDoctor = await this.doctorModel.findById(appoinmentData.doctorId);
+    //     console.log("Checking doctor ID:", appoinmentData.doctorId);
+    //     console.log("Doctor found:", findDoctor);
+        
+    //     if (!findDoctor) {
+    //       throw new Error("Doctor not found");
+    //     }
+    
+       
+    //     const existingAppointments = await this.appoinmentModel.find({
+    //       doctorId: appoinmentData.doctorId,
+    //       selectedDate: appoinmentData.selectedDate, 
+    //       $or: [
+    //         { startTime: { $lt: appoinmentData.endTime }, endTime: { $gt: appoinmentData.startTime } }
+    //       ],
+    //     });
+    
+        
+    //     const hasConflict = existingAppointments.some((existingApp) => {
+    //       const existingStartTime = moment(existingApp.startTime, "HH:mm");
+    //       const existingEndTime = moment(existingApp.endTime, "HH:mm");
+    
+    //       const newStartTime = moment(appoinmentData.startTime, "HH:mm");
+    //       const newEndTime = moment(appoinmentData.endTime, "HH:mm");
+    
+       
+    //       return newStartTime.isBefore(existingEndTime) && newEndTime.isAfter(existingStartTime);
+    //     });
+    
+    //     if (hasConflict) {
+    //       throw new Error("Time conflict with an existing session.");
+    //     }
+    
+       
+    //     appoinmentData.price = Number(appoinmentData.price);
+    
+       
+    //     const createdSessionData = await this.appoinmentModel.create(appoinmentData);
+    //     return createdSessionData.populate("specializationId");
+    
+    //   } catch (error) {
+    //     console.log("Error in Repository", error);
+    //     throw error;
+    //   }
+    // }
+
+
+
+    async createNewAppoinment(appointmentData: any) {
+      console.log("single repos");
+      
       try {
        
-        const findDoctor = await this.doctorModel.findById(appoinmentData.doctorId);
-        console.log("Checking doctor ID:", appoinmentData.doctorId);
-        console.log("Doctor found:", findDoctor);
+        const findDoctor = await this.doctorModel.findById(appointmentData.doctorId);
+        
+        if (!findDoctor) {
+          throw new Error("Doctor not found");
+        }
+  
+       
+        appointmentData.price = Number(appointmentData.price);
+  
+       
+        const createdAppointment = await this.appoinmentModel.create(appointmentData);
+        
+ 
+        return await this.appoinmentModel.populate(createdAppointment, 'specializationId');
+      } catch (error) {
+        console.error('Error in creating single appointment:', error);
+        throw error;
+      }
+    }
+  
+    async createMultipleAppointments(appointments: any[]) {
+      console.log("multiple repos");
+      
+ 
+      console.log("aaaaaaaaaa",appointments);
+      
+      if (!appointments || !Array.isArray(appointments) || appointments.length === 0) {
+        throw new Error("Invalid appointments data: empty or not an array");
+      }
+    
+      try {
+       
+        const doctorId = appointments[0]?.doctorId;
+        
+      
+        if (!doctorId) {
+          throw new Error("No doctor ID provided in the first appointment");
+        }
+    
+        const findDoctor = await this.doctorModel.findById(doctorId);
         
         if (!findDoctor) {
           throw new Error("Doctor not found");
         }
     
+      
+        const processedAppointments = appointments.map(appointment => {
        
-        const existingAppointments = await this.appoinmentModel.find({
-          doctorId: appoinmentData.doctorId,
-          selectedDate: appoinmentData.selectedDate, 
-          $or: [
-            { startTime: { $lt: appoinmentData.endTime }, endTime: { $gt: appoinmentData.startTime } }
-          ],
+          if (!appointment.doctorId) {
+            throw new Error("Each appointment must have a doctorId");
+          }
+          
+          return {
+            ...appointment,
+            price: Number(appointment.price)
+          };
         });
     
+       
+        const createdAppointments = await this.appoinmentModel.create(processedAppointments);
         
-        const hasConflict = existingAppointments.some((existingApp) => {
-          const existingStartTime = moment(existingApp.startTime, "HH:mm");
-          const existingEndTime = moment(existingApp.endTime, "HH:mm");
-    
-          const newStartTime = moment(appoinmentData.startTime, "HH:mm");
-          const newEndTime = moment(appoinmentData.endTime, "HH:mm");
-    
        
-          return newStartTime.isBefore(existingEndTime) && newEndTime.isAfter(existingStartTime);
-        });
-    
-        if (hasConflict) {
-          throw new Error("Time conflict with an existing session.");
-        }
-    
-       
-        appoinmentData.price = Number(appoinmentData.price);
-    
-       
-        const createdSessionData = await this.appoinmentModel.create(appoinmentData);
-        return createdSessionData.populate("specializationId");
-    
+        return await this.appoinmentModel.populate(createdAppointments, 'specializationId');
       } catch (error) {
-        console.log("Error in Repository", error);
+        console.error('Error in creating multiple appointments:', error);
         throw error;
       }
+    }
+  
+    async findConflictingAppointments(appointmentData: any) {
+      return this.appoinmentModel.find({
+        doctorId: appointmentData.doctorId,
+        selectedDate: appointmentData.selectedDate, 
+        $or: [
+          { 
+            startTime: { $lt: appointmentData.endTime }, 
+            endTime: { $gt: appointmentData.startTime } 
+          }
+        ]
+      });
     }
     
 
@@ -352,6 +441,28 @@ class DoctorRepository implements IDoctorRepository{
     
   }
 } 
+
+async getAllBookings(doctor_id: string) {
+  try {
+      const bookings = await this.bookingModel.find({ doctorId: doctor_id })
+          .populate("userId", "name email profileImage")  // Populate user details
+          .exec();
+
+      const response = bookings.map((booking: any) => {
+          return {
+              ...booking.toObject(),
+              userName: booking.userId ? booking.userId.name : "User not found",
+              userEmail: booking.userId ? booking.userId.email : "User not found",
+              userProfileImage: booking.userId ? booking.userId.profileImage : "User not found"
+          };
+      });
+
+      return response;
+  } catch (error) {
+      console.log("Error in fetching doctor bookings:", error);
+  }
+}
+
 
 
 }

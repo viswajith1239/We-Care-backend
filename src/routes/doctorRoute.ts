@@ -36,6 +36,7 @@ router.get('/shedules/:doctorId',verifyToken('doctor'), doctorController.getAppo
 
 router.get(`/bookingdetails/:doctorId`,verifyToken('doctor'),doctorController.fetchbookingDetails.bind(doctorController))
 router.get('/fetchusers/:doctorId',doctorController.fetchusers.bind(doctorController))
+router.get('/bookings/:doctor_id', doctorController.getAllBookings.bind(doctorController));
 
 
 

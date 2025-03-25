@@ -559,5 +559,26 @@ async cancelAppoinment(bookId:string,userId:string,doctorId:string){
   }
  }
 
+ async resetPasswords(userId: string, currentPassword: string, newPassword: string) {
+  try {
+    const userData = await this.authRepository.fetchUser(userId);
+    if (!userData?.password) {
+      throw new Error('User password is null');
+    }
+    const isPasswordMatch = await bcrypt.compare(currentPassword, userData.password);
+
+    if (!isPasswordMatch) {
+      throw new Error('Old password is not correct');
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    userData.password = hashedPassword;
+    await userData.save();
+    return { message: 'Password reset successfully' };
+  } catch (error) {
+    console.error('Failed to reset password:', error);
+    throw new Error('Failed to reset password');
+  }
+}
+
     
 }

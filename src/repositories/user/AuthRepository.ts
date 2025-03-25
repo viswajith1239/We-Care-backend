@@ -438,5 +438,14 @@ export class AuthRepository implements IAuthRepository {
   }
 }
 
+async fetchUser(userId: string) {
+  try {
+    const userData = await this.userModel.findById(userId);
+    return userData;
+  } catch (error) {
+    throw new Error("Error fetching user");
+  }
+}
+
 }
 
