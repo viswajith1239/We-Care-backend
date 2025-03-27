@@ -371,7 +371,12 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
       daysOfWeek
     } = config;
 
-    
+    console.log('Input Configuration:');
+    console.log('Start Date:', selectedDate);
+    console.log('Recurrence End Date:', recurrenceEnd);
+    console.log('Recurrence Type:', recurrenceType);
+    console.log('Days of Week:', daysOfWeek);
+  
     let rruleOptions: any = {
       dtstart: new Date(selectedDate),
       until: new Date(recurrenceEnd),

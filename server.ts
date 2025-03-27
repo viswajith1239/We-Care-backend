@@ -1,19 +1,19 @@
 import cors from 'cors'
-import dotenv from 'dotenv'
 import cookieParser from "cookie-parser";
 import path from "path"
 import express from "express"
 import userRoute from "./src/routes/userRoute"
 import adminRoute from "./src/routes/adminRoute"
 import doctorRoute from "./src/routes/doctorRoute"
-import { createServer } from 'http';
+// import { createServer } from 'http';
 import ConnectDB from './src/config/db';
+import {app,server} from '../backend/src/socket/socket'
 import messageRoute from './src/routes/messageRoute';
 
 
-dotenv.config()
-const app = express();
-const server = createServer(app);
+
+
+
 ConnectDB()
 
 
