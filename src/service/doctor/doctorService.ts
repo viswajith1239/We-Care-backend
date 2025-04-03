@@ -1,6 +1,6 @@
 import DoctorRepository from "../../repositories/doctor/doctorRepository"
 import sendMail from "../../config/emailConfig"
-import {Interface_Doctor,IAppoinment} from "../../interface/doctor/doctor_interface"
+import {Interface_Doctor,IAppoinment, IDoctor} from "../../interface/doctor/doctor_interface"
 import { response } from "express";
 import bcrypt from "bcrypt";
 import mongoose from "mongoose";
@@ -451,7 +451,78 @@ constructor(doctorRepository: IDoctorRepository) {
             console.log("Error in fetching doctor's bookings:", error);
         }
     }
-    
+    async getDoctor(doctor_id: string) {
+      try {
+        return await this.doctorRepository.getDoctor(doctor_id)
+      } catch (error:any) {
+        throw Error(error);
+      }
+    }
+
+
+    async getWallet(doctor_id: string) {
+      return await this.doctorRepository.fetchWalletData(doctor_id)
+    }
+
+
+    async withdraw (doctor_id:string, amount: number)  {
+      try {
+        return await this.doctorRepository.withdrawMoney(doctor_id, amount)
+      } catch (error: any) {
+        throw Error(error)
+      }
+    }
+
+    async fetchDoctor(doctor_id: string) {
+      return await this.doctorRepository.getDoctorProfile(doctor_id)
+    }
+
+    async updateDoctor(doctor_id: string, doctorData: Partial<IDoctor>) {
+      try {
+        const {
+          profileImage,
+          name,
+          email,
+          phone,
+          yearsOfExperience,
+          gender,
+          language,
+          dailySessionLimit,
+          about,
+          specializations
+        } = doctorData;
+  
+        const existingDoctor = await this.doctorRepository.updateDoctorData(
+          doctor_id
+        );
+        if (!existingDoctor) {
+          throw new Error("Doctor not found");
+        }
+        if (profileImage) existingDoctor.profileImage = profileImage;
+        if (name) existingDoctor.name = name;
+        if (email) existingDoctor.email = email;
+        if (phone) existingDoctor.phone = phone;
+        if (yearsOfExperience)
+          existingDoctor.yearsOfExperience = yearsOfExperience;
+        if (gender) existingDoctor.gender = gender;
+        if (language) existingDoctor.language = language;
+        if (about) existingDoctor.about = about;
+        if (dailySessionLimit)
+          existingDoctor.dailySessionLimit = dailySessionLimit;
+  
+        if(Array.isArray(specializations)) {
+          existingDoctor.specializations = specializations
+        }
+        await existingDoctor.save();
+        console.log("nnnn",existingDoctor);
+        
+        return existingDoctor;
+      } catch (error) {
+        console.error("Error in service layer:", error);
+        throw new Error("Failed to update doctor");
+      }
+    }
+  
 }
 
 export default Doctorservice

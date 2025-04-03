@@ -1,5 +1,5 @@
 
-import { IAppoinment, Interface_Doctor } from "./doctor_interface"
+import { IAppoinment, Interface_Doctor, IWallet } from "./doctor_interface"
 import  {IOtp, IUser} from "../common"
 import mongoose from "mongoose"
 export interface IDoctorRepository{
@@ -23,4 +23,9 @@ export interface IDoctorRepository{
     getAllBookings(doctor_Id:string):Promise<any>
     createMultipleAppointments(appointments: IAppoinment[]): Promise<IAppoinment[]>;
     findConflictingAppointments(appointmentData: Partial<IAppoinment>): Promise<IAppoinment[]>;
+    getDoctor(doctor_id:string):Promise<any>
+    fetchWalletData(doctor_id:string):Promise<IWallet|null|undefined>
+    withdrawMoney(doctor_id:any,amount:any):Promise<any>
+    getDoctorProfile(doctor_id:string):Promise<any>
+    updateDoctorData(doctor_id:string):Promise<any>
 }

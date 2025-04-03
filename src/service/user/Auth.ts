@@ -399,7 +399,7 @@ async checkoutPayment(appoinmentid: string, userId: string) {
     
     const appoinmentData = await this.authRepository.findSessionDetails(appoinmentid);
     if (!appoinmentData || !appoinmentData.doctorId || !appoinmentData.price) {
-      throw new Error("Missing session data, trainer ID, or price");
+      throw new Error("Missing session data, doctor ID, or price");
     }
     // const doctorid = appoinmentData.doctorId.toString();
     // const doctorData = await this.authRepository.findTrainerDetails(doctorid);

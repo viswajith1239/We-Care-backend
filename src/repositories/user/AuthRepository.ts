@@ -11,6 +11,8 @@ import AppoinmentModel from "../../models/appoinmentModel";
 import { ISpecialization } from "../../interface/doctor/doctor_interface"
 import BookingModel from "../../models/bookingModel";
 import { IUsers } from "../../interface/common";
+import { ITransaction } from "../../models/walletModel";
+import WalletModel from "../../models/walletModel";
 
 
 
@@ -23,6 +25,7 @@ export class AuthRepository implements IAuthRepository {
   private specializationModel=SpecializationModel
   private appoinmetModel=AppoinmentModel
   private bookingModel=BookingModel
+  private walletModel=WalletModel
   async existUser(email: string,phone: string): Promise<{ existEmail: boolean; existPhone: boolean }> {
     try {
 
@@ -279,31 +282,31 @@ export class AuthRepository implements IAuthRepository {
         return bookingnew
   
       }
-      // const transactionAmount=0.9*bookingDetails.amount
-      // const transactionId = "txn_" + Date.now() + Math.floor(Math.random() * 10000);
+      const transactionAmount=0.9*bookingDetails.amount
+      const transactionId = "txn_" + Date.now() + Math.floor(Math.random() * 10000);
   
-      // let wallet = await this._walletModel.findOne({ trainerId: bookingDetails.trainerId });
-      // const transaction: ITransaction = {
-      //   amount: transactionAmount,
-      //   transactionId: transactionId,
-      //   transactionType: "credit",
-      //   bookingId: bookingnew._id.toString(),
-      //   date: new Date(),
-      // };
-      // if (wallet) {
+      let wallet = await this.walletModel.findOne({ doctorId: bookingDetails.doctorId });
+      const transaction: ITransaction = {
+        amount: transactionAmount,
+        transactionId: transactionId,
+        transactionType: "credit",
+        bookingId: bookingnew._id.toString(),
+        date: new Date(),
+      };
+      if (wallet) {
         
-      //   wallet.transactions.push(transaction);
-      //   wallet.balance += transactionAmount;
-      //   await wallet.save();
-      // } else {
+        wallet.transactions.push(transaction);
+        wallet.balance += transactionAmount;
+        await wallet.save();
+      } else {
         
-      //   wallet = new WalletModel({
-      //     trainerId: bookingDetails.trainerId,
-      //     balance: transactionAmount,
-      //     transactions: [transaction],
-      //   });
-      //   await wallet.save();
-      // }
+        wallet = new WalletModel({
+          doctorId: bookingDetails.doctorId,
+          balance: transactionAmount,
+          transactions: [transaction],
+        });
+        await wallet.save();
+      }
       
   
       return bookingnew

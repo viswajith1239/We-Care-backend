@@ -71,4 +71,13 @@ import { Document } from "mongoose";
     message: string;
     createdAt?: Date;
   }
+
+  export interface ITransaction {
+    amount: number;             
+    transactionId: string;      
+    transactionType: 'credit' | 'debit';
+    date?: Date;                
+    bookingId?: string;         
+}
   
+

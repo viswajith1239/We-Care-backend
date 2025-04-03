@@ -31,12 +31,15 @@ router.post('/kyc',uploadDoctorDataFiles,doctorController.kycSubmission.bind(doc
 router.get('/kycStatus/:doctorId',doctorController.doctorKycStatus.bind(doctorController))
 router.get("/specializations/:doctorId",verifyToken('doctor'),doctorController.getSpecialization.bind(doctorController))
 router.post('/appoinments/:doctorId',verifyToken('doctor'), doctorController.storeAppoinmentData.bind(doctorController));
-
+router.patch('/update-doctor/:doctor_id', verifyToken('doctor'), upload.single('profileImage'), doctorController.updateDoctor.bind(doctorController));
 router.get('/shedules/:doctorId',verifyToken('doctor'), doctorController.getAppoinmentSchedules.bind(doctorController))
-
+router.get('/:doctor_id',  doctorController.getDoctor.bind(doctorController));
 router.get(`/bookingdetails/:doctorId`,verifyToken('doctor'),doctorController.fetchbookingDetails.bind(doctorController))
 router.get('/fetchusers/:doctorId',doctorController.fetchusers.bind(doctorController))
 router.get('/bookings/:doctor_id', doctorController.getAllBookings.bind(doctorController));
+router.get('/wallet-data/:doctor_id', doctorController.getWalletData.bind(doctorController));
+router.post('/withdraw/:doctor_id', doctorController.withdraw.bind(doctorController));
+
 
 
 

@@ -11,6 +11,10 @@ const doctorSchema = new Schema<Interface_Doctor>({
     profileImage:{type:String,required:false},
     kycStatus:{type:String,enum:["pending","approved","submitted","rejected"],default:"pending"},
     isKycApproved: { type: Boolean, default: false },
+    gender: { type: String, enum: ['male', 'female', 'other', ''], required: false },
+    yearsOfExperience: { type: Number, required: false }, 
+    language: { type: String, required: false },
+    about: { type: String, required: false },
   }, { timestamps: true ,collection: 'doctors'});
   
   const DoctorModel = model<Interface_Doctor>('Doctor', doctorSchema);  

@@ -12,6 +12,10 @@ export interface Interface_Doctor{
     specializations?: Types.ObjectId[];
     profileImage:string,
     isKycApproved:boolean
+    gender?: 'male' | 'female' | 'other' | ''; 
+    yearsOfExperience?: number;
+    language?: string;
+    about?: string
 
 
 }
@@ -87,5 +91,30 @@ export interface IOtp {
     name: string;
     email: string;
     kycData: IKYC; 
+  }
+
+  export interface IWallet {
+    doctorId: string;
+    balance: number;
+    transactions: any[]; 
+  }
+  
+  export interface IDoctor {
+    _id?: Types.ObjectId;
+    id?: string; 
+    name: string;
+    phone: number;
+    email: string;
+    password: string;
+    dob?: string;
+    profileImage?: string;
+    gender?: 'male' | 'female' | 'other' | ''; 
+    yearsOfExperience?: number;
+    language?: string;
+    specializations: Types.ObjectId[];
+    about?: string
+    dailySessionLimit: number 
+    kycStatus: 'pending' | 'approved' | 'submitted' | 'rejected';
+    isBlocked?: boolean;
   }
   

@@ -1,6 +1,6 @@
 
 import SpecializationModel from "../../models/specializationModel";
-import {Interface_Doctor, IOtp,IAppoinment} from "../../interface/doctor/doctor_interface"
+import {Interface_Doctor, IOtp,IAppoinment, IWallet} from "../../interface/doctor/doctor_interface"
 import DoctorModel from "../../models/doctorModel";
 import OtpModel from "../../models/otpModel";
 import KYCModel from "../../models/kycModel";
@@ -9,6 +9,8 @@ import AppoinmentModel from "../../models/appoinmentModel";
 import moment from "moment";
 import BookingModel from "../../models/bookingModel";
 import { IDoctorRepository } from "../../interface/doctor/Doctor.repository.interface";
+import WalletModel from "../../models/walletModel";
+import { ITransaction } from "../../interface/common";
 
 class DoctorRepository implements IDoctorRepository{
     private specializationModel = SpecializationModel;
@@ -17,6 +19,7 @@ class DoctorRepository implements IDoctorRepository{
     private kycModel = KYCModel;
     private appoinmentModel=AppoinmentModel
     private bookingModel=BookingModel
+    private walletModel=WalletModel
     
     async findAllSpecializations() {
         try {
@@ -419,28 +422,49 @@ class DoctorRepository implements IDoctorRepository{
         }
 
 
-   async fetchusers(doctorId: string) {
-  try {
-    console.log("doctor reposs",doctorId);
-    
-    const bookedUsers = await BookingModel.find({ doctorId }).populate("userId");
-    const uniqueUsersMap = new Map<string, any>();
-    bookedUsers.forEach((booking) => {
-      const user = booking.userId as { _id: string; name: string; email: string; profileImage: string };
-
-      if (user && user._id) {
-        uniqueUsersMap.set(user._id.toString(), user);
-      }
-    })
-    
-
-    return Array.from(uniqueUsersMap.values());
-
-    
-  } catch (error) {
-    
-  }
-} 
+        async fetchusers(doctorId: string) {
+          try {
+            console.log("Fetching booked users for doctor:", doctorId);
+        
+            const bookedUsers = await BookingModel.find({ doctorId }).populate("userId");
+            console.log("Booked Users:", bookedUsers);
+        
+            const uniqueUsersMap = new Map<string, any>();
+        
+            bookedUsers.forEach((booking) => {
+              const user = booking.userId as {
+                _id: string;
+                name: string;
+                email: string;
+                profileImage?: string;
+                userId:string
+              };
+        
+              if (user && user._id) {
+                uniqueUsersMap.set(user._id.toString(), {
+                  _id: user._id,
+                  id: user.userId,
+                  name: user.name,
+                  email: user.email,
+                  profileImage: user.profileImage || "",
+                  appoinmentId: booking.appoinmentId, // Include appointment ID
+                  bookingDate: booking.bookingDate,
+                  startDate: booking.startDate,
+                  startTime: booking.startTime,
+                  endTime: booking.endTime,
+                  amount: booking.amount,
+                  paymentStatus: booking.paymentStatus,
+                });
+              }
+            });
+        
+            return Array.from(uniqueUsersMap.values());
+          } catch (error) {
+            console.error("Error fetching booked users:", error);
+            return [];
+          }
+        }
+        
 
 async getAllBookings(doctor_id: string) {
   try {
@@ -464,6 +488,89 @@ async getAllBookings(doctor_id: string) {
 }
 
 
+
+async getDoctor(doctor_id: string) {
+  try {
+    const doctorData = await this.doctorModel.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(doctor_id) },
+      },
+      {
+        $lookup: {
+          from: "specializations",
+          localField: "specializations",
+          foreignField: "_id",
+          as: "specializationDetails",
+        },
+      },
+    ]);
+    return doctorData;
+  } catch (error: any) {
+    throw new Error(error);
+  }
+}
+
+async fetchWalletData(doctor_id: string):Promise<IWallet|null|undefined> {
+  try {
+    console.log("hhhh",doctor_id);
+    
+    const walletData = await this.walletModel.findOne({
+      doctorId: doctor_id,
+    });
+    console.log("Wallet Data Found:", walletData);
+    return walletData;
+  } catch (error) {}
+}
+
+
+async withdrawMoney(doctor_id: string, amount: number) {
+  try {
+    const wallet = await this.walletModel.findOne({ doctorId: doctor_id });
+    if (!wallet) {
+      throw new Error("Wallet not found for the specified Trainer.");
+    }
+    if (wallet.balance < amount) {
+      throw new Error("Insufficient balance for withdrawal.");
+    }
+    wallet.balance -= amount;
+    const transactionId =
+      "txn_" + Date.now() + Math.floor(Math.random() * 10000);
+    const transaction: ITransaction = {
+      amount: amount,
+      transactionId: transactionId,
+      transactionType: "debit",
+    };
+    wallet.transactions.push(transaction);
+    await wallet.save();
+    return wallet;
+  } catch (error: any) {
+    console.error("Error processing withdrawal:", error.message);
+    throw new Error(error.message);
+  }
+}
+
+async getDoctorProfile(doctor_id: string) {
+  try {
+    const doctorData = await this.doctorModel.findById(doctor_id) 
+    return doctorData?.profileImage
+  } catch (error) {
+    
+  }
+}
+
+
+async updateDoctorData(doctor_id: string) {
+  try {
+    const existingDoctor = await this.doctorModel.findByIdAndUpdate(doctor_id);
+    if (!existingDoctor) {
+      throw new Error("Doctor not found");
+    }
+    return existingDoctor;
+  } catch (error) {
+    console.error("Error in repository layer:", error);
+    throw new Error("Failed to update doctor data");
+  }
+}
 
 }
 export default DoctorRepository

@@ -7,6 +7,7 @@ import {jwtDecode, JwtPayload} from "jwt-decode"
 import { IDoctorService } from "../../interface/doctor/Doctor.Srevice.interface";
 import { JwtPayloads } from "../../interface/common";
 import { RRule, RRuleSet, rrulestr } from 'rrule';
+import { deleteFromCloudinary, uploadToCloudinary } from "../../config/cloudinary";
 import moment from 'moment';
 
 
@@ -498,6 +499,72 @@ return appoinments
         } catch (error) {
             next(error);
         }
+    }
+
+
+    async getDoctor(req: Request, res: Response, next: NextFunction) {
+      try {
+        const doctor_id = req.params.doctor_id;
+        const DoctorData = await this.doctorService.getDoctor(doctor_id);
+        res.status(200).json({
+          DoctorData: DoctorData,
+        });
+      } catch (error: any) {
+        next(error)
+      }
+    }
+
+
+    async getWalletData(req: Request, res: Response, next: NextFunction) {
+      try {
+        const doctorId = req.params.doctor_id
+        const walletData = await this.doctorService.getWallet(doctorId)
+        res.status(200).json(walletData)
+      } catch (error) {
+        next(error)
+      }
+    }
+
+    async withdraw(req: Request, res: Response, next: NextFunction) {
+      try {
+       const {doctor_id} = req.params
+       const {amount} = req.body
+   
+       const withdrawed = await this.doctorService.withdraw(doctor_id, amount)
+       res.status(200).json(withdrawed)
+      } catch (error) {
+       next(error)
+      }
+     }
+
+     async updateDoctor(req: Request, res: Response, next: NextFunction) {
+      try {
+        const doctor_id = req.params.doctor_id;
+        const doctorData = req.body;
+        const existingDoctorProfile = await this.doctorService.fetchDoctor(doctor_id)
+        if(existingDoctorProfile) {
+           await deleteFromCloudinary(existingDoctorProfile)
+        }
+        const documents: { [key: string]: string | undefined } = {};
+        if (req.file) {
+          const profileImageUrl = await uploadToCloudinary(
+            req.file.buffer,
+            "doctor_profileImage"
+          );
+          documents.profileImage = profileImageUrl.secure_url;
+        }
+        const updatedDoctorData = { ...doctorData, ...documents };
+        const updatedDoctor = await this.doctorService.updateDoctor(
+          doctor_id,
+          updatedDoctorData
+        );
+        res.status(200).json({
+          message: "Doctor updated successfully",
+          updatedDoctor,
+        });
+      } catch (error) {
+        next(error);
+      }
     }
     
   

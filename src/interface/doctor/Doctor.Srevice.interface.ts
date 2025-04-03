@@ -1,5 +1,6 @@
+
 import { IBooking, JwtPayload, JwtPayloads } from "../common"
-import { IAppoinment, IKYC, Interface_Doctor, ISpecialization } from "./doctor_interface"
+import { IAppoinment, IDoctor, IKYC, Interface_Doctor, ISpecialization, IWallet } from "./doctor_interface"
 
 
 export interface IDoctorService{
@@ -19,5 +20,10 @@ export interface IDoctorService{
     fetchusers(doctorId:string):Promise<any>
     getAllBookings(doctor_id:string):Promise<any>
     storeMultipleAppointments(appointments: IAppoinment[]):Promise<IAppoinment[]>
+    getDoctor(doctor_id:string):Promise<any>
+    getWallet(doctorId:any):Promise<IWallet|null|undefined>
+    withdraw(doctor_id:any,amount:any):Promise<IWallet|null|undefined>
+    fetchDoctor(doctor_id:string):Promise<any>
+    updateDoctor(doctor_Id: string, updatedDoctorData: Partial<IDoctor>): Promise<IDoctor | null | undefined>;
 
 }
