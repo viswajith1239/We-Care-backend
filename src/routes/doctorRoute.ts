@@ -39,6 +39,7 @@ router.get('/fetchusers/:doctorId',doctorController.fetchusers.bind(doctorContro
 router.get('/bookings/:doctor_id', doctorController.getAllBookings.bind(doctorController));
 router.get('/wallet-data/:doctor_id', doctorController.getWalletData.bind(doctorController));
 router.post('/withdraw/:doctor_id', doctorController.withdraw.bind(doctorController));
+router.post('/logout', verifyToken('doctor'), doctorController.logoutDoctor.bind(doctorController));
 
 
 
