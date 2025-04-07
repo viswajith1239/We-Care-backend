@@ -11,6 +11,7 @@ import BookingModel from "../../models/bookingModel";
 import { IDoctorRepository } from "../../interface/doctor/Doctor.repository.interface";
 import WalletModel from "../../models/walletModel";
 import { ITransaction } from "../../interface/common";
+import prescriptionModel from "../../models/prescriptionModel";
 
 class DoctorRepository implements IDoctorRepository{
     private specializationModel = SpecializationModel;
@@ -20,6 +21,7 @@ class DoctorRepository implements IDoctorRepository{
     private appoinmentModel=AppoinmentModel
     private bookingModel=BookingModel
     private walletModel=WalletModel
+    private prescriptionModel=prescriptionModel
     
     async findAllSpecializations() {
         try {
@@ -527,7 +529,7 @@ async withdrawMoney(doctor_id: string, amount: number) {
   try {
     const wallet = await this.walletModel.findOne({ doctorId: doctor_id });
     if (!wallet) {
-      throw new Error("Wallet not found for the specified Trainer.");
+      throw new Error("Wallet not found for the specified Doctor.");
     }
     if (wallet.balance < amount) {
       throw new Error("Insufficient balance for withdrawal.");
@@ -571,6 +573,95 @@ async updateDoctorData(doctor_id: string) {
     throw new Error("Failed to update doctor data");
   }
 }
+
+ async findUserEmail(email: string) {
+    try {
+      return await this.doctorModel.findOne({ email });
+    } catch (error) {
+      console.log("error finding user login:", error);
+      return null;
+    }
+  }
+
+  async saveOTP(email: string, OTP: string, OTPExpiry: Date): Promise<void> {
+    console.log("save otp");
+    
+    try {
+      const newOtp = new this.otpModel({
+        email,
+        otp: OTP,
+        expiresAt: OTPExpiry,
+      });
+      await newOtp.save();
+    } catch (error) {
+      console.error("Error in saveOTP:", error);
+      throw error;
+    }
+  }
+
+
+   async getOtpsByEmail(email: string): Promise<IOtp[]> {
+      console.log("Getting OTP for email:", email); 
+      try {
+          const otps = await this.otpModel.find({ email: email }); 
+          if (!otps || otps.length === 0) {
+              console.log("No OTPs found for the given email."); 
+          } else {
+              console.log("Fetched OTPs:", otps); 
+          }
+          return otps; 
+      } catch (error) {
+          console.error("Error in getOtpsByEmail:", error); 
+          throw error;
+      }
+  }
+
+  async saveResetPassword(email: string, hashedPassword: string) {
+      console.log("hee", email);
+      console.log("reset reached in repos", hashedPassword);
+      try {
+        const user = await this.doctorModel.findOne({ email });
+        if (!user) {
+          console.log("User Not found  for this email", email);
+        }
+        const result = await this.doctorModel.updateOne(
+          { email },
+          { $set: { password: hashedPassword } }
+        );
+        if (result.modifiedCount === 0) {
+          console.error("Failed to update password for email:", email);
+          throw new Error("Password update failed.");
+        }
+  
+        console.log("Password reset successfully for email:", email);
+        return result;
+      } catch (error) {
+        console.log("Error in Resetting password", error);
+        throw error;
+      }
+    }
+
+
+    async create(data: {
+      doctorId: string;
+      userId: string;
+      prescriptions: { medicineName: string; description: string }[];
+    }) {
+      const newPrescription = new prescriptionModel({
+        doctorId: data.doctorId,
+        userId: data.userId,
+        prescriptions: data.prescriptions,
+        createdAt: new Date()
+      });
+  
+      return await newPrescription.save();
+    }
+    async getPrescriptionsByDoctor(doctorId: string) {
+      return await this.prescriptionModel.find({ doctorId })
+        .populate('userId', 'name') 
+        .sort({ createdAt: -1 });   
+    }
+    
 
 }
 export default DoctorRepository

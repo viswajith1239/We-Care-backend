@@ -1,5 +1,5 @@
 
-import { IAppoinment, Interface_Doctor, IWallet } from "./doctor_interface"
+import { IAppoinment, Interface_Doctor, IWallet,PrescriptionData } from "./doctor_interface"
 import  {IOtp, IUser} from "../common"
 import mongoose from "mongoose"
 export interface IDoctorRepository{
@@ -28,4 +28,10 @@ export interface IDoctorRepository{
     withdrawMoney(doctor_id:any,amount:any):Promise<any>
     getDoctorProfile(doctor_id:string):Promise<any>
     updateDoctorData(doctor_id:string):Promise<any>
+    saveOTP(email: string, OTP: string, OTPExpirey: Date):Promise<void>
+    findUserEmail(email: string):Promise<any>
+    getOtpsByEmail(email: string):Promise<IOtp[]|[]>
+    saveResetPassword(email: string, hashedPassword: string):Promise<any>
+    create(data:PrescriptionData):Promise<any>
+    getPrescriptionsByDoctor(doctor_id:string):Promise<any>
 }

@@ -448,7 +448,7 @@ async findBookingDetails(session_id: string, user_id: string, stripe_session_id:
     }
     const doctorId = session?.doctorId;
     if (!doctorId) {
-      throw new Error("Trainer ID is not available in the session.");
+      throw new Error("Doctor ID is not available in the session.");
     }
     
     
@@ -578,6 +578,10 @@ async cancelAppoinment(bookId:string,userId:string,doctorId:string){
     console.error('Failed to reset password:', error);
     throw new Error('Failed to reset password');
   }
+}
+
+async fetchPrescriptions(user_id: string) {
+  return await this.authRepository.getPrescriptionsByuser(user_id);
 }
 
     

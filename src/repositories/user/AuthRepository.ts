@@ -13,6 +13,7 @@ import BookingModel from "../../models/bookingModel";
 import { IUsers } from "../../interface/common";
 import { ITransaction } from "../../models/walletModel";
 import WalletModel from "../../models/walletModel";
+import PrescriptionModel from "../../models/prescriptionModel";
 
 
 
@@ -26,6 +27,7 @@ export class AuthRepository implements IAuthRepository {
   private appoinmetModel=AppoinmentModel
   private bookingModel=BookingModel
   private walletModel=WalletModel
+  private prescriptionModel=PrescriptionModel
   async existUser(email: string,phone: string): Promise<{ existEmail: boolean; existPhone: boolean }> {
     try {
 
@@ -449,6 +451,12 @@ async fetchUser(userId: string) {
     throw new Error("Error fetching user");
   }
 }
+
+async getPrescriptionsByuser(user_id: string) {
+      return await this.prescriptionModel.find({ userId: user_id })
+        .populate('doctorId', 'name') 
+        .sort({ createdAt: -1 });   
+    }
 
 }
 

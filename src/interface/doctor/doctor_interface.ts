@@ -117,4 +117,14 @@ export interface IOtp {
     kycStatus: 'pending' | 'approved' | 'submitted' | 'rejected';
     isBlocked?: boolean;
   }
+
+  export interface PrescriptionData {
+    doctorId: string;
+    userId: string;
+    prescriptions: {
+      medicineName: string;
+      description: string;
+    }[];
+  }
+  
   

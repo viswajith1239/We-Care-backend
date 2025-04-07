@@ -459,6 +459,100 @@ constructor(doctorRepository: IDoctorRepository) {
       }
     }
 
+    async forgotpassword(UserEmail: string): Promise<any> {
+      try {
+        console.log("checccc", UserEmail);
+    
+        const userResponse = await this.doctorRepository.findUserEmail(UserEmail);
+        if (!userResponse) {
+          console.log("user not already exist", userResponse);
+          throw new Error("Invalid email Address");
+        }
+        const generateOtp = Math.floor(1000 + Math.random() * 9000).toString();
+        this.OTP = generateOtp;
+        console.log("Generated OTP is", this.OTP);
+    
+        //send otp to the email:
+        const isMailSet = await sendMail( UserEmail,"otp", this.OTP);
+        
+        if (!isMailSet) {
+          throw new Error("Email not sent");
+        }
+    
+        const OTP_createdTime = new Date();
+        this.expiryOTP_time = new Date(OTP_createdTime.getTime() + 1 * 60 * 1000);
+     
+    
+        console.log("Saving OTP:", {
+          email: UserEmail,
+          otp: this.OTP,
+          expiresAt: this.expiryOTP_time
+      });
+        await this.doctorRepository.saveOTP(
+          UserEmail,
+          this.OTP,
+          this.expiryOTP_time
+        );
+        console.log(`OTP will expire at: ${this.expiryOTP_time}`);
+    
+        return userResponse;
+      } catch (error) {
+        console.log("Error in userservice forgot password", error);
+      }
+    }
+
+    async verifyForgotOTP(doctorData: string, otp: string): Promise<void> {
+      try {
+        const validateOtp = await this.doctorRepository.getOtpsByEmail(doctorData);
+        console.log("the validateOtp is..", validateOtp);
+        if (validateOtp.length === 0) {
+          console.log("there is no otp in email");
+          throw new Error("no OTP found for this email");
+        }
+        const latestOtp = validateOtp.sort(
+          (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+        )[0];
+        if (latestOtp.otp === otp) {
+          if (latestOtp.expiresAt > new Date()) {
+            console.log("otp expiration not working");
+    
+            console.log("OTP is valid and verified", latestOtp.expiresAt);
+    
+            await this.doctorRepository.deleteOtpById(latestOtp._id);
+          } else {
+            console.log("OTP has expired");
+            await this.doctorRepository.deleteOtpById(latestOtp._id);
+            throw new Error("OTP has expired");
+          }
+        } else {
+          console.log("Invalid OTP");
+          throw new Error("Invalid OTP");
+        }
+      } catch (error) {
+        const errorMessage =
+          (error as Error).message || "An unknown error occurred";
+        console.error("Error in OTP verification:", errorMessage);
+        throw error;
+      }
+    }
+
+    async resetapassword(doctorData: string, payload: { newPassword: string }) {
+      console.log("got pay load", payload, doctorData);
+      try {
+        const { newPassword }: { newPassword: string } = payload;
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        console.log("hashed", hashedPassword);
+        const response = await this.doctorRepository.saveResetPassword(
+          doctorData,
+          hashedPassword
+        );
+        console.log("response check in userservice ", response);
+        return response;
+      } catch (error) {
+        console.log("Error is",error)
+      }
+    }
+
 
     async getWallet(doctor_id: string) {
       return await this.doctorRepository.fetchWalletData(doctor_id)
@@ -522,6 +616,19 @@ constructor(doctorRepository: IDoctorRepository) {
         throw new Error("Failed to update doctor");
       }
     }
+
+    async savePrescription(data: {
+      doctorId: string;
+      userId: string;
+      prescriptions: { medicineName: string; description: string }[];
+    }) {
+      return await this.doctorRepository.create(data);
+    }
+
+    async fetchPrescriptions(doctor_id: string) {
+      return await this.doctorRepository.getPrescriptionsByDoctor(doctor_id);
+    }
+    
   
 }
 

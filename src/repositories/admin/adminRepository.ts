@@ -149,7 +149,7 @@ async updateKycStatus(status: string, doctor_id: string, rejectionReason: string
     );
 
     if (updatedDoctor) {
-      console.log('Trainer KYC status updated successfully:', updatedDoctor);
+      console.log('Doctor KYC status updated successfully:', updatedDoctor);
 
       const updatedKyc = await this.kycModel.findOneAndUpdate(
         { doctorId: doctor_id },

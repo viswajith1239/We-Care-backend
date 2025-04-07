@@ -135,7 +135,7 @@ class AdminService implements IAdminService {
   
         if (status === "approved" || status === "rejected") {
           await this.adminRepository.deleteKyc(doctor_id);
-          console.log(`KYC data deleted for trainer ID: ${doctor_id}`);
+          console.log(`KYC data deleted for doctor ID: ${doctor_id}`);
         }
   
         if (status === "approved") {

@@ -174,7 +174,7 @@ async changeKycStatus(req: Request, res: Response, next: NextFunction) {
 
     res.status(HTTP_statusCode.OK).json({ message: 'Trainer status updated successfully', status });
   } catch (error) {
-    console.error('Error updating trainer status:', error);
+    console.error('Error updating doctor status:', error);
     next(error)
   }
 }

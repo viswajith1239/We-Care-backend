@@ -46,7 +46,7 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
       res.status(200).json({ message: "OTP sent to email" });
       
     } catch (error) {
-      console.error("Error in registerTrainer:", error);
+      console.error("Error in registerDoctor:", error);
       if ((error as Error).message === "Email already exists") {
         res.status(409).json({ message: "Email already exists" });
         return;
@@ -176,7 +176,7 @@ async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<v
 
       res.status(HTTP_statusCode.OK).json({ kycStatus });
     } catch (error) {
-      console.error("Error fetching trainer KYC status:", error);
+      console.error("Error fetching doctor KYC status:", error);
       next(error)
     }
   }
@@ -566,6 +566,71 @@ return appoinments
         next(error);
       }
     }
+
+      async forgotpassword(req:Request,res:Response,next:NextFunction):Promise<any>{
+            try {
+              const {emailData}=req.body
+              console.log("got email from body",emailData)
+              const response=await this.doctorService.forgotpassword(emailData)
+              console.log("noll",response)
+              if(!response){
+                return res.status(HTTP_statusCode.BadRequest).json({message:"email not found"})
+          
+              }
+              return res.status(HTTP_statusCode.OK).json({message:"email vrified successfully",statusCode:HTTP_statusCode.OK})
+          
+            } catch (error) {
+              console.log("Error in Forgot password",error)
+            }
+          }
+
+          async verifyForgotOtp(req: Request, res: Response, next: NextFunction) {
+                console.log("verify otp controller");
+                try {
+                   console.log("verify otp controller");
+                  const { doctorData, otp } = req.body;
+                  
+                  await this.doctorService.verifyForgotOTP(doctorData, otp);
+            
+                  res
+                    .status(HTTP_statusCode.OK)
+                    .json({ message: "OTP verified successfully", doctor: doctorData });
+                } catch (error) {
+                  console.error("OTP Verification Controller error:", error);
+                  if ((error as Error).message === "OTP has expired") {
+                    res.status(HTTP_statusCode.BadRequest).json({ message: "OTP has expired" });
+                  } else if ((error as Error).message === "Invalid OTP") {
+                    res.status(HTTP_statusCode.BadRequest).json({ message: "Invalid OTP" });
+                  } else if ((error as Error).message === "No OTP found for this email") {
+                    res.status(HTTP_statusCode.NotFound).json({ message: "No OTP found for this email" });
+                  } else {
+                   next(error)
+                  }
+                }
+              }
+
+               async resetPassword(req:Request,res:Response,next:NextFunction):Promise<any>{
+                      try {
+                        console.log("Request body:", req.body); 
+                         const{doctorData,payload}=req.body
+                         console.error("Missing required fields:", { doctorData, payload });
+                        
+                         const result=await this.doctorService.resetapassword(doctorData,payload)
+                         console.log("what is the response got?",result)
+                         if(result?.modifiedCount===1){
+                          return res.status(HTTP_statusCode.OK).json({ message: "Password reset successfully" });
+                    
+                         }else{
+                          return res.status(HTTP_statusCode.BadRequest).json({ message: "Failed To Reset Password" });
+                    
+                         }
+                    
+                      } catch (error) {
+                        console.log("User Controller Error",error)
+                        return res.status(HTTP_statusCode.InternalServerError).json({ message: "Server Error" });
+                    
+                      }
+                    }
     
     async logoutDoctor(req: Request, res: Response) {
       try {
@@ -579,6 +644,61 @@ return appoinments
         res.status(500).json({ message: "Logout failed", error });
       }
     }
+
+
+    // doctor.controller.ts
+
+async createPrescription(req: Request, res: Response, next: NextFunction): Promise<void> {
+  console.log("eivide othis");
+  
+  try {
+    console.log(";;;;;");
+    
+    const { doctor_id, user_id } = req.params;
+    const { prescriptions } = req.body;
+    console.log("nnnnnbbb",doctor_id,user_id,prescriptions);
+    
+
+    if (!doctor_id || !user_id || !prescriptions || prescriptions.length === 0) {
+      res.status(400).json({ message: "Missing required fields" });
+      return;
+    }
+
+    const formData = {
+      doctorId: doctor_id,
+      userId: user_id,
+      prescriptions
+    };
+
+    const result = await this.doctorService.savePrescription(formData);
+
+    res.status(200).json({ message: "Prescription submitted successfully", result });
+  } catch (error) {
+    console.error("Error submitting prescription:", error);
+    next(error);
+  }
+}
+
+// Fetch prescriptions by doctor ID
+async getPrescriptionsByDoctor(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { doctor_id } = req.params;
+
+    if (!doctor_id) {
+      res.status(400).json({ message: "Doctor ID is required" });
+      return;
+    }
+
+    const prescriptions = await this.doctorService.fetchPrescriptions(doctor_id);
+
+    res.status(200).json(prescriptions);
+  } catch (error) {
+    console.error("Error fetching prescriptions:", error);
+    next(error);
+  }
+}
+
+
   
 }
 

@@ -34,9 +34,7 @@ route.get('/bookings-details/:user_id', AuthControllerInstance.getAllBookings.bi
 route.post("/cancel-appoinment",AuthControllerInstance.cancelAppoinment.bind(AuthControllerInstance))
 route.get("/fetchdoctors/:userId", verifyToken('user'),AuthControllerInstance.getbookedDoctor.bind(AuthControllerInstance))
 route.patch('/reset-password/:user_id', AuthControllerInstance.resetPasswords.bind(AuthControllerInstance));
+route.get('/prescription/:user_id',AuthControllerInstance.getprescription.bind(AuthControllerInstance))
 route.post("/logout", verifyToken('user'), AuthControllerInstance.logout.bind(AuthControllerInstance));  
 
-
-
-    
 export default route;

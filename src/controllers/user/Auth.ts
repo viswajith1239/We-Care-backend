@@ -223,9 +223,9 @@ export class AuthController  {
       async getAllDoctors(req:Request,res:Response,next:NextFunction){
         console.log("ïn controller")
         try {
-          const allTrainers=await this.authService.getAllDoctors()
+          const allDoctors=await this.authService.getAllDoctors()
           
-          res.status(HTTP_statusCode.OK).json(allTrainers)
+          res.status(HTTP_statusCode.OK).json(allDoctors)
           
         } catch (error) {
           console.log("Error fetching Doctors",error)
@@ -402,6 +402,24 @@ export class AuthController  {
           );
           res.status(HTTP_statusCode.OK).json({ message: "Password changed successfully" });
         } catch (error) {
+          next(error);
+        }
+      }
+
+      async getprescription(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+          const { user_id } = req.params;
+      
+          if (!user_id) {
+            res.status(400).json({ message: "Doctor ID is required" });
+            return;
+          }
+      
+          const prescriptions = await this.authService.fetchPrescriptions(user_id);
+      
+          res.status(200).json(prescriptions);
+        } catch (error) {
+          console.error("Error fetching prescriptions:", error);
           next(error);
         }
       }

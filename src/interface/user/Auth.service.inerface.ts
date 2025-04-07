@@ -26,5 +26,6 @@ export interface IAuthService {
     cancelAppoinment(appoinmentId:string,userId:string,doctorId:string):Promise<any>
     getbookedDoctor(userId:string):Promise<any>
     resetPasswords(user_id:string,currentPassword:string,newPassword:string):Promise<any>
+    fetchPrescriptions(user_id:string):Promise<any>
     
  };
