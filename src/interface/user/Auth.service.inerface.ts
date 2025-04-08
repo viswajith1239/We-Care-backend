@@ -27,5 +27,10 @@ export interface IAuthService {
     getbookedDoctor(userId:string):Promise<any>
     resetPasswords(user_id:string,currentPassword:string,newPassword:string):Promise<any>
     fetchPrescriptions(user_id:string):Promise<any>
+    findBookings(user_id:string,doctor_id:string):Promise<any>
+    addReview(reviewComment:any,selectedRating:any,userId:any,doctorId:any):Promise<any>
+    reviews(doctor_id:string):Promise<any>
+    editReview(reviewComment:any,selectedRating:any,userReviewId:any):Promise<any>
+    getReivewSummary(doctor_id:string):Promise<any>
     
  };

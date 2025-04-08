@@ -33,6 +33,11 @@ export interface IAuthRepository {
     getbookedDoctor(userId:string):Promise<any>
     fetchUser(userId:string):Promise<any>
     getPrescriptionsByuser(user_id:string):Promise<any>
+    findBookings(user_id:string,doctorId:string):Promise<any>
+    createReview(reviewComment:any,selectedRating:any,userId:any,doctorId:any):Promise<any>
+    getReview(doctor_id:string):Promise<any>
+    editReview(reviewComment:any,selectedRating:any,userReviewId:any):Promise<any>
+    getAvgReviewsRating(doctor_id:string):Promise<any>
     
     
  };

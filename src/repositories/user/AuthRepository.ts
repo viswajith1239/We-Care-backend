@@ -14,6 +14,7 @@ import { IUsers } from "../../interface/common";
 import { ITransaction } from "../../models/walletModel";
 import WalletModel from "../../models/walletModel";
 import PrescriptionModel from "../../models/prescriptionModel";
+import ReviewModel from "../../models/reviewModel";
 
 
 
@@ -28,6 +29,8 @@ export class AuthRepository implements IAuthRepository {
   private bookingModel=BookingModel
   private walletModel=WalletModel
   private prescriptionModel=PrescriptionModel
+  private reviewModel=ReviewModel
+
   async existUser(email: string,phone: string): Promise<{ existEmail: boolean; existPhone: boolean }> {
     try {
 
@@ -456,6 +459,111 @@ async getPrescriptionsByuser(user_id: string) {
       return await this.prescriptionModel.find({ userId: user_id })
         .populate('doctorId', 'name') 
         .sort({ createdAt: -1 });   
+    }
+
+    async findBookings(user_id: string, doctor_id: string) {
+      try {
+        const bookingData = await this.bookingModel.findOne({
+          userId: user_id,
+          doctorId: doctor_id,
+          paymentStatus: "Confirmed",
+        });
+    
+        return bookingData;
+      } catch (error) {
+        throw new Error("Failed to find bookings");
+      }
+    }
+
+    async createReview(
+      reviewComment: string,
+      selectedRating: number,
+      userId: string,
+      doctorId: string
+    ) {
+      
+      try {
+        const data = {
+          userId: new mongoose.Types.ObjectId(userId),
+          doctorId: new mongoose.Types.ObjectId(doctorId),
+          rating: selectedRating,
+          comment: reviewComment,
+        };
+        const addReview = await this.reviewModel.create(data);
+        return addReview;
+      } catch (error) {
+        console.error("Error creating review:", error);
+        throw new Error("Failed to create review");
+      }
+    }
+
+    async getReview(doctor_id: string) {
+  
+      try {
+        const reviews = await this.reviewModel
+          .find({ doctorId: doctor_id }) // Find reviews by trainerId
+          .populate({
+            path: "userId", 
+            select: "name image",
+          })
+          .sort({ createdAt: -1 }); 
+          
+          {
+          }
+            
+    
+   
+    
+        return reviews;
+      } catch (error) {
+        throw new Error("Failed to find review");
+      }
+    }
+
+    async editReview(
+      reviewComment: string,
+      selectedRating: number,
+      userReviewId: string
+    ) {
+      try {
+        const review = await this.reviewModel.findByIdAndUpdate(
+          userReviewId,
+          { comment: reviewComment, rating: selectedRating },
+          { new: true }
+        );
+      } catch (error) {
+        console.error("Error creating review:", error);
+        throw new Error("Failed to create review");
+      }
+    }
+
+    async getAvgReviewsRating(doctor_id: string) {
+      try {
+        const avgRatingAndReivews = await this.reviewModel.aggregate([
+          {
+            $match: { doctorId: new mongoose.Types.ObjectId(doctor_id) }, 
+          },
+          {
+            $group: {
+              _id: null,
+              averageRating: { $avg: "$rating" },
+              totalReviews: { $sum: 1 },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              averageRating: { $floor: "$averageRating" },
+              totalReviews: 1,
+            },
+          },
+        ]);
+    
+        return avgRatingAndReivews;
+      } catch (error) {
+        console.error("Error finding review avg summary:", error);
+        throw new Error("Failed to find review avg summary");
+      }
     }
 
 }

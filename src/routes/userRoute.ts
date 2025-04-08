@@ -35,6 +35,12 @@ route.post("/cancel-appoinment",AuthControllerInstance.cancelAppoinment.bind(Aut
 route.get("/fetchdoctors/:userId", verifyToken('user'),AuthControllerInstance.getbookedDoctor.bind(AuthControllerInstance))
 route.patch('/reset-password/:user_id', AuthControllerInstance.resetPasswords.bind(AuthControllerInstance));
 route.get('/prescription/:user_id',AuthControllerInstance.getprescription.bind(AuthControllerInstance))
+route.get('/bookings/:user_id/:doctor_id',verifyToken('user'), AuthControllerInstance.findbookings.bind(AuthControllerInstance));
+route.post('/review', verifyToken('user'), AuthControllerInstance.addReview.bind(AuthControllerInstance));
+route.get('/reviews/:doctor_id',verifyToken('user'), AuthControllerInstance.getReivew.bind(AuthControllerInstance));
+route.patch('/edit-review', verifyToken('user'), AuthControllerInstance.editReview.bind(AuthControllerInstance)); 
+route.get('/reviews-summary/:doctor_id', verifyToken('user'), AuthControllerInstance.getReivewSummary.bind(AuthControllerInstance)); 
+
 route.post("/logout", verifyToken('user'), AuthControllerInstance.logout.bind(AuthControllerInstance));  
 
 export default route;

@@ -79,5 +79,12 @@ import { Document } from "mongoose";
     date?: Date;                
     bookingId?: string;         
 }
+
+export  interface IReview {
+  userId: mongoose.Types.ObjectId
+  doctorId: mongoose.Types.ObjectId
+  rating: number
+  comment: string
+}
   
 

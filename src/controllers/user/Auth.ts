@@ -423,6 +423,76 @@ export class AuthController  {
           next(error);
         }
       }
+
+      async findbookings(req: Request, res: Response, next: NextFunction) {
+  
+        try {
+          const { user_id, doctor_id } = req.params;
+          const bookingStatus = await this.authService.findBookings(
+            user_id,
+            doctor_id
+          );
+          
+      
+          res.status(200).json(bookingStatus);
+        } catch (error) {
+          next(error);
+        }
+      }
+
+
+      async addReview(req: Request, res: Response, next: NextFunction) {
+        try {
+          const { reviewComment, selectedRating, userId, doctorId } = req.body;
+          const response = await this.authService.addReview(
+            reviewComment,
+            selectedRating,
+            userId,
+            doctorId
+          );
+          
+          let reviewId = response._id;
+          res .status(200).json({ message: "Review created successfully", reviewId });
+        } catch (error) {
+          next(error);
+        }
+      }
+
+      async getReivew(req: Request, res: Response, next: NextFunction) {
+        try {
+          const { doctor_id } = req.params;
+          const reviews = await this.authService.reviews(doctor_id);
+          res.status(200).json(reviews);
+        } catch (error) {
+          next(error);
+        }
+      }
+
+      async editReview(req: Request, res: Response, next: NextFunction) {
+        try {
+          const { reviewComment, selectedRating, userReviewId } = req.body;
+          const response = await this.authService.editReview(
+            reviewComment,
+            selectedRating,
+            userReviewId
+          );
+          res.status(200).json({ message: "Review edited successfully" });
+        } catch (error) {
+          next(error);
+        }
+      }
+
+      async getReivewSummary(req: Request, res: Response, next: NextFunction) {
+        try {
+          const { doctor_id } = req.params;
+          const reviewsAndAvgRating = await this.authService.getReivewSummary(
+            doctor_id
+          );
+          res.status(200).json(reviewsAndAvgRating);
+        } catch (error) {
+          next(error);
+        }
+      }
     
     
       

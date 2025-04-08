@@ -584,5 +584,50 @@ async fetchPrescriptions(user_id: string) {
   return await this.authRepository.getPrescriptionsByuser(user_id);
 }
 
+async findBookings(user_id: string, doctorId: string) {
+  try {
+    const bookingData = await this.authRepository.findBookings(user_id, doctorId)
+    
+    return bookingData?.paymentStatus
+  } catch (error) {
+    throw new Error('failed to find booking') 
+  }
+ }
+
+ async addReview(reviewComment: string, selectedRating: number, userId: string, doctorId: string) {
+  try {
+    return await this.authRepository.createReview(reviewComment, selectedRating, userId, doctorId)
+  } catch (error) {
+    throw new Error('Failed to create review');
+  }
+}
+
+async reviews(doctor_id: string) {
+  try {
+    return await this.authRepository.getReview(doctor_id)
+  } catch (error) {
+    throw new Error('failed to find review')    
+  }
+}
+
+async editReview(reviewComment: string, selectedRating: number,userReviewId: string) {
+  try {
+    return await this.authRepository.editReview(reviewComment, selectedRating, userReviewId)
+  } catch (error) {
+    throw new Error('Failed to create review');
+  }
+}
+
+async getReivewSummary(doctor_id: string) {
+  try {      
+    const avgReviewsRating = await this.authRepository.getAvgReviewsRating(doctor_id)
+    return avgReviewsRating
+  } catch (error) {
+    throw new Error('failed to find review summary')   
+  }
+}
+
+
+
     
 }
