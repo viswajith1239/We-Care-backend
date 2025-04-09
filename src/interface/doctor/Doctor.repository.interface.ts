@@ -34,4 +34,5 @@ export interface IDoctorRepository{
     saveResetPassword(email: string, hashedPassword: string):Promise<any>
     create(data:PrescriptionData):Promise<any>
     getPrescriptionsByDoctor(doctor_id:string):Promise<any>
+    getAllStatistics():Promise<any>
 }

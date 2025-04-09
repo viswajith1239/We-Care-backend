@@ -6,8 +6,10 @@ import userModel from "../../models/userModel";
 import KYCModel from "../../models/kycModel";
 import DoctorModel from "../../models/doctorModel";
 import KycRejectionReasonModel from "../../models/KycRejectionReason";
+import BookingModel from "../../models/bookingModel";
 import { IAdminRepository } from "../../interface/admin/Admin.repository.interface";
 import { IUser } from "../../interface/common";
+import { MonthlyStats } from "../../interface/admin/admin_interface";
 type IUserDocument = IUser & Document;
 
 class AdminRepository implements IAdminRepository{
@@ -19,10 +21,11 @@ private userModel=userModel;
 private kycModel = KYCModel
 private doctorModel=DoctorModel
 private kycRejectionReasonModel = KycRejectionReasonModel
+private bookingModel=BookingModel
 
 async findAdmin(email:string):Promise<LoginAdmin_interface|null>{
     console.log("admin repo find ethi");
-    return await AdminModel.findOne({ email });
+    return await this.adminModel.findOne({ email });
  
 }
 async createAdmin(email:string,password:string):Promise<LoginAdmin_interface|null>{
@@ -33,7 +36,7 @@ console.log("admin repo create");
 
     let data={email,password}
     
-    const newAdmin = new AdminModel(data);
+    const newAdmin = new this.adminModel(data);
     return await newAdmin.save()
    }catch(error){
     console.log("create admin",error);
@@ -211,6 +214,138 @@ async deleteKyc(doctor_id: string) {
     }
   } catch (error) {
     console.error('Error deleting KYC record:', error);
+  }
+}
+
+
+async getAllStatistics(){
+  const totalDoctors=await this.doctorModel.countDocuments()
+  const activeDoctors = await this.doctorModel.countDocuments({ isBlocked: false });
+  const totalUsers = await this.userModel.countDocuments();
+  const activeUsers = await this.userModel.countDocuments({ isBlocked: false });
+  const totalBookings=await this.bookingModel.countDocuments()
+  const revenueData=await this.bookingModel.aggregate([
+    {$match:{paymentStatus:"Confirmed"}},
+    {
+      $group:{
+         _id:null,amount:{$sum:"$amount"},
+         doctorRevenue:{$sum:{$multiply:["$amount",0.9]}},
+         adminRevenue: { $sum: { $multiply: ["$amount", 0.1] } }
+
+      }
+    }
+  ])
+
+  const amount = revenueData.length > 0 ? revenueData[0].amount : 0;
+  const doctorRevenue = revenueData.length > 0 ? revenueData[0].doctorRevenue : 0;
+  const adminRevenue = revenueData.length > 0 ? revenueData[0].adminRevenue : 0;
+  const currentDate = new Date();
+  const startDate = new Date();
+  startDate.setMonth(currentDate.getMonth()-12)//past month
+
+  const userAndDoctorRegistartionData=await Promise.all([
+    this.userModel.aggregate([
+      { $match: { createdAt: { $gte: startDate } } },
+      {
+        $group: {
+          _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } }
+    ]),
+
+    this.doctorModel.aggregate([
+      { $match: { createdAt: { $gte: startDate } } },
+      {
+        $group: {
+          _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } }
+    ])
+  ])
+  const monthlyStatistics: { [key: string]: MonthlyStats } = {};
+  for (let monthOffset = 0; monthOffset < 12; monthOffset++) {
+    const monthDate = new Date();
+    monthDate.setMonth(currentDate.getMonth() - monthOffset);
+    const year = monthDate.getFullYear();
+    const month = monthDate.getMonth() + 1; 
+    const key = `${year}-${month < 10 ? '0' : ''}${month}`;
+
+    monthlyStatistics[key] = {
+      users: 0,
+      doctor: 0,
+      revenue: 0,
+      amount: 0,
+      doctorRevenue: 0,
+      adminRevenue: 0
+    };
+  }
+
+  userAndDoctorRegistartionData[0].forEach(userData => {
+    const key = `${userData._id.year}-${userData._id.month < 10 ? '0' : ''}${userData._id.month}`;
+    if (monthlyStatistics[key]) {
+      monthlyStatistics[key].users = userData.count;
+    }
+  });
+
+  userAndDoctorRegistartionData[1].forEach(doctorData => {
+    const key = `${doctorData._id.year}-${doctorData._id.month < 10 ? '0' : ''}${doctorData._id.month}`;
+    if (monthlyStatistics[key]) {
+      monthlyStatistics[key].doctor = doctorData.count;
+    }
+  });
+  const revenueByMonth = await BookingModel.aggregate([
+    { $match: { paymentStatus: "Confirmed", bookingDate: { $gte: startDate } } },
+    {
+      $group: {
+        _id: {
+          year: { $year: "$bookingDate" },
+          month: { $month: "$bookingDate" }
+        },
+        amount: { $sum: "$amount" },
+        doctorRevenue: { $sum: { $multiply: ["$amount", 0.9] } },
+        adminRevenue: { $sum: { $multiply: ["$amount", 0.1] } }
+      }
+    },
+    { $sort: { "_id.year": 1, "_id.month": 1 } }
+  ]);
+  
+  
+  revenueByMonth.forEach(revenueData => {
+    const key = `${revenueData._id.year}-${revenueData._id.month < 10 ? '0' : ''}${revenueData._id.month}`;
+    if (monthlyStatistics[key]) {
+      monthlyStatistics[key].revenue = revenueData.amount;
+      monthlyStatistics[key].amount = revenueData.amount;
+      monthlyStatistics[key].doctorRevenue = revenueData.doctorRevenue;
+      monthlyStatistics[key].adminRevenue = revenueData.adminRevenue;
+    }
+});
+const userDoctorChartData = Object.keys(monthlyStatistics).map(key => {
+  const [year, month] = key.split('-');
+  return {
+    year: parseInt(year, 10),
+    month: parseInt(month, 10),
+    users: monthlyStatistics[key].users,
+    doctor: monthlyStatistics[key].doctor,
+    revenue: monthlyStatistics[key].revenue,
+    amount: monthlyStatistics[key].amount,
+    doctorRevenue: monthlyStatistics[key].doctorRevenue,
+    adminRevenue: monthlyStatistics[key].adminRevenue
+  };
+});
+  return{
+    totalDoctors,
+    activeDoctors,
+    totalUsers,
+    activeUsers,
+    doctorRevenue,
+    adminRevenue,
+    totalRevenue:amount,
+    userDoctorChartData,
+    totalBookings
   }
 }
 

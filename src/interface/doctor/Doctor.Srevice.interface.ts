@@ -30,5 +30,6 @@ export interface IDoctorService{
     updateDoctor(doctor_Id: string, updatedDoctorData: Partial<IDoctor>): Promise<IDoctor | null | undefined>;
     savePrescription(formData: PrescriptionData): Promise<any>
     fetchPrescriptions(doctor_id:string):Promise<any>
+    getDashboardData():Promise<void>
 
 }

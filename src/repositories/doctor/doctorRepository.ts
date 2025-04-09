@@ -11,7 +11,8 @@ import BookingModel from "../../models/bookingModel";
 import { IDoctorRepository } from "../../interface/doctor/Doctor.repository.interface";
 import WalletModel from "../../models/walletModel";
 import { ITransaction } from "../../interface/common";
-import prescriptionModel from "../../models/prescriptionModel";
+import PrescriptionModel from "../../models/prescriptionModel";
+import UserModel from "../../models/userModel";
 
 class DoctorRepository implements IDoctorRepository{
     private specializationModel = SpecializationModel;
@@ -21,7 +22,8 @@ class DoctorRepository implements IDoctorRepository{
     private appoinmentModel=AppoinmentModel
     private bookingModel=BookingModel
     private walletModel=WalletModel
-    private prescriptionModel=prescriptionModel
+    private prescriptionModel=PrescriptionModel
+    private userModel=UserModel
     
     async findAllSpecializations() {
         try {
@@ -647,7 +649,7 @@ async updateDoctorData(doctor_id: string) {
       userId: string;
       prescriptions: { medicineName: string; description: string }[];
     }) {
-      const newPrescription = new prescriptionModel({
+      const newPrescription = new this.prescriptionModel({
         doctorId: data.doctorId,
         userId: data.userId,
         prescriptions: data.prescriptions,
@@ -661,6 +663,149 @@ async updateDoctorData(doctor_id: string) {
         .populate('userId', 'name') 
         .sort({ createdAt: -1 });   
     }
+
+    async getAllStatistics() {
+    
+
+      // Fetch total revenue data
+      const revenueData = await this.bookingModel.aggregate([
+          { $match: { paymentStatus: "Confirmed" } },
+          {
+              $group: {
+                  _id: null,
+                  amount: { $sum: "$amount" },
+                  doctorRevenue: { $sum: { $multiply: ["$amount", 0.9] } },
+              }
+          }
+      ]);
+      const amount = revenueData.length > 0 ? revenueData[0].amount : 0;
+      const doctorRevenue = revenueData.length > 0 ? revenueData[0].doctorRevenue : 0;
+  
+      // Set date range
+      const currentDate = new Date();
+      const startDate = new Date();
+      startDate.setMonth(currentDate.getMonth() - 12);
+  
+      // Fetch user registration data
+      const userRegistrationData = await this.userModel.aggregate([
+          { $match: { createdAt: { $gte: startDate } } },
+          {
+              $group: {
+                  _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
+                  count: { $sum: 1 }
+              }
+          },
+          { $sort: { "_id.year": 1, "_id.month": 1 } }
+      ]);
+  
+      // Initialize statistics for the last 12 months
+      const monthlyStatistics: Record<string, {
+          users: number;
+          revenue: number;
+          amount: number;
+          doctorRevenue: number;
+          doctor: number;
+      }> = {};
+  
+      for (let monthOffset = 0; monthOffset < 12; monthOffset++) {
+          const monthDate = new Date();
+          monthDate.setMonth(currentDate.getMonth() - monthOffset);
+          const year = monthDate.getFullYear();
+          const month = monthDate.getMonth() + 1;
+          const key = `${year}-${month < 10 ? '0' : ''}${month}`;
+  
+          monthlyStatistics[key] = { users: 0, revenue: 0, amount: 0, doctorRevenue: 0, doctor: 0 };
+      }
+  
+      // Map user registration data to statistics
+      userRegistrationData.forEach(userData => {
+          const key = `${userData._id.year}-${userData._id.month < 10 ? '0' : ''}${userData._id.month}`;
+          if (monthlyStatistics[key]) {
+              monthlyStatistics[key].users = userData.count;
+          }
+      });
+  
+      // Fetch revenue by month
+      const revenueByMonth = await this.bookingModel.aggregate([
+          { $match: { paymentStatus: "Confirmed", bookingDate: { $gte: startDate } } },
+          {
+              $group: {
+                  _id: { year: { $year: "$bookingDate" }, month: { $month: "$bookingDate" } },
+                  amount: { $sum: "$amount" },
+                  doctorRevenue: { $sum: { $multiply: ["$amount", 0.9] } }
+              }
+          },
+          { $sort: { "_id.year": 1, "_id.month": 1 } }
+      ]);
+  
+      
+  
+      // Fetch revenue by doctor
+      const revenueByDoctor = await this.bookingModel.aggregate([
+          { $match: { paymentStatus: "Confirmed", bookingDate: { $gte: startDate } } },
+          {
+              $group: {
+                  _id: { doctor: "$doctorId", year: { $year: "$bookingDate" }, month: { $month: "$bookingDate" } },
+                  amount: { $sum: "$amount" },
+                  doctorRevenue: { $sum: { $multiply: ["$amount", 0.9] } }
+              }
+          },
+          { $sort: { "_id.year": 1, "_id.month": 1 } }
+      ]);
+  
+      console.log("Doctor-wise Revenue:", revenueByDoctor);
+  
+      // Process revenue by doctor
+      const doctorWiseData: Record<string, { year: number; month: number; revenue: number; doctorRevenue: number }[]> = {};
+  
+      revenueByDoctor.forEach(data => {
+          const doctorId = data._id.doctor;
+          const key = `${data._id.year}-${data._id.month < 10 ? '0' : ''}${data._id.month}`;
+  
+          if (!doctorWiseData[doctorId]) {
+              doctorWiseData[doctorId] = [];
+          }
+  
+          doctorWiseData[doctorId].push({
+              year: data._id.year,
+              month: data._id.month,
+              revenue: data.amount,
+              doctorRevenue: data.doctorRevenue
+          });
+      });
+  
+      
+  
+      // Map revenue data to statistics
+      revenueByMonth.forEach(revenueData => {
+          const key = `${revenueData._id.year}-${revenueData._id.month < 10 ? '0' : ''}${revenueData._id.month}`;
+          if (monthlyStatistics[key]) {
+              monthlyStatistics[key].revenue = revenueData.amount;
+              monthlyStatistics[key].amount = revenueData.amount;
+              monthlyStatistics[key].doctorRevenue = revenueData.doctorRevenue;
+          }
+      });
+  
+      // Prepare final response
+      const userDoctorChartData = Object.keys(monthlyStatistics).map(key => {
+          const [year, month] = key.split('-');
+          return {
+              year: parseInt(year, 10),
+              month: parseInt(month, 10),
+              users: monthlyStatistics[key].users,
+              doctor: monthlyStatistics[key].doctor,
+              revenue: monthlyStatistics[key].revenue,
+              amount: monthlyStatistics[key].amount,
+              doctorRevenue: monthlyStatistics[key].doctorRevenue
+          };
+      });
+  
+      return {
+          doctorRevenue,
+          userDoctorChartData,
+          doctorWiseData
+      };
+  }
     
 
 }

@@ -628,6 +628,14 @@ constructor(doctorRepository: IDoctorRepository) {
     async fetchPrescriptions(doctor_id: string) {
       return await this.doctorRepository.getPrescriptionsByDoctor(doctor_id);
     }
+
+    async getDashboardData() {
+      try {
+        return await this.doctorRepository.getAllStatistics()
+      } catch (error: any) {
+        throw Error(error)
+      }
+    }
     
   
 }

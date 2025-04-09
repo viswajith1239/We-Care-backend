@@ -17,4 +17,5 @@ export interface IAdminRepository{
     saveupdatespecialization(name:string,description:string,specializationId:string):Promise<any>
     deleteKyc(doctor_id: string):Promise<void>
     deleteSpecializationRepository(id:string):Promise<any>
+    getAllStatistics():Promise<any>
 }

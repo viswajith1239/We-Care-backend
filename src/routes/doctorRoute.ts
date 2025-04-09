@@ -44,6 +44,8 @@ router.get('/wallet-data/:doctor_id', doctorController.getWalletData.bind(doctor
 router.post('/withdraw/:doctor_id', doctorController.withdraw.bind(doctorController));
 router.post('/prescription/:doctor_id/:user_id', doctorController.createPrescription.bind(doctorController));
 router.get('/prescriptions/:doctor_id', doctorController.getPrescriptionsByDoctor.bind(doctorController));
+router.get('/dashboard/:doctor_id', verifyToken('doctor'),doctorController.getDashboardData.bind(doctorController));
+
 
 router.post('/logout', verifyToken('doctor'), doctorController.logoutDoctor.bind(doctorController));
 

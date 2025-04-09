@@ -22,5 +22,6 @@ router.delete("/specializations/:id",adminController.deleteSpecialization.bind(a
 router.get("/doctor/kyc",verifyToken('admin'),adminController.getAllDoctorKycDatas.bind(adminController))
 router.get('/doctors/kyc/:doctor_id', verifyToken('admin'),adminController.doctorsKycData.bind(adminController));
 router.patch('/kyc-status-update/:doctor_id',verifyToken('admin'), adminController.changeKycStatus.bind(adminController));
+router.get('/dashboardData',verifyToken('admin'), adminController.getDashboardData.bind(adminController));
 
 export default router; 

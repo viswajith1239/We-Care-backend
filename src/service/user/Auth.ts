@@ -402,7 +402,7 @@ async checkoutPayment(appoinmentid: string, userId: string) {
       throw new Error("Missing session data, doctor ID, or price");
     }
     // const doctorid = appoinmentData.doctorId.toString();
-    // const doctorData = await this.authRepository.findTrainerDetails(doctorid);
+    // const doctorData = await this.authRepository.findDoctorDetails(doctorid);
 
     // if (!doctorData) {
     //   throw new Error("Doctor data not found");

@@ -16,3 +16,12 @@ export interface LoginAdmin_interface {
     isListed: boolean;
 
   }
+
+  export interface MonthlyStats {
+    users: number;        
+    doctor: number;       
+    revenue: number;      
+    amount: number;     
+    doctorRevenue: number; 
+    adminRevenue: number;
+  }

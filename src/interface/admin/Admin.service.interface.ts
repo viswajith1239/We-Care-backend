@@ -16,4 +16,5 @@ export interface IAdminService{
     updateKycStatus(  status: string, doctor_id: string,rejectionReason: string | null):Promise<void>
     fetchKycData(doctorId:string):Promise<IKYC|undefined|null>
     deleteSpecializationService(id:string):Promise<any>
+    getDashboardData():Promise<any>
 }
