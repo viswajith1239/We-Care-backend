@@ -180,6 +180,8 @@ async changeKycStatus(req: Request, res: Response, next: NextFunction) {
 }
 
 
+
+
 async getDashboardData(req: Request, res: Response, next: NextFunction) {
   try {
     const response = await this.adminService.getDashboardData()
@@ -193,7 +195,19 @@ async getDashboardData(req: Request, res: Response, next: NextFunction) {
 
  
 
+async logoutAdmin(req: Request, res: Response): Promise<void> {
+  try {
+    // Clear the access token and refresh token cookies
+    res.clearCookie('AccessToken',  { httpOnly: true, expires: new Date(0) });
+    res.clearCookie('RefreshToken', { httpOnly: true, expires: new Date(0) });
 
+    // Send success response
+    res.status(HTTP_statusCode.OK).json({ message: "Logout successful" });
+  } catch (error: any) {
+    console.error('Logout error:', error);
+    res.status(HTTP_statusCode.InternalServerError).json({ message: "Logout failed" });
+  }
+}
   
 }
 

@@ -32,6 +32,8 @@ export interface IDoctorRepository{
     findUserEmail(email: string):Promise<any>
     getOtpsByEmail(email: string):Promise<IOtp[]|[]>
     saveResetPassword(email: string, hashedPassword: string):Promise<any>
+    fetchNotifications(doctorId:any):Promise<any>
+    deleteDoctorNotifications(doctorId:any):Promise<any>
     create(data:PrescriptionData):Promise<any>
     getPrescriptionsByDoctor(doctor_id:string):Promise<any>
     getAllStatistics():Promise<any>

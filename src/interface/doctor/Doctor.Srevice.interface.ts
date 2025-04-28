@@ -27,6 +27,8 @@ export interface IDoctorService{
     getWallet(doctorId:any):Promise<IWallet|null|undefined>
     withdraw(doctor_id:any,amount:any):Promise<IWallet|null|undefined>
     fetchDoctor(doctor_id:string):Promise<any>
+    getNotifications(doctor_id:any):Promise<any>
+    clearNotifications(doctor_id:any):Promise<any>
     updateDoctor(doctor_Id: string, updatedDoctorData: Partial<IDoctor>): Promise<IDoctor | null | undefined>;
     savePrescription(formData: PrescriptionData): Promise<any>
     fetchPrescriptions(doctor_id:string):Promise<any>

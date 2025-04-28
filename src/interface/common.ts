@@ -86,5 +86,17 @@ export  interface IReview {
   rating: number
   comment: string
 }
+
+export interface INotificationContent {
+  content: string;
+  bookingId: mongoose.Types.ObjectId|undefined;
+  read: boolean;
+  createdAt: Date;
+}
+
+export interface INotification {
+  receiverId: mongoose.Types.ObjectId|string;
+  notifications: INotificationContent[];
+}
   
 

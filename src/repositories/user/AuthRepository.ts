@@ -10,11 +10,12 @@ import SpecializationModel from "../../models/specializationModel";
 import AppoinmentModel from "../../models/appoinmentModel";
 import { ISpecialization } from "../../interface/doctor/doctor_interface"
 import BookingModel from "../../models/bookingModel";
-import { IUsers } from "../../interface/common";
+import { INotification, INotificationContent, IUsers } from "../../interface/common";
 import { ITransaction } from "../../models/walletModel";
 import WalletModel from "../../models/walletModel";
 import PrescriptionModel from "../../models/prescriptionModel";
 import ReviewModel from "../../models/reviewModel";
+import NotificationModel from "../../models/notificationModel";
 
 
 
@@ -30,6 +31,7 @@ export class AuthRepository implements IAuthRepository {
   private walletModel=WalletModel
   private prescriptionModel=PrescriptionModel
   private reviewModel=ReviewModel
+  private notificationModel = NotificationModel;
 
   async existUser(email: string,phone: string): Promise<{ existEmail: boolean; existPhone: boolean }> {
     try {
@@ -339,6 +341,71 @@ export class AuthRepository implements IAuthRepository {
   }
 
 
+    async createNotification(bookingDetails: IBooking) {
+      try {
+        if (!bookingDetails.doctorId || !bookingDetails.userId) {
+          throw new Error("Doctor ID or User ID is missing.");
+        }
+        const doctorNotificationContent: INotificationContent = {
+          content: `New booking for  on ${bookingDetails.startDate.toDateString()} at ${bookingDetails.startTime}. Amount: ₹${bookingDetails.amount}.`,
+          bookingId: new mongoose.Types.ObjectId(bookingDetails.appoinmentId),
+          read: false,
+          createdAt: new Date(),
+        }
+        const userNotificationContent: INotificationContent = {
+          content: `Your appointment  on ${bookingDetails.startDate.toDateString()} at ${bookingDetails.startTime} is confirmed. Amount: ₹${bookingDetails.amount}.`,
+          bookingId: new mongoose.Types.ObjectId(bookingDetails.appoinmentId),
+          read: false,
+          createdAt: new Date(),
+        };
+        const existingDoctorNotification = await this.notificationModel.findOne({
+          receiverId: bookingDetails.doctorId,
+        });
+
+        if (existingDoctorNotification) {
+          existingDoctorNotification.notifications.push(
+            doctorNotificationContent
+          );
+          await existingDoctorNotification.save();
+        } else {
+          const newDoctorNotification: INotification = {
+            receiverId: bookingDetails.doctorId,
+            notifications: [doctorNotificationContent],
+          };
+          await this.notificationModel.create(newDoctorNotification);
+        }
+        const existingUserNotification = await this.notificationModel.findOne({
+          receiverId: bookingDetails.userId,
+        });
+
+        if (existingUserNotification) {
+          existingUserNotification.notifications.push(userNotificationContent);
+          await existingUserNotification.save();
+        } else {
+
+          const userId =
+    typeof bookingDetails.userId === 'object' &&
+    bookingDetails.userId !== null &&
+    'name' in bookingDetails.userId
+      ? undefined // Invalid case: no _id
+      : bookingDetails.userId;
+
+  if (!userId) {
+    throw new Error("Invalid user ID: cannot extract ObjectId from userId.");
+  }
+          const newUserNotification: INotification = {
+            receiverId:userId,
+            notifications: [userNotificationContent],
+          };
+          await this.notificationModel.create(newUserNotification);
+        }
+      } catch (error: any) {
+        console.error("Error creating notification:", error);
+        throw new Error("Failed to create notification.");
+      }
+    }
+
+
   async editUserData(userId:string,userData:User){
     try {
       console.log("Received userData for update:", userData); 
@@ -350,6 +417,33 @@ export class AuthRepository implements IAuthRepository {
       console.log("Error in UserEdit in Repository",error)
     }
   
+  }
+
+  async fetchNotifications(userId: string) {
+    try {
+      const notificationsDoc = await this.notificationModel.findOne({
+        receiverId: userId,
+      });
+  
+      if (notificationsDoc?.notifications?.length) {
+        notificationsDoc.notifications.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      }
+  
+      return notificationsDoc;
+    } catch (error) {
+      throw new Error("Failed to find notifications");
+    }
+  }
+
+  async deleteUserNotifications(userId: string) {
+    try {
+      await this.notificationModel.deleteOne({ receiverId: userId });
+    } catch (error) {
+      throw new Error("Failed to delete notifications");
+    }
   }
   async fetchBookings(user_id:string){
     try {
@@ -429,17 +523,19 @@ export class AuthRepository implements IAuthRepository {
     console.log("reached repo", userId);
 
     const bookings = await this.bookingModel
-      .find({ userId })
-      .populate("doctorId");
+  .find({ userId })
+  .populate("doctorId");
 
-    
-    const uniqueDoctors = new Map();
+const uniqueDoctors = new Map();
 
-    bookings.forEach((booking) => {
-      uniqueDoctors.set(booking.doctorId._id.toString(), booking.doctorId);
-    });
+bookings.forEach((booking) => {
+  if (booking.doctorId) {
+    uniqueDoctors.set(booking.doctorId._id.toString(), booking.doctorId);
+  }
+});
 
-    return Array.from(uniqueDoctors.values());
+return Array.from(uniqueDoctors.values());
+
   } catch (error) {
     console.error("Error fetching booked doctors:", error);
     throw new Error("Could not fetch booked doctors");

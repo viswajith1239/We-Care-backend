@@ -41,6 +41,10 @@ route.get('/reviews/:doctor_id',verifyToken('user'), AuthControllerInstance.getR
 route.patch('/edit-review', verifyToken('user'), AuthControllerInstance.editReview.bind(AuthControllerInstance)); 
 route.get('/reviews-summary/:doctor_id', verifyToken('user'), AuthControllerInstance.getReivewSummary.bind(AuthControllerInstance)); 
 
+route.get('/notifications/:user_id', verifyToken('user'), AuthControllerInstance.getNotifications.bind(AuthControllerInstance)); 
+
+route.delete('/clear-notifications/:user_id', verifyToken('user'), AuthControllerInstance.clearNotifications.bind(AuthControllerInstance));
+
 route.post("/logout", verifyToken('user'), AuthControllerInstance.logout.bind(AuthControllerInstance));  
 
 export default route;

@@ -34,6 +34,9 @@ export interface IAuthRepository {
     fetchUser(userId:string):Promise<any>
     getPrescriptionsByuser(user_id:string):Promise<any>
     findBookings(user_id:string,doctorId:string):Promise<any>
+    fetchNotifications(userId:string):Promise<any>
+    deleteUserNotifications(userId:string):Promise<any>
+    createNotification(bookingDetails:any):Promise<any>
     createReview(reviewComment:any,selectedRating:any,userId:any,doctorId:any):Promise<any>
     getReview(doctor_id:string):Promise<any>
     editReview(reviewComment:any,selectedRating:any,userReviewId:any):Promise<any>

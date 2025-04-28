@@ -13,6 +13,7 @@ const adminController=new AdminController(adminService)
 
 
 router.post("/loginadmin",adminController.adminLogin.bind(adminController))
+router.post('/logout', adminController.logoutAdmin.bind(adminController));
 router.post("/specialization", adminController.addspecialization.bind(adminController));
 router.get("/users",verifyToken('admin'),adminController.getAllUsers.bind(adminController))
 router.get('/specialization',verifyToken('admin'),  adminController.getAllSpecializations.bind(adminController))

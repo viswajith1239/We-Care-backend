@@ -634,6 +634,12 @@ return appoinments
     
     async logoutDoctor(req: Request, res: Response) {
       try {
+        res.cookie("AccessToken",  {
+          httpOnly: true,
+          expires: new Date(0),
+          sameSite: "none",
+          secure: true,
+        });
         res.clearCookie("RefreshToken", {
           httpOnly: true,
           sameSite: "none",
@@ -676,6 +682,28 @@ async createPrescription(req: Request, res: Response, next: NextFunction): Promi
   } catch (error) {
     console.error("Error submitting prescription:", error);
     next(error);
+  }
+}
+
+
+async getNotifications(req: Request, res: Response, next: NextFunction) {
+  console.log("fetching notificatin in controller");
+  try {
+    console.log("fetching notificatin in controller try");
+    const { doctor_id } = req.params;
+    const notifications = await this.doctorService.getNotifications(doctor_id);
+    res.status(200).json(notifications);
+  } catch (error) {
+    next(error);
+  }
+}
+async clearNotifications(req: Request, res: Response, next: NextFunction) {
+  try {
+    const {doctor_id} = req.params
+    await this.doctorService.clearNotifications(doctor_id)
+    res.status(200).json({message:'Notifications cleared successfully'})
+  } catch (error) {
+    next(error)
   }
 }
 

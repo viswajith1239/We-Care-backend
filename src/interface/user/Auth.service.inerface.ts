@@ -30,6 +30,8 @@ export interface IAuthService {
     findBookings(user_id:string,doctor_id:string):Promise<any>
     addReview(reviewComment:any,selectedRating:any,userId:any,doctorId:any):Promise<any>
     reviews(doctor_id:string):Promise<any>
+    getNotifications(user_id:any):Promise<any>
+    clearNotifications(user_id:any):Promise<any>
     editReview(reviewComment:any,selectedRating:any,userReviewId:any):Promise<any>
     getReivewSummary(doctor_id:string):Promise<any>
     

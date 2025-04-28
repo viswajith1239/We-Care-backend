@@ -42,6 +42,8 @@ router.get('/fetchusers/:doctorId',doctorController.fetchusers.bind(doctorContro
 router.get('/bookings/:doctor_id', doctorController.getAllBookings.bind(doctorController));
 router.get('/wallet-data/:doctor_id', doctorController.getWalletData.bind(doctorController));
 router.post('/withdraw/:doctor_id', doctorController.withdraw.bind(doctorController));
+router.get('/notifications/:doctor_id', verifyToken('doctor'), doctorController.getNotifications.bind(doctorController));
+router.delete('/clear-notifications/:doctor_id', verifyToken('doctor'), doctorController.clearNotifications.bind(doctorController));
 router.post('/prescription/:doctor_id/:user_id', doctorController.createPrescription.bind(doctorController));
 router.get('/prescriptions/:doctor_id', doctorController.getPrescriptionsByDoctor.bind(doctorController));
 router.get('/dashboard/:doctor_id', verifyToken('doctor'),doctorController.getDashboardData.bind(doctorController));

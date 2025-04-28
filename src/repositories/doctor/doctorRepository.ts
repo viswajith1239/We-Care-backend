@@ -13,6 +13,7 @@ import WalletModel from "../../models/walletModel";
 import { ITransaction } from "../../interface/common";
 import PrescriptionModel from "../../models/prescriptionModel";
 import UserModel from "../../models/userModel";
+import NotificationModel from "../../models/notificationModel";
 
 class DoctorRepository implements IDoctorRepository{
     private specializationModel = SpecializationModel;
@@ -24,6 +25,7 @@ class DoctorRepository implements IDoctorRepository{
     private walletModel=WalletModel
     private prescriptionModel=PrescriptionModel
     private userModel=UserModel
+    private notificationModel=NotificationModel
     
     async findAllSpecializations() {
         try {
@@ -408,7 +410,7 @@ class DoctorRepository implements IDoctorRepository{
       try {
         
         
-        const bookingDetails=await  this.bookingModel.find({doctorId}).populate("userId","name").exec()
+        const bookingDetails=await  this.bookingModel.find({doctorId}).sort({ createdAt: -1 }).populate("userId","name").exec()
         
         const response = bookingDetails.map((booking: any) => {
           return {
@@ -418,7 +420,7 @@ class DoctorRepository implements IDoctorRepository{
           };
         });
         
-        return bookingDetails
+        return response
        
       } catch (error) {
         console.log("ërror in fetching booking dewtails",error)
@@ -488,6 +490,35 @@ async getAllBookings(doctor_id: string) {
       return response;
   } catch (error) {
       console.log("Error in fetching doctor bookings:", error);
+  }
+}
+
+
+
+async fetchNotifications(doctorId: string) {
+  console.log("fetching notificatin in repo");
+  
+  try {
+    console.log("fetching notificatin in repo try");
+    const notificationsDoc = await this.notificationModel.findOne({ receiverId: doctorId });
+    if (notificationsDoc && notificationsDoc.notifications) {
+      notificationsDoc.notifications.sort((a, b) => {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+    }
+    return notificationsDoc;
+  } catch (error) {
+    console.error('Error finding notifications');
+    throw new Error('Failed to find notifications')
+    
+  }
+}
+async deleteDoctorNotifications(doctorId: string) {
+  try {
+    await this.notificationModel.deleteOne({receiverId: doctorId})
+  } catch (error) {
+    console.error('Error delete notifications');
+    throw new Error('Failed to delete notifications');
   }
 }
 

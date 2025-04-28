@@ -629,6 +629,25 @@ constructor(doctorRepository: IDoctorRepository) {
       return await this.doctorRepository.getPrescriptionsByDoctor(doctor_id);
     }
 
+
+    async getNotifications(doctorId: string) {
+      console.log("fetching notificatin in service ");
+      try {
+        console.log("fetching notificatin in srcice try");
+        return await this.doctorRepository.fetchNotifications(doctorId)
+      } catch (error) {
+        throw new Error('failed to find notifications')
+      }
+     }
+
+     async clearNotifications(doctorId: string) {
+      try {
+        return await this.doctorRepository.deleteDoctorNotifications(doctorId)
+      } catch (error) {
+        throw new Error('failed to delete notifications')
+      }
+     }
+
     async getDashboardData() {
       try {
         return await this.doctorRepository.getAllStatistics()

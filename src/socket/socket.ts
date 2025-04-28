@@ -106,6 +106,7 @@ io.on("connection",(socket)=>{
     console.log("fff",userSocketMap);
     
 }
+io.emit("getonline",Object.keys(userSocketMap))
   
 
 
@@ -121,6 +122,7 @@ socket.on("disconnect", () => {
    
     if (userSocketMap[disconnectedUserId]?.length === 0) {
       delete userSocketMap[disconnectedUserId];
+      io.emit("getonline",Object.keys(userSocketMap))
     }
 
     console.log(`Updated userSocketMap after disconnection:`, userSocketMap);
@@ -207,6 +209,38 @@ socket.on("disconnect", () => {
       socket.to(friendSocketId).emit("user-left",data.to);
     }
   });
+
+  socket.on("newBookingNotification", (data) => {
+
+    const receiverSocketId = getReceiverSocketId(data.receiverId);
+  
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("receiveNewBooking", data.content);
+    } else {
+      console.warn("Receiver not connected:", data.receiverId);
+    }
+  });
+  socket.on('cancelDoctorNotification', (data) => {
+    const receiverSocketId = getReceiverSocketId(data.receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("receiveCancelNotificationForDoctor", data.content);
+      console.log("Notification sent to client:", data);
+    } else {
+      console.warn("No receiverSocketId found for receiverId:", data.receiverId);
+    }
+  });
+
+  socket.on('cancelUserNotification', (data) => {
+    const receiverSocketId = getReceiverSocketId(data.userId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("receiveCancelNotificationForUser", data.content);
+      console.log("Notification sent to client:", data);
+    } else {
+      console.warn("No receiverSocketId found for receiverId:", data.receiverId);
+    }
+  });
+
+  
   
 })
 export{app,io,server}

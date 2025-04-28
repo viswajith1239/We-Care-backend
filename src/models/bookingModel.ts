@@ -16,6 +16,6 @@ const bookingSchema=new Schema<IBooking>({
     payment_intent: {type: String, required: false },
     
 
-})
+},{ timestamps: true })
 const BookingModel =model<IBooking>("Booking",bookingSchema)
 export default BookingModel;

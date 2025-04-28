@@ -245,7 +245,7 @@ export class AuthController  {
           }
       
           const doctor = await this.authService.getDoctor(doctorId);
-          // console.log(trainer);
+         
       
           if (!doctor) {
             res.status(HTTP_statusCode.NotFound).json({ message: "doctor not found" });
@@ -334,6 +334,26 @@ export class AuthController  {
           
         }
       
+      }
+
+      async getNotifications(req: Request, res: Response, next: NextFunction) {
+        try {
+          const { user_id } = req.params;
+          const notifications = await this.authService.getNotifications(user_id);
+          res.status(200).json(notifications);
+        } catch (error) {
+          next(error);
+        }
+      }
+
+      async clearNotifications(req: Request, res: Response, next: NextFunction) {
+        try {
+          const { user_id } = req.params;
+          await this.authService.clearNotifications(user_id);
+          res.status(200).json({ message: "Notifications cleared successfully" });
+        } catch (error) {
+          next(error);
+        }
       }
 
       async updateUserData(req: Request, res: Response, next: NextFunction) {
@@ -498,6 +518,11 @@ export class AuthController  {
       
       logout = async (req: Request, res: Response): Promise<void> => {
         try {
+          res.clearCookie("AccessToken", {
+            httpOnly: true,
+            sameSite: "none",
+            secure: true,
+          });
           res.clearCookie("RefreshToken", {
             httpOnly: true,
             sameSite: "none",

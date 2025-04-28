@@ -482,7 +482,7 @@ async findBookingDetails(session_id: string, user_id: string, stripe_session_id:
      // throw new Error("Booking already exists.");
     }
     const bookingData=await this.authRepository.createBooking(bookingDetails)
-    // await this._userRepository.createNotification(bookingData)
+    await this.authRepository.createNotification(bookingData)
 
     
     return bookingData
@@ -505,6 +505,22 @@ async fechtUserData(userId:string):Promise<User|null>{
     return null
   }
 }
+
+async getNotifications(userId: string) {
+  try {
+    return await this.authRepository.fetchNotifications(userId)
+  } catch (error) {
+    throw new Error('failed to find notifications')
+  }
+ }
+
+ async clearNotifications(userId: string) {
+  try {
+    return await this.authRepository.deleteUserNotifications(userId)
+  } catch (error) {
+    throw new Error('failed to delete notifications')
+  }
+ }
 
 
 async editUserData( userId: string,userData: User,) {
