@@ -11,16 +11,16 @@ const messageService = new MessageService();
 export class MessageController {
   async sendMessage(req: Request, res: Response): Promise<any> {
     try {
-      const { senderId, receiverId, message } = req.body;
+      const { senderId, receiverId, message,mediaUrl } = req.body;
       console.log("uuu",receiverId);
-      
+      console.log("Media URL received:", mediaUrl);
 
       if (!receiverId || receiverId.length !== 24) {
         return res.status(400).json({ success: false, message: "Invalid receiverId" });
       }
 
       // Assuming messageService.sendMessage exists
-      const newMessage = await messageService.sendMessage({ senderId, receiverId,message});
+      const newMessage = await messageService.sendMessage({ senderId, receiverId,message,imageUrl:mediaUrl});
 
       res.status(201).json({ success: true, message: "Message sent!", data: newMessage });
     } catch (error) {
