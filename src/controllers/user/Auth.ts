@@ -461,6 +461,42 @@ export class AuthController  {
       }
 
 
+     async addReport(req: Request, res: Response):Promise<any>{
+    try {
+      const { userId, userName, userEmail } = req.body;
+      const file = req.file;
+
+      const result = await this.authService.addReport(file!, { userId, userName, userEmail });
+
+      return res.status(200).json({
+        message: 'Report uploaded successfully',
+        ...result,
+      });
+    } catch (error) {
+      console.error('Upload error:', error);
+      return res.status(500).json({ message:'Upload failed' });
+    }
+  }
+
+
+  async getReports(req: Request, res: Response): Promise<any> {
+  try {
+    const userId = req.params.userId;
+
+    const reports = await this.authService.getReportsByUserId(userId);
+
+    res.status(200).json({
+      message: 'Reports fetched successfully',
+      reports,
+    });
+  } catch (error) {
+    console.error('Fetch error:', error);
+    res.status(500).json({ message: 'Failed to fetch reports' });
+  }
+}
+
+
+
       async addReview(req: Request, res: Response, next: NextFunction) {
         try {
           const { reviewComment, selectedRating, userId, doctorId } = req.body;

@@ -39,7 +39,7 @@ const appoinmentSchema = new Schema<IAppoinment>({
     },
     specializationId: { 
         type: Schema.Types.ObjectId, 
-        ref: "Specialization" 
+        ref: "ISpecialization" 
     },
     selectedDate: { 
         type: Date, 

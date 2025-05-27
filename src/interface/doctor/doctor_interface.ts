@@ -79,6 +79,7 @@ export interface IOtp {
     recurrenceInterval?: number;
     recurrenceEnd?: Date;
     daysOfWeek?: number[];
+    
 }
 
   export interface ISpecialization {
@@ -118,13 +119,27 @@ export interface IOtp {
     isBlocked?: boolean;
   }
 
-  export interface PrescriptionData {
-    doctorId: string;
-    userId: string;
-    prescriptions: {
-      medicineName: string;
-      description: string;
-    }[];
-  }
+ export interface PrescriptionData {
+  doctorId: string;
+  userId: string;
+  bookingId?: string;
+  // specializationId?: string;
+  prescriptions: {
+    medicineName: string;
+    dosage: string;
+    frequency: string;
+    duration: string;
+    instruction: string;
+  }[];
+}
+
+export interface IReportData {
+  _id: any;
+  userId: mongoose.Types.ObjectId;        
+  userName: string;       
+  userEmail: string;      
+  imageUrl: string;       
+}
+
   
   

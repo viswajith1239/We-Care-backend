@@ -23,5 +23,15 @@ export class MessageRepository {
       throw new Error("Could not fetch messages");
     }
   }
+
+  async deleteMessage(messageId: string) {
+    try {
+      const result = await MessageModel.findByIdAndDelete(messageId); // Use findByIdAndDelete to remove the message
+      return result; // Returns the deleted document or null if not found
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      throw new Error("Could not delete message");
+    }
+  }
   
 }

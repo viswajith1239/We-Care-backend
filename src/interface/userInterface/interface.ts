@@ -95,4 +95,14 @@ export interface User {
   
 
   }
+
+  export interface IReportData {
+  _id: any;
+  userId: mongoose.Types.ObjectId;   
+  doctorId: mongoose.Types.ObjectId;       
+  userName: string;       
+  userEmail: string;      
+  imageUrl: string;       
+}
+
   

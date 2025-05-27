@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 
 import { IAuthService } from "../../interface/user/Auth.service.inerface";
-import { User, userType } from "../../interface/userInterface/interface";
+import { IReportData, User, userType } from "../../interface/userInterface/interface";
 import { AuthRepository } from "../../repositories/user/AuthRepository";
 import jwt from "jsonwebtoken"
 import sendMail from "../../config/emailConfig";
@@ -11,6 +11,7 @@ import { response } from "express";
 import stripeClient from "../../config/stripeClients";
 import mongoose from "mongoose";
 import { IAuthRepository } from "../../interface/user/Auth.repository.interface";
+import cloudinary, { uploadToCloudinary } from "../../config/cloudinary";
 
 
 export class AuthService implements IAuthService {
@@ -401,6 +402,9 @@ async checkoutPayment(appoinmentid: string, userId: string) {
     if (!appoinmentData || !appoinmentData.doctorId || !appoinmentData.price) {
       throw new Error("Missing session data, doctor ID, or price");
     }
+    console.log("entered in to stripe function");
+    
+
     // const doctorid = appoinmentData.doctorId.toString();
     // const doctorData = await this.authRepository.findDoctorDetails(doctorid);
 
@@ -617,6 +621,30 @@ async findBookings(user_id: string, doctorId: string) {
     throw new Error('Failed to create review');
   }
 }
+
+async addReport(file: Express.Multer.File, userData: { userId: string; userName?: string; userEmail?: string }) {
+    if (!file) throw new Error('No file provided');
+
+    const result =  await uploadToCloudinary(file.buffer, 'medical_reports');
+
+    const savedReport = await this.authRepository.saveReport({
+      userId: userData.userId,
+      userName: userData.userName || '',
+      userEmail: userData.userEmail || '',
+      imageUrl: result.secure_url,
+    });
+
+    return {
+      cloudinaryUrl: result.secure_url,
+      documentId: savedReport._id,
+    };
+  }
+
+
+  async getReportsByUserId(userId: string): Promise<IReportData[]> {
+  return await this.authRepository.getReportsByUserId(userId);
+}
+
 
 async reviews(doctor_id: string) {
   try {

@@ -16,5 +16,9 @@ export class MessageService {
     async fetchMessages(id:string,ids:string) {
       return await messageRepository.getMessages(id,ids);
     }
+
+    async deleteMessage(messageId: string) {
+      return await messageRepository.deleteMessage(messageId); // Delegate deletion to repository
+    }
   }
 export default MessageService  

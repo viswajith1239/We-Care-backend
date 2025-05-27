@@ -1,6 +1,6 @@
 
 import userModel from "../../models/userModel"
-import { UserProfile, userType,IOtp,IUser,IBooking, User } from "../../interface/userInterface/interface";
+import { UserProfile, userType,IOtp,IUser,IBooking, User, IReportData } from "../../interface/userInterface/interface";
 import { IAuthRepository } from "../../interface/user/Auth.repository.interface";
 import { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
@@ -16,6 +16,7 @@ import WalletModel from "../../models/walletModel";
 import PrescriptionModel from "../../models/prescriptionModel";
 import ReviewModel from "../../models/reviewModel";
 import NotificationModel from "../../models/notificationModel";
+import ReportModel from "../../models/reportModel";
 
 
 
@@ -32,6 +33,7 @@ export class AuthRepository implements IAuthRepository {
   private prescriptionModel=PrescriptionModel
   private reviewModel=ReviewModel
   private notificationModel = NotificationModel;
+  private reportModel=ReportModel
 
   async existUser(email: string,phone: string): Promise<{ existEmail: boolean; existPhone: boolean }> {
     try {
@@ -449,7 +451,7 @@ export class AuthRepository implements IAuthRepository {
     try {
       
   
-      const bookings=await this.bookingModel.find({userId:user_id}).populate("doctorId","name profileImage").exec()
+      const bookings=await this.bookingModel.find({userId:user_id}).populate("doctorId","name profileImage").sort({ createdAt: -1 }).exec()
       const response = bookings.map((booking: any) => {
         return {
           ...booking.toObject(),  
@@ -552,10 +554,79 @@ async fetchUser(userId: string) {
 }
 
 async getPrescriptionsByuser(user_id: string) {
-      return await this.prescriptionModel.find({ userId: user_id })
-        .populate('doctorId', 'name') 
-        .sort({ createdAt: -1 });   
-    }
+ const prescriptions = await this.prescriptionModel.aggregate([
+  {
+    $match: {
+      userId: new mongoose.Types.ObjectId(user_id),
+    },
+  },
+  {
+    $lookup: {
+      from: 'doctors',
+      localField: 'doctorId',
+      foreignField: '_id',
+      as: 'doctorDetails',
+    },
+  },
+  { $unwind: '$doctorDetails' },
+  {
+    $lookup: {
+      from: 'bookings',
+      localField: 'bookingId',
+      foreignField: 'appoinmentId',
+      as: 'bookingDetails',
+    },
+  },
+  {
+    $unwind: {
+      path: '$bookingDetails',
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    $lookup: {
+      from: 'users',
+      localField: 'userId',
+      foreignField: '_id',
+      as: 'userDetails',
+    },
+  },
+  {
+    $unwind: {
+      path: '$userDetails',
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    $project: {
+      _id: 1,
+      userId: 1,
+      bookingId: 1,
+      prescriptions: 1,
+      createdAt: 1,
+      doctorName: '$doctorDetails.name',
+      specializationId: '$bookingDetails.specialization',
+      bookingAmount: '$bookingDetails.amount',
+      bookingStartDate: '$bookingDetails.startDate',
+      bookingEndTime: '$bookingDetails.endTime',
+      bookingStartTime: '$bookingDetails.startTime',
+      bookingDate: '$bookingDetails.bookingDate',
+      userName: '$userDetails.name',
+    },
+  },
+  {
+    $sort: {
+      createdAt: -1,
+    },
+  },
+]);
+
+  console.log('Fetched prescriptions:',prescriptions);
+
+  return prescriptions;
+}
+
+
 
     async findBookings(user_id: string, doctor_id: string) {
       try {
@@ -570,6 +641,33 @@ async getPrescriptionsByuser(user_id: string) {
         throw new Error("Failed to find bookings");
       }
     }
+
+     async saveReport(data: {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  doctorId:string
+  imageUrl: string;
+}): Promise<IReportData> {
+  const report = new this.reportModel(data);
+  const saved = await report.save();
+
+  return {
+    _id: saved._id,
+    userId: saved.userId,
+    doctorId: saved.doctorId,
+    userName: saved.userName,
+    userEmail: saved.userEmail,
+    imageUrl: saved.imageUrl,
+  };
+}
+
+
+async getReportsByUserId(userId: string): Promise<IReportData[]> {
+  return await this.reportModel.find({ userId }).sort({ createdAt: -1 });
+}
+
+
 
     async createReview(
       reviewComment: string,

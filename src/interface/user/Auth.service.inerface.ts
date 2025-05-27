@@ -34,5 +34,10 @@ export interface IAuthService {
     clearNotifications(user_id:any):Promise<any>
     editReview(reviewComment:any,selectedRating:any,userReviewId:any):Promise<any>
     getReivewSummary(doctor_id:string):Promise<any>
+    addReport(
+    file: Express.Multer.File,
+    userData: { userId: string; userName?: string; userEmail?: string }
+  ): Promise<{ cloudinaryUrl: string; documentId: string }>;
+  getReportsByUserId(userId:string):Promise<any>
     
  };

@@ -6,5 +6,6 @@ const messagecontroller =new MessageController()
 
 router.post('/send',  messagecontroller.sendMessage)
 router.get('/:id/:ids', messagecontroller.getMessages)
+router.delete('/:id',messagecontroller.deleteMessage)
 
 export default router

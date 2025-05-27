@@ -1,5 +1,5 @@
 import { Document } from "mongoose";
-import { User, userType,} from "../userInterface/interface";
+import { IReportData, User, userType,} from "../userInterface/interface";
 import { IUser,IOtp,IBooking,IUsers} from "../common";
 import mongoose, { Types } from "mongoose";
 import { Interface_Doctor, IAppoinment } from "../doctor/doctor_interface";
@@ -41,6 +41,13 @@ export interface IAuthRepository {
     getReview(doctor_id:string):Promise<any>
     editReview(reviewComment:any,selectedRating:any,userReviewId:any):Promise<any>
     getAvgReviewsRating(doctor_id:string):Promise<any>
+  saveReport(data: {
+    userId: string;
+    userName: string;
+    userEmail: string;
+    imageUrl: string;
+  }): Promise<IReportData>;
+  getReportsByUserId(userId:string):Promise<any>
     
     
  };

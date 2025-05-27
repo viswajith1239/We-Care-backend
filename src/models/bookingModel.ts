@@ -6,7 +6,7 @@ const bookingSchema=new Schema<IBooking>({
     userId:{type:Schema.Types.ObjectId,ref:"User"},
     specialization: { type: String, required: false },
    
-    bookingDate: { type: Date, default: Date.now }, 
+    bookingDate: { type: Date, }, 
     startDate: { type: Date, required: true }, 
     // endDate: { type: Date, required: false }, 
     startTime: { type: String, required: true },
