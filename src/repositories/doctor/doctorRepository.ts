@@ -502,6 +502,13 @@ class DoctorRepository implements IDoctorRepository {
     }
   }
 
+  async findByDoctorAndUser (
+  doctorId: string,
+  userId: string
+): Promise<any>{
+  return await this.bookingModel.find({ doctorId, userId });
+};
+
 
 
   async fetchNotifications(doctorId: string) {

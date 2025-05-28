@@ -708,6 +708,20 @@ async getReports(req: Request, res: Response): Promise<any> {
 }
 
 
+ async getPatientBookingForDoctor (req: Request, res: Response):Promise<any> {
+  const { doctorId, userId } = req.params;
+  console.log("userid",userId,doctorId);
+  
+
+  try {
+    const bookings = await this.doctorService.getBookingsByDoctorAndUser(doctorId, userId);
+    res.status(200).json(bookings);
+  } catch (error) {
+    console.error("Error in controller:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
   async getNotifications(req: Request, res: Response, next: NextFunction) {
     console.log("fetching notificatin in controller");
     try {

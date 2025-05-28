@@ -463,10 +463,10 @@ export class AuthController  {
 
      async addReport(req: Request, res: Response):Promise<any>{
     try {
-      const { userId, userName, userEmail } = req.body;
+      const { userId, userName, userEmail,doctorId } = req.body;
       const file = req.file;
 
-      const result = await this.authService.addReport(file!, { userId, userName, userEmail });
+      const result = await this.authService.addReport(file!, { userId, userName, userEmail,doctorId });
 
       return res.status(200).json({
         message: 'Report uploaded successfully',

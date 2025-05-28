@@ -50,4 +50,5 @@ export interface IDoctorRepository {
     ): Promise<IAppoinment[]>;
     rescheduleAppointment(id: string, updatedData: any): Promise<IAppoinment | null>;
      getReportsByUserId(doctorId:string):Promise<any>
+     findByDoctorAndUser(doctorId:string,userId:string):Promise<any>
 }

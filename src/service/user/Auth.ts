@@ -622,13 +622,14 @@ async findBookings(user_id: string, doctorId: string) {
   }
 }
 
-async addReport(file: Express.Multer.File, userData: { userId: string; userName?: string; userEmail?: string }) {
+async addReport(file: Express.Multer.File, userData: { userId: string; userName?: string; userEmail?: string;doctorId:string }) {
     if (!file) throw new Error('No file provided');
 
     const result =  await uploadToCloudinary(file.buffer, 'medical_reports');
 
     const savedReport = await this.authRepository.saveReport({
       userId: userData.userId,
+      doctorId:userData.doctorId,
       userName: userData.userName || '',
       userEmail: userData.userEmail || '',
       imageUrl: result.secure_url,

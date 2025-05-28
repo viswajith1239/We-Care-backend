@@ -36,7 +36,7 @@ export interface IAuthService {
     getReivewSummary(doctor_id:string):Promise<any>
     addReport(
     file: Express.Multer.File,
-    userData: { userId: string; userName?: string; userEmail?: string }
+    userData: { userId: string; userName?: string; userEmail?: string,doctorId:string }
   ): Promise<{ cloudinaryUrl: string; documentId: string }>;
   getReportsByUserId(userId:string):Promise<any>
     

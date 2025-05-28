@@ -37,4 +37,5 @@ export interface IDoctorService {
     findAppointmentById(id: string): Promise<IAppoinment | null>;
     rescheduleAppointment(appointmentId: string, updatedData: any): Promise<IAppoinment | null>;
     getReportsByUserId(doctorId:string):Promise<any>
+    getBookingsByDoctorAndUser(doctorId:string,userId:string):Promise<any>
 }

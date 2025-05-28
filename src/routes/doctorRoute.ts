@@ -47,6 +47,7 @@ router.post('/withdraw/:doctor_id', doctorController.withdraw.bind(doctorControl
 router.get('/notifications/:doctor_id', verifyToken('doctor'), doctorController.getNotifications.bind(doctorController));
 router.delete('/clear-notifications/:doctor_id', verifyToken('doctor'), doctorController.clearNotifications.bind(doctorController));
 router.post('/prescription/:doctor_id/:user_id', doctorController.createPrescription.bind(doctorController));
+router.get('/booking/:doctorId/:userId', doctorController.getPatientBookingForDoctor.bind(doctorController));
 router.get('/reports/:doctorId',verifyToken('doctor'),doctorController.getReports.bind(doctorController))
 router.get('/prescriptions/:doctor_id', doctorController.getPrescriptionsByDoctor.bind(doctorController));
 router.get('/dashboard/:doctor_id', verifyToken('doctor'), doctorController.getDashboardData.bind(doctorController));

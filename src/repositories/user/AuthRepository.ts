@@ -644,9 +644,9 @@ async getPrescriptionsByuser(user_id: string) {
 
      async saveReport(data: {
   userId: string;
+  doctorId:string
   userName: string;
   userEmail: string;
-  doctorId:string
   imageUrl: string;
 }): Promise<IReportData> {
   const report = new this.reportModel(data);

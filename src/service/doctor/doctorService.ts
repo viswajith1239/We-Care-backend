@@ -660,6 +660,13 @@ class Doctorservice implements IDoctorService {
   }
   
 
+  async getBookingsByDoctorAndUser  (
+  doctorId: string,
+  userId: string
+): Promise<any>  {
+  return await this.doctorRepository.findByDoctorAndUser(doctorId, userId);
+};
+
 
   async getNotifications(doctorId: string) {
     console.log("fetching notificatin in service ");

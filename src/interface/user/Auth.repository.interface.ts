@@ -41,8 +41,9 @@ export interface IAuthRepository {
     getReview(doctor_id:string):Promise<any>
     editReview(reviewComment:any,selectedRating:any,userReviewId:any):Promise<any>
     getAvgReviewsRating(doctor_id:string):Promise<any>
-  saveReport(data: {
+    saveReport(data: {
     userId: string;
+    doctorId:string;
     userName: string;
     userEmail: string;
     imageUrl: string;
