@@ -10,9 +10,10 @@ import BookingModel from "../../models/bookingModel";
 import { IAdminRepository } from "../../interface/admin/Admin.repository.interface";
 import { IUser } from "../../interface/common";
 import { MonthlyStats } from "../../interface/admin/admin_interface";
+import BaseRepository from "../base/baseRepository";
 type IUserDocument = IUser & Document;
 
-class AdminRepository implements IAdminRepository{
+class AdminRepository extends BaseRepository<any>  implements IAdminRepository{
 
 
 private adminModel = AdminModel;
@@ -22,6 +23,10 @@ private kycModel = KYCModel
 private doctorModel=DoctorModel
 private kycRejectionReasonModel = KycRejectionReasonModel
 private bookingModel=BookingModel
+
+constructor() {
+      super(AdminModel);  
+    }
 
 async findAdmin(email:string):Promise<LoginAdmin_interface|null>{
     console.log("admin repo find ethi");

@@ -11,8 +11,10 @@ const messageService = new MessageService();
 export class MessageController {
   async sendMessage(req: Request, res: Response): Promise<any> {
     try {
-      const { senderId, receiverId, message,mediaUrl } = req.body;
+      const { senderId, receiverId, message,mediaUrl,read } = req.body;
       console.log("uuu",receiverId);
+      console.log("readsss",read);
+      
       console.log("Media URL received:", mediaUrl);
 
       if (!receiverId || receiverId.length !== 24) {

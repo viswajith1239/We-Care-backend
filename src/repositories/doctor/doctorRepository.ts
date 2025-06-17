@@ -15,8 +15,9 @@ import PrescriptionModel from "../../models/prescriptionModel";
 import UserModel from "../../models/userModel";
 import NotificationModel from "../../models/notificationModel";
 import ReportModel from "../../models/reportModel";
+import BaseRepository from "../base/baseRepository";
 
-class DoctorRepository implements IDoctorRepository {
+class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository {
   private specializationModel = SpecializationModel;
   private doctorModel = DoctorModel
   private otpModel = OtpModel
@@ -28,6 +29,10 @@ class DoctorRepository implements IDoctorRepository {
   private userModel = UserModel
   private notificationModel = NotificationModel
   private reportModel=ReportModel
+
+  constructor() {
+    super(DoctorModel);  
+  }
 
   async findAllSpecializations() {
     try {

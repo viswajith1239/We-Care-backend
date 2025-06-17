@@ -17,12 +17,13 @@ import PrescriptionModel from "../../models/prescriptionModel";
 import ReviewModel from "../../models/reviewModel";
 import NotificationModel from "../../models/notificationModel";
 import ReportModel from "../../models/reportModel";
+import BaseRepository from "../base/baseRepository";
 
 
 
 const ObjectId = mongoose.Types.ObjectId;
 
-export class AuthRepository implements IAuthRepository {
+export class AuthRepository extends BaseRepository<any> implements IAuthRepository {
   private otpModel = OtpModel;
   private userModel = userModel;
   private doctorModel=DoctorModel
@@ -35,6 +36,10 @@ export class AuthRepository implements IAuthRepository {
   private notificationModel = NotificationModel;
   private reportModel=ReportModel
 
+
+   constructor() {
+    super(userModel);  
+  }
   async existUser(email: string,phone: string): Promise<{ existEmail: boolean; existPhone: boolean }> {
     try {
 
@@ -285,6 +290,8 @@ export class AuthRepository implements IAuthRepository {
     try {
       console.log("booking details is",bookingDetails)
       const bookingnew =await this.bookingModel.create(bookingDetails)
+
+  
      
       if (!bookingDetails.amount) {
         console.warn("Booking amount is undefined. Skipping wallet update.");

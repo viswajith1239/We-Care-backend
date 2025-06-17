@@ -61,97 +61,104 @@
 
 // export { configSocketIO, io}
 
-import {Server} from "socket.io"
-import http from "http"
-import express from "express"
-import { Socket } from "dgram"
-import dotenv from 'dotenv'
-dotenv.config()
+import { Server } from "socket.io";
+import http from "http";
+import express from "express";
+import dotenv from "dotenv";
 
-const app=express()
-const server=http.createServer(app)
-const io= new Server(server,{
-  cors:{
-    origin:"http://localhost:5173",
-    credentials:true
-  }
-})
-const userSocketMap: Record<string, string[]> = {}; 
-export const getReceiverSocketId=(receiverId:string)=>{
-   
-  return userSocketMap[receiverId]
-}
+dotenv.config();
 
-// const userSocketMap: Record<string, string> = {}; 
-
-// export const getReceiverSocketId = (receiverId: string) => {
-//   return userSocketMap[receiverId] || null;
-// };
-
-
-io.on("connection",(socket)=>{
-  console.log("new client connected",socket.id);
-  const userId = socket.handshake.query.userId as string;
-  // if (userId) {
-  //   userSocketMap[userId] = socket.id;
-  //   console.log(`User connected with ID: ${userId} and socket ID: ${socket.id}`);
-  // }
-  if (userId) {
-    console.log(`User connected: ${userId}, Socket: ${socket.id}`);
-    (socket as any).userId = userId; 
-    if (!userSocketMap[userId]) {
-      userSocketMap[userId] = []; 
-  }
-    userSocketMap[userId].push(socket.id);
-    console.log("fff",userSocketMap);
-    
-}
-io.emit("getonline",Object.keys(userSocketMap))
-  
-
-
-socket.on("disconnect", () => {
-  const disconnectedUserId = (socket as any).userId;
-
-  if (disconnectedUserId) {
-    console.log(`User disconnected: ${disconnectedUserId}, Socket: ${socket.id}`);
-
-    
-    userSocketMap[disconnectedUserId] = userSocketMap[disconnectedUserId]?.filter(id => id !== socket.id);
-
-   
-    if (userSocketMap[disconnectedUserId]?.length === 0) {
-      delete userSocketMap[disconnectedUserId];
-      io.emit("getonline",Object.keys(userSocketMap))
-    }
-
-    console.log(`Updated userSocketMap after disconnection:`, userSocketMap);
-  }
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    credentials: true,
+  },
 });
 
+const userSocketMap: Record<string, string[]> = {};
 
-  socket.on('sendMessage', (data) => {
-    if (userId) {
-      io.emit('messageUpdate',data) 
-    } else {
-      console.error("receiverId is missing in sendMessage data");
+export const getReceiverSocketId = (receiverId: string) => {
+  return userSocketMap[receiverId] || [];
+};
+
+io.on("connection", (socket) => {
+  console.log("new client connected", socket.id);
+  const userId = socket.handshake.query.userId as string;
+
+  if (userId) {
+    console.log(`User connected: ${userId}, Socket: ${socket.id}`);
+    (socket as any).userId = userId;
+    if (!userSocketMap[userId]) {
+      userSocketMap[userId] = [];
+    }
+    userSocketMap[userId].push(socket.id);
+    console.log("Updated userSocketMap:", userSocketMap);
+
+    // Notify all clients of online users
+    io.emit("getonline", Object.keys(userSocketMap));
+  }
+
+  socket.on("disconnect", () => {
+    const disconnectedUserId = (socket as any).userId;
+
+    if (disconnectedUserId) {
+      console.log(`User disconnected: ${disconnectedUserId}, Socket: ${socket.id}`);
+      userSocketMap[disconnectedUserId] = userSocketMap[disconnectedUserId]?.filter(
+        (id) => id !== socket.id
+      );
+
+      if (userSocketMap[disconnectedUserId]?.length === 0) {
+        delete userSocketMap[disconnectedUserId];
+        io.emit("getonline", Object.keys(userSocketMap));
+      }
+
+      console.log(`Updated userSocketMap after disconnection:`, userSocketMap);
     }
   });
 
+  socket.on("sendMessage", (data) => {
+    const receiverSocketIds = getReceiverSocketId(data.receiverId);
+    if (receiverSocketIds.length > 0) {
+      receiverSocketIds.forEach((socketId) => {
+        io.to(socketId).emit("messageUpdate", data);
+      });
+      // Also emit to sender's sockets to confirm message delivery
+      const senderSocketIds = getReceiverSocketId(data.senderId);
+      senderSocketIds.forEach((socketId) => {
+        io.to(socketId).emit("messageUpdate", data);
+      });
+    } else {
+      console.error("No active sockets for receiverId:", data.receiverId);
+    }
+  });
 
+  // New messageRead event handler
+  socket.on("markMessageRead", ({ messageId, senderId }) => {
+    console.log(`Message read: ${messageId} by sender: ${senderId}`);
+    const senderSocketIds = getReceiverSocketId(senderId);
+    if (senderSocketIds.length > 0) {
+      senderSocketIds.forEach((socketId) => {
+        io.to(socketId).emit("messageRead", { messageId });
+      });
+    } else {
+      console.warn(`No active sockets for senderId: ${senderId}`);
+    }
+  });
 
   socket.on("outgoing-video-call", (data) => {
-    const userSocketId = getReceiverSocketId(data.to);
-    
-    if (userSocketId) {
-      // console.log('hit incomming',userSocketId)
-      io.to(userSocketId).emit('incoming-video-call', {
-        _id: data.to,
-        from: data.from,
-        callType: data.callType,
-        doctorName: data.doctorName,
-        doctorImage: data.doctorImage,
-        roomId: data.roomId,
+    const receiverSocketIds = getReceiverSocketId(data.to);
+    if (receiverSocketIds.length > 0) {
+      receiverSocketIds.forEach((socketId) => {
+        io.to(socketId).emit("incoming-video-call", {
+          _id: data.to,
+          from: data.from,
+          callType: data.callType,
+          doctorName: data.doctorName,
+          doctorImage: data.doctorImage,
+          roomId: data.roomId,
+        });
       });
     } else {
       console.log(`Receiver not found for user ID: ${data.to}`);
@@ -160,87 +167,82 @@ socket.on("disconnect", () => {
 
   socket.on("accept-incoming-call", async (data) => {
     try {
-      const friendSocketId = getReceiverSocketId(data.to);
-      
-      if (friendSocketId) {
-        console.log(` Sending 'accepted-call' to latest socket: ${friendSocketId}`);
-        io.to(friendSocketId).emit("accepted-call", { ...data, startedAt: new Date() });
+      const friendSocketIds = getReceiverSocketId(data.to);
+      if (friendSocketIds.length > 0) {
+        friendSocketIds.forEach((socketId) => {
+          io.to(socketId).emit("accepted-call", { ...data, startedAt: new Date() });
+        });
       } else {
-        console.error(` No active socket found for user ID: ${data.to}`);
+        console.error(`No active socket found for user ID: ${data.to}`);
       }
     } catch (error: any) {
       console.error("Error in accept-incoming-call handler:", error.message);
     }
   });
-  
-  
-  
-  socket.on("doctor-call-accept", async (data) => {
-    console.log('doctor-call-accept data',data)
-    console.log("jjjjj",userSocketMap);
-    
-    const doctorSocket =  getReceiverSocketId(data.doctorId);
-    console.log("doctor-call-accept", doctorSocket);
-  
-    if (!doctorSocket) {
-      console.warn(`Doctor with ID ${data.doctorId} is not connected.`);
-      return;
-    }
-  
-    console.log("doctor-call-accept doctorSocket", doctorSocket);
-    socket.to(doctorSocket).emit("doctor-accept", data);
-  });
-  
 
-  socket.on('reject-call', (data) => {
-    const friendSocketId = getReceiverSocketId(data.to);
-    if (friendSocketId) {
-      
-      socket.to(friendSocketId).emit('call-rejected');
+  socket.on("doctor-call-accept", async (data) => {
+    const doctorSocketIds = getReceiverSocketId(data.doctorId);
+    if (doctorSocketIds.length > 0) {
+      doctorSocketIds.forEach((socketId) => {
+        socket.to(socketId).emit("doctor-accept", data);
+      });
+    } else {
+      console.warn(`Doctor with ID ${data.doctorId} is not connected.`);
+    }
+  });
+
+  socket.on("reject-call", (data) => {
+    const friendSocketIds = getReceiverSocketId(data.to);
+    if (friendSocketIds.length > 0) {
+      friendSocketIds.forEach((socketId) => {
+        socket.to(socketId).emit("call-rejected");
+      });
     } else {
       console.error(`No socket ID found for the receiver with ID: ${data.to}`);
     }
   });
 
   socket.on("leave-room", (data) => {
-    const friendSocketId = getReceiverSocketId(data.to);
-    console.log('friendSocketId',friendSocketId, 'data', data.to);
-    if (friendSocketId) {
-      socket.to(friendSocketId).emit("user-left",data.to);
+    const friendSocketIds = getReceiverSocketId(data.to);
+    if (friendSocketIds.length > 0) {
+      friendSocketIds.forEach((socketId) => {
+        socket.to(socketId).emit("user-left", data.to);
+      });
     }
   });
 
   socket.on("newBookingNotification", (data) => {
-
-    const receiverSocketId = getReceiverSocketId(data.receiverId);
-  
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("receiveNewBooking", data.content);
+    const receiverSocketIds = getReceiverSocketId(data.receiverId);
+    if (receiverSocketIds.length > 0) {
+      receiverSocketIds.forEach((socketId) => {
+        io.to(socketId).emit("receiveNewBooking", data.content);
+      });
     } else {
       console.warn("Receiver not connected:", data.receiverId);
     }
   });
-  socket.on('cancelDoctorNotification', (data) => {
-    const receiverSocketId = getReceiverSocketId(data.receiverId);
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("receiveCancelNotificationForDoctor", data.content);
-      console.log("Notification sent to client:", data);
+
+  socket.on("cancelDoctorNotification", (data) => {
+    const receiverSocketIds = getReceiverSocketId(data.receiverId);
+    if (receiverSocketIds.length > 0) {
+      receiverSocketIds.forEach((socketId) => {
+        io.to(socketId).emit("receiveCancelNotificationForDoctor", data.content);
+      });
     } else {
       console.warn("No receiverSocketId found for receiverId:", data.receiverId);
     }
   });
 
-  socket.on('cancelUserNotification', (data) => {
-    const receiverSocketId = getReceiverSocketId(data.userId);
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("receiveCancelNotificationForUser", data.content);
-      console.log("Notification sent to client:", data);
+  socket.on("cancelUserNotification", (data) => {
+    const receiverSocketIds = getReceiverSocketId(data.userId);
+    if (receiverSocketIds.length > 0) {
+      receiverSocketIds.forEach((socketId) => {
+        io.to(socketId).emit("receiveCancelNotificationForUser", data.content);
+      });
     } else {
-      console.warn("No receiverSocketId found for receiverId:", data.receiverId);
+      console.warn("No receiverSocketId found for receiverId:", data.userId);
     }
   });
+});
 
-  
-  
-})
-export{app,io,server}
+export { app, io, server };
