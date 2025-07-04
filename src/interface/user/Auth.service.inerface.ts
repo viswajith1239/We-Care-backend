@@ -22,6 +22,7 @@ export interface IAuthService {
     // findBookings(user_id:string,doctor_id:string):Promise<any>
     getUserStatus(userId: string): Promise<{ isBlocked: boolean }>;
     editUserData(userId:string,userData:User):Promise<any>
+    getUserById(userId:string):Promise<any>
     getAllBookings(user_id:string|undefined):Promise<any>
     cancelAppoinment(appoinmentId:string,userId:string,doctorId:string):Promise<any>
     getbookedDoctor(userId:string):Promise<any>

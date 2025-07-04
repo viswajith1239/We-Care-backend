@@ -13,14 +13,15 @@ interface Iuser extends Document {
     email: string;
     phone: string;
     password: string;
-    dob: String;
+    dob: string;
     address: string;
     image: IImage; 
     createdAt: Date;
     lastLogin: Date;
     referral?: string;
     isBlocked: boolean;
-    gender:String
+    gender:string
+    profileImage:String
 }
 
 const userSchema = new Schema<Iuser>({
@@ -83,7 +84,11 @@ const userSchema = new Schema<Iuser>({
     gender:{
         type:String,
         required:false
-    }
+    },
+    profileImage: {
+         type: String, 
+         default: ''
+    },
 });
 
 const userModel = model<Iuser>("User", userSchema);

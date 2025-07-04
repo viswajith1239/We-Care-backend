@@ -134,6 +134,25 @@ io.on("connection", (socket) => {
     }
   });
 
+
+  socket.on("messageDeleted", (data) => {
+  console.log(`Message deleted: ${data.messageId} by user: ${data.senderId}`);
+  
+  // Send to receiver
+  const receiverSocketIds = getReceiverSocketId(data.receiverId);
+  if (receiverSocketIds.length > 0) {
+    receiverSocketIds.forEach((socketId) => {
+      io.to(socketId).emit("messageDeleted", { messageId: data.messageId });
+    });
+  }
+  
+  // Also send to sender's other sockets (if they have multiple tabs open)
+  const senderSocketIds = getReceiverSocketId(data.senderId);
+  senderSocketIds.forEach((socketId) => {
+    io.to(socketId).emit("messageDeleted", { messageId: data.messageId });
+  });
+});
+
   // New messageRead event handler
   socket.on("markMessageRead", ({ messageId, senderId }) => {
     console.log(`Message read: ${messageId} by sender: ${senderId}`);

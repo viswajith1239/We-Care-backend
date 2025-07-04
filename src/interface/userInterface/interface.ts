@@ -19,6 +19,12 @@ export interface User {
     isBlocked: boolean;
     dob?:string
     gender?: string,
+    _id?: string;
+    id?: string;
+    password?: string;
+    profileImage?: string; // Add this field
+    createdAt?: Date;
+    updatedAt?: Date;
     
   
   }

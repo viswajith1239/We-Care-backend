@@ -16,13 +16,13 @@ type IUserDocument = IUser & Document;
 class AdminRepository extends BaseRepository<any>  implements IAdminRepository{
 
 
-private adminModel = AdminModel;
-private specializationModel=SpecializationModel;
-private userModel=userModel;
-private kycModel = KYCModel
-private doctorModel=DoctorModel
-private kycRejectionReasonModel = KycRejectionReasonModel
-private bookingModel=BookingModel
+private _adminModel = AdminModel;
+private _specializationModel=SpecializationModel;
+private _userModel=userModel;
+private _kycModel = KYCModel
+private _doctorModel=DoctorModel
+private _kycRejectionReasonModel = KycRejectionReasonModel
+private _bookingModel=BookingModel
 
 constructor() {
       super(AdminModel);  
@@ -30,7 +30,7 @@ constructor() {
 
 async findAdmin(email:string):Promise<LoginAdmin_interface|null>{
     console.log("admin repo find ethi");
-    return await this.adminModel.findOne({ email });
+    return await this._adminModel.findOne({ email });
  
 }
 async createAdmin(email:string,password:string):Promise<LoginAdmin_interface|null>{
@@ -41,7 +41,7 @@ console.log("admin repo create");
 
     let data={email,password}
     
-    const newAdmin = new this.adminModel(data);
+    const newAdmin = new this._adminModel(data);
     return await newAdmin.save()
    }catch(error){
     console.log("create admin",error);
@@ -51,13 +51,13 @@ console.log("admin repo create");
 
 
 async fetchAllUsers(): Promise<IUserDocument[] | undefined> {
-  return await this.userModel.find().lean<IUserDocument[]>(); 
+  return await this._userModel.find().lean<IUserDocument[]>(); 
 }
 
 async saveSpecialization({name,description}:{name:string,description:string}){
     
     try{
-   return await this.specializationModel.create({name,description})
+   return await this._specializationModel.create({name,description})
 }catch(error:any){
    console.error("Error in admin repository:", error);
  throw error
@@ -65,12 +65,12 @@ async saveSpecialization({name,description}:{name:string,description:string}){
 }
 
 async getAllSpecializations() {
-    return await this.specializationModel.find()
+    return await this._specializationModel.find()
   }
   async saveupdatespecialization(name:string,description:string,specializationId:string){
     try{
 
-    const updatedSpecialization=await this.specializationModel.findByIdAndUpdate(specializationId,{name,description},{new:true})
+    const updatedSpecialization=await this._specializationModel.findByIdAndUpdate(specializationId,{name,description},{new:true})
     return updatedSpecialization
     }catch(error){
         console.log(error)
@@ -81,14 +81,14 @@ async getAllSpecializations() {
   
 
   deleteSpecializationRepository = async (id: string): Promise<void> => {
-  const result = await this. specializationModel.findByIdAndDelete(id);
+  const result = await this. _specializationModel.findByIdAndDelete(id);
   if (!result) {
     throw new Error(`Specialization with id ${id} not found`);
   }
 };
 
 async blockUnblockUser(user_id: string, userState: boolean): Promise<IUser> {
-  const updatedUser = await this.userModel.findByIdAndUpdate(
+  const updatedUser = await this._userModel.findByIdAndUpdate(
       user_id,  
       { isBlocked: userState },
       { new: true }
@@ -103,10 +103,10 @@ async blockUnblockUser(user_id: string, userState: boolean): Promise<IUser> {
 
 
 async getAllDoctorsKycDatas() {
-  return await this.doctorModel.aggregate([
+  return await this._doctorModel.aggregate([
     {
       $lookup: {
-        from: this.kycModel.collection.name, 
+        from: this._kycModel.collection.name, 
         localField: '_id', 
         foreignField: 'doctorId', 
         as: 'kycData', 
@@ -133,7 +133,7 @@ async getAllDoctorsKycDatas() {
 async fetchKycData(doctorId:string){
   console.log("here alsoo")
   try {
-      const kycData=await this.kycModel.findOne({doctorId}).populate("specializationId").populate("doctorId")
+      const kycData=await this._kycModel.findOne({doctorId}).populate("specializationId").populate("doctorId")
       console.log("final reached///////",kycData)
       return kycData
   } catch (error) {
@@ -150,7 +150,7 @@ async updateKycStatus(status: string, doctor_id: string, rejectionReason: string
   try {
     console.log('update kyc status repo', rejectionReason);
     
-    const updatedDoctor = await this.doctorModel.findByIdAndUpdate(
+    const updatedDoctor = await this._doctorModel.findByIdAndUpdate(
       doctor_id,
       { kycStatus: status },
       { new: true, runValidators: true }
@@ -159,7 +159,7 @@ async updateKycStatus(status: string, doctor_id: string, rejectionReason: string
     if (updatedDoctor) {
       console.log('Doctor KYC status updated successfully:', updatedDoctor);
 
-      const updatedKyc = await this.kycModel.findOneAndUpdate(
+      const updatedKyc = await this._kycModel.findOneAndUpdate(
         { doctorId: doctor_id },
         { kycStatus: status },
         { new: true, runValidators: true }
@@ -170,7 +170,7 @@ async updateKycStatus(status: string, doctor_id: string, rejectionReason: string
 
        
         if (status === 'rejected' && rejectionReason) {
-         const reason =  await this.kycRejectionReasonModel.create({
+         const reason =  await this._kycRejectionReasonModel.create({
           doctorId: doctor_id,
             reason: rejectionReason,
           });
@@ -211,7 +211,7 @@ async deleteKyc(doctor_id: string) {
   try {
     console.log('-------------------------->',doctor_id);
     
-    const result = await this.kycModel.findOneAndDelete({ doctorId: doctor_id });
+    const result = await this._kycModel.findOneAndDelete({ doctorId: doctor_id });
     if (result) {
       console.log('KYC record deleted successfully:', result);
     } else {
@@ -224,12 +224,12 @@ async deleteKyc(doctor_id: string) {
 
 
 async getAllStatistics(){
-  const totalDoctors=await this.doctorModel.countDocuments()
-  const activeDoctors = await this.doctorModel.countDocuments({ isBlocked: false });
-  const totalUsers = await this.userModel.countDocuments();
-  const activeUsers = await this.userModel.countDocuments({ isBlocked: false });
-  const totalBookings=await this.bookingModel.countDocuments()
-  const revenueData=await this.bookingModel.aggregate([
+  const totalDoctors=await this._doctorModel.countDocuments()
+  const activeDoctors = await this._doctorModel.countDocuments({ isBlocked: false });
+  const totalUsers = await this._userModel.countDocuments();
+  const activeUsers = await this._userModel.countDocuments({ isBlocked: false });
+  const totalBookings=await this._bookingModel.countDocuments()
+  const revenueData=await this._bookingModel.aggregate([
     {$match:{paymentStatus:"Confirmed"}},
     {
       $group:{
@@ -249,7 +249,7 @@ async getAllStatistics(){
   startDate.setMonth(currentDate.getMonth()-12)//past month
 
   const userAndDoctorRegistartionData=await Promise.all([
-    this.userModel.aggregate([
+    this._userModel.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
       {
         $group: {
@@ -260,7 +260,7 @@ async getAllStatistics(){
       { $sort: { "_id.year": 1, "_id.month": 1 } }
     ]),
 
-    this.doctorModel.aggregate([
+    this._doctorModel.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
       {
         $group: {

@@ -3,6 +3,7 @@ import { ILoginUser } from "../../interface/userInterface/interface"
 import DoctorService from "../../service/doctor/doctorService"
 import { Interface_Doctor } from "../../interface/doctor/doctor_interface"
 import HTTP_statusCode from "../../enums/HttpStatusCode";
+import RESPONSE_MESSAGES from "../../enums/messages";
 import { jwtDecode, JwtPayload } from "jwt-decode"
 import { IDoctorService } from "../../interface/doctor/Doctor.Srevice.interface";
 import { JwtPayloads } from "../../interface/common";
@@ -26,7 +27,7 @@ class DoctorController {
 
       const specializationsData = await this.doctorService.findAllSpecializations();
       console.log("specialisationdaTA", specializationsData)
-      res.status(200).json({ success: true, data: specializationsData });
+      res.status(HTTP_statusCode.OK).json({ success: true, data: specializationsData });
     } catch (error) {
       console.error(
         "Error in controller while fetching specializations:",
@@ -43,12 +44,12 @@ class DoctorController {
       console.log("datass", doctorData)
       const doctor = await this.doctorService.registerDoctor(doctorData);
 
-      res.status(200).json({ message: "OTP sent to email" });
+      res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.OTP_SEND });
 
     } catch (error) {
       console.error("Error in registerDoctor:", error);
-      if ((error as Error).message === "Email already exists") {
-        res.status(409).json({ message: "Email already exists" });
+      if ((error as Error).message === RESPONSE_MESSAGES.EMAIL_EXISTS) {
+        res.status(HTTP_statusCode.Conflict).json({ message: RESPONSE_MESSAGES.EMAIL_EXISTS });
         return;
       } else {
 
@@ -62,15 +63,15 @@ class DoctorController {
       let { doctorData, otp } = req.body
       console.log("the otp entered from frontend", otp)
       await this.doctorService.verifyOtp(doctorData, otp)
-      res.status(200).json({ message: "OTP Veified Successfully", doctor: doctorData })
+      res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.OTP_VERIFIED, doctor: doctorData })
     } catch (error) {
       console.error("OTP Verification Controller error:", error);
-      if ((error as Error).message === "OTP has expired") {
-        res.status(400).json({ message: "OTP has expired" });
-      } else if ((error as Error).message === "Invalid OTP") {
-        res.status(400).json({ message: "Invalid OTP" });
-      } else if ((error as Error).message === "No OTP found for this email") {
-        res.status(404).json({ message: "No OTP found for this email" });
+      if ((error as Error).message === RESPONSE_MESSAGES.OTP_EXPIRED) {
+        res.status(HTTP_statusCode.BadRequest).json({ message: RESPONSE_MESSAGES.OTP_EXPIRED });
+      } else if ((error as Error).message === RESPONSE_MESSAGES.INVALID_OTP) {
+        res.status(HTTP_statusCode.BadRequest).json({ message: RESPONSE_MESSAGES.INVALID_OTP });
+      } else if ((error as Error).message === RESPONSE_MESSAGES.NO_OTP_FOUND) {
+        res.status(HTTP_statusCode.NotFound).json({ message: RESPONSE_MESSAGES.NO_OTP_FOUND });
       } else {
         next(error)
       }
@@ -84,11 +85,11 @@ class DoctorController {
 
 
       await this.doctorService.resendOTP(email);
-      res.status(200).json({ message: "OTP resent successfully" });
+      res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.OTP_RESEND });
     } catch (error) {
       console.error("Resend OTP Controller error:", error);
-      if ((error as Error).message === "User not found") {
-        res.status(404).json({ message: "User not found" });
+      if ((error as Error).message === RESPONSE_MESSAGES.USER_NOT_FOUND) {
+        res.status(HTTP_statusCode.NotFound).json({ message: RESPONSE_MESSAGES.USER_NOT_FOUND });
       } else {
         next(error)
       }
@@ -121,18 +122,18 @@ class DoctorController {
         });
 
 
-        res.status(200).json({
-          message: "Login successful",
+        res.status(HTTP_statusCode.OK).json({
+          message: RESPONSE_MESSAGES.LOGIN_SUCCESS,
           doctor: user.user,
         });
       }
     } catch (error: any) {
       console.error("Error in loginDoctor:", error.message);
 
-      if (error.message === "Usernotfound") {
-        res.status(404).json({ message: "User not found" });
+      if (error.message === RESPONSE_MESSAGES.USER_NOT_FOUND) {
+        res.status(HTTP_statusCode.NotFound).json({ message: RESPONSE_MESSAGES.USER_NOT_FOUND });
       } else if (error.message === "PasswordIncorrect") {
-        res.status(401).json({ message: "Invalid credentials" });
+        res.status(HTTP_statusCode.Unauthorized).json({ message: RESPONSE_MESSAGES.INVALID_CREDENTIALSS });
       } else {
         next(error);
       }
@@ -161,7 +162,7 @@ class DoctorController {
       const kycStatus = await this.doctorService.kycSubmit(formData, files);
 
 
-      res.status(HTTP_statusCode.OK).json({ message: "KYC submitted successfully", kycStatus });
+      res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.KYC_SUBMIT_SUCCESS, kycStatus });
     } catch (error) {
       console.error("Error in KYC submission:", error);
       next(error);
@@ -188,9 +189,9 @@ class DoctorController {
 
       const decodedToken: JwtPayloads = jwtDecode(token)
       const response = await this.doctorService.googleSignUpUser(decodedToken)
-      res.status(200).json({ message: "user signed successfully" })
-      res.status(200).json({
-        message: "User signed up successfully",
+      res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.SIGNUP_SUCCESS })
+      res.status(HTTP_statusCode.OK).json({
+        message: RESPONSE_MESSAGES.SIGNUP_SUCCESS,
         user: response,
         token: token,
       })
@@ -209,7 +210,7 @@ class DoctorController {
       console.log("doctor id for specialization", doctorId)
       const specialisations = await this.doctorService.getSpecialization(doctorId)
 
-      res.status(HTTP_statusCode.OK).json({ message: "specialisation fetched successfully", data: specialisations })
+      res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.SPECIALIZATION_FETCH_SUCCESS, data: specialisations })
 
     } catch (error) {
       console.log("Error in contoller", error)
@@ -448,10 +449,10 @@ class DoctorController {
   async getAppoinmentSchedules(req: Request, res: Response, next: NextFunction) {
     try {
       console.log("entered in to get appoinment try");
-      
+
       const doctor_id = req.params.doctorId;
-      console.log("dddo",doctor_id);
-      
+      console.log("dddo", doctor_id);
+
       const sheduleData = await this.doctorService.getAppoinmentSchedules(
         doctor_id
       );
@@ -459,7 +460,7 @@ class DoctorController {
 
       res
         .status(HTTP_statusCode.OK)
-        .json({ message: "Session data feched sucessfully", sheduleData });
+        .json({ message: RESPONSE_MESSAGES.SESSION_FETCH_SUCCESS, sheduleData });
     } catch (error) {
       console.error("Error saving session data:", error);
       next(error)
@@ -476,7 +477,7 @@ class DoctorController {
     } catch (error) {
       console.error("Error fetching booking details:", error);
 
-      res.status(500).json({ error: "Failed to fetch booking details." });
+      res.status(HTTP_statusCode.InternalServerError).json({ error: "Failed to fetch booking details." });
 
 
     }
@@ -488,7 +489,7 @@ class DoctorController {
       console.log("hh", doctorId);
       const users = await this.doctorService.fetchusers(doctorId)
       console.log("cccccccccccc", users)
-      return res.status(200).json(users);
+      return res.status(HTTP_statusCode.OK).json(users);
     } catch (error) {
 
     }
@@ -499,7 +500,7 @@ class DoctorController {
     try {
       const doctor_id = req.params.doctor_id; // Get doctorId from request params
       const bookings = await this.doctorService.getAllBookings(doctor_id);
-      res.status(200).json(bookings);
+      res.status(HTTP_statusCode.OK).json(bookings);
     } catch (error) {
       next(error);
     }
@@ -510,7 +511,7 @@ class DoctorController {
     try {
       const doctor_id = req.params.doctor_id;
       const DoctorData = await this.doctorService.getDoctor(doctor_id);
-      res.status(200).json({
+      res.status(HTTP_statusCode.OK).json({
         DoctorData: DoctorData,
       });
     } catch (error: any) {
@@ -523,7 +524,7 @@ class DoctorController {
     try {
       const doctorId = req.params.doctor_id
       const walletData = await this.doctorService.getWallet(doctorId)
-      res.status(200).json(walletData)
+      res.status(HTTP_statusCode.OK).json(walletData)
     } catch (error) {
       next(error)
     }
@@ -535,7 +536,7 @@ class DoctorController {
       const { amount } = req.body
 
       const withdrawed = await this.doctorService.withdraw(doctor_id, amount)
-      res.status(200).json(withdrawed)
+      res.status(HTTP_statusCode.OK).json(withdrawed)
     } catch (error) {
       next(error)
     }
@@ -562,8 +563,8 @@ class DoctorController {
         doctor_id,
         updatedDoctorData
       );
-      res.status(200).json({
-        message: "Doctor updated successfully",
+      res.status(HTTP_statusCode.updated).json({
+        message: RESPONSE_MESSAGES.DOCTOR_UPDATED_SUCCESS,
         updatedDoctor,
       });
     } catch (error) {
@@ -578,10 +579,10 @@ class DoctorController {
       const response = await this.doctorService.forgotpassword(emailData)
       console.log("noll", response)
       if (!response) {
-        return res.status(HTTP_statusCode.BadRequest).json({ message: "email not found" })
+        return res.status(HTTP_statusCode.BadRequest).json({ message: RESPONSE_MESSAGES.EMAIL_NOT_FOUND })
 
       }
-      return res.status(HTTP_statusCode.OK).json({ message: "email vrified successfully", statusCode: HTTP_statusCode.OK })
+      return res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.EMAIL_VERIFIED, statusCode: HTTP_statusCode.OK })
 
     } catch (error) {
       console.log("Error in Forgot password", error)
@@ -598,15 +599,15 @@ class DoctorController {
 
       res
         .status(HTTP_statusCode.OK)
-        .json({ message: "OTP verified successfully", doctor: doctorData });
+        .json({ message: RESPONSE_MESSAGES.OTP_VERIFIED, doctor: doctorData });
     } catch (error) {
       console.error("OTP Verification Controller error:", error);
-      if ((error as Error).message === "OTP has expired") {
-        res.status(HTTP_statusCode.BadRequest).json({ message: "OTP has expired" });
-      } else if ((error as Error).message === "Invalid OTP") {
-        res.status(HTTP_statusCode.BadRequest).json({ message: "Invalid OTP" });
-      } else if ((error as Error).message === "No OTP found for this email") {
-        res.status(HTTP_statusCode.NotFound).json({ message: "No OTP found for this email" });
+      if ((error as Error).message === RESPONSE_MESSAGES.OTP_EXPIRED) {
+        res.status(HTTP_statusCode.BadRequest).json({ message: RESPONSE_MESSAGES.OTP_EXPIRED });
+      } else if ((error as Error).message === RESPONSE_MESSAGES.INVALID_OTP) {
+        res.status(HTTP_statusCode.BadRequest).json({ message: RESPONSE_MESSAGES.INVALID_OTP });
+      } else if ((error as Error).message === RESPONSE_MESSAGES.NO_OTP_FOUND) {
+        res.status(HTTP_statusCode.NotFound).json({ message: RESPONSE_MESSAGES.NO_OTP_FOUND });
       } else {
         next(error)
       }
@@ -622,16 +623,16 @@ class DoctorController {
       const result = await this.doctorService.resetapassword(doctorData, payload)
       console.log("what is the response got?", result)
       if (result?.modifiedCount === 1) {
-        return res.status(HTTP_statusCode.OK).json({ message: "Password reset successfully" });
+        return res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.PASSWORD_RESET_SUCCESS });
 
       } else {
-        return res.status(HTTP_statusCode.BadRequest).json({ message: "Failed To Reset Password" });
+        return res.status(HTTP_statusCode.BadRequest).json({ message: RESPONSE_MESSAGES.PASSWORD_RESET_FAILED });
 
       }
 
     } catch (error) {
       console.log("User Controller Error", error)
-      return res.status(HTTP_statusCode.InternalServerError).json({ message: "Server Error" });
+      return res.status(HTTP_statusCode.InternalServerError).json({ message: RESPONSE_MESSAGES.INTERNAL_SERVER_ERROR });
 
     }
   }
@@ -649,9 +650,9 @@ class DoctorController {
         sameSite: "none",
         secure: true,
       });
-      res.status(200).json({ message: "Logged out successfully" });
+      res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.LOGOUT_SUCCESS });
     } catch (error) {
-      res.status(500).json({ message: "Logout failed", error });
+      res.status(HTTP_statusCode.InternalServerError).json({ message: RESPONSE_MESSAGES.LOGOUT_FAILED, error });
     }
   }
 
@@ -659,68 +660,68 @@ class DoctorController {
   // doctor.controller.ts
 
   async createPrescription(req: Request, res: Response, next: NextFunction): Promise<void> {
-  console.log("Creating prescription");
-  try {
-    const { doctor_id, user_id } = req.params;
-    const { prescriptions, patientDetails, doctorDetails } = req.body;
-    
-    console.log("Prescription data:", { doctor_id, user_id, prescriptions, patientDetails, doctorDetails });
+    console.log("Creating prescription");
+    try {
+      const { doctor_id, user_id } = req.params;
+      const { prescriptions, patientDetails, doctorDetails } = req.body;
 
-    if (!doctor_id || !user_id || !prescriptions || prescriptions.length === 0) {
-      res.status(400).json({ message: "Missing required fields" });
-      return;
+      console.log("Prescription data:", { doctor_id, user_id, prescriptions, patientDetails, doctorDetails });
+
+      if (!doctor_id || !user_id || !prescriptions || prescriptions.length === 0) {
+        res.status(HTTP_statusCode.BadRequest).json({ message: RESPONSE_MESSAGES.MISSING_REQUIRED_FIELDS });
+        return;
+      }
+
+      const formData = {
+        doctorId: doctor_id,
+        userId: user_id,
+        bookingId: patientDetails?.appointmentId,
+        specializationId: doctorDetails?.specializationId,
+        prescriptions: prescriptions,
+        patientDetails,
+        doctorDetails
+      };
+
+      const result = await this.doctorService.savePrescription(formData);
+
+      res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.PRESCRIPTION_SUBMIT_SUCCESS, result });
+    } catch (error) {
+      console.error("Error submitting prescription:", error);
+      next(error);
     }
-
-    const formData = {
-      doctorId: doctor_id,
-      userId: user_id,
-      bookingId: patientDetails?.appointmentId, 
-      specializationId: doctorDetails?.specializationId, 
-      prescriptions: prescriptions, 
-      patientDetails,
-      doctorDetails
-    };
-
-    const result = await this.doctorService.savePrescription(formData);
-
-    res.status(200).json({ message: "Prescription submitted successfully", result });
-  } catch (error) {
-    console.error("Error submitting prescription:", error);
-    next(error);
   }
-}
 
 
-async getReports(req: Request, res: Response): Promise<any> {
-  try {
-    const doctorId = req.params.doctorId;
+  async getReports(req: Request, res: Response): Promise<any> {
+    try {
+      const doctorId = req.params.doctorId;
 
-    const reports = await this.doctorService.getReportsByUserId(doctorId);
+      const reports = await this.doctorService.getReportsByUserId(doctorId);
 
-    res.status(200).json({
-      message: 'Reports fetched successfully',
-      reports,
-    });
-  } catch (error) {
-    console.error('Fetch error:', error);
-    res.status(500).json({ message: 'Failed to fetch reports' });
+      res.status(HTTP_statusCode.OK).json({
+        message: RESPONSE_MESSAGES.REPORT_FETCH_SUCCESS,
+        reports,
+      });
+    } catch (error) {
+      console.error('Fetch error:', error);
+      res.status(HTTP_statusCode.InternalServerError).json({ message: RESPONSE_MESSAGES.REPORT_FETCH_FAILED });
+    }
   }
-}
 
 
- async getPatientBookingForDoctor (req: Request, res: Response):Promise<any> {
-  const { doctorId, userId } = req.params;
-  console.log("userid",userId,doctorId);
-  
+  async getPatientBookingForDoctor(req: Request, res: Response): Promise<any> {
+    const { doctorId, userId } = req.params;
+    console.log("userid", userId, doctorId);
 
-  try {
-    const bookings = await this.doctorService.getBookingsByDoctorAndUser(doctorId, userId);
-    res.status(200).json(bookings);
-  } catch (error) {
-    console.error("Error in controller:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
+
+    try {
+      const bookings = await this.doctorService.getBookingsByDoctorAndUser(doctorId, userId);
+      res.status(HTTP_statusCode.OK).json(bookings);
+    } catch (error) {
+      console.error("Error in controller:", error);
+      res.status(HTTP_statusCode.InternalServerError).json({ message: RESPONSE_MESSAGES.SERVER_ERRORS });
+    }
+  };
 
   async getNotifications(req: Request, res: Response, next: NextFunction) {
     console.log("fetching notificatin in controller");
@@ -728,7 +729,7 @@ async getReports(req: Request, res: Response): Promise<any> {
       console.log("fetching notificatin in controller try");
       const { doctor_id } = req.params;
       const notifications = await this.doctorService.getNotifications(doctor_id);
-      res.status(200).json(notifications);
+      res.status(HTTP_statusCode.OK).json(notifications);
     } catch (error) {
       next(error);
     }
@@ -737,25 +738,25 @@ async getReports(req: Request, res: Response): Promise<any> {
     try {
       const { doctor_id } = req.params
       await this.doctorService.clearNotifications(doctor_id)
-      res.status(200).json({ message: 'Notifications cleared successfully' })
+      res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.NOTIFICATIONS_CLEAR_SUCCESS })
     } catch (error) {
       next(error)
     }
   }
 
-  // Fetch prescriptions by doctor ID
+
   async getPrescriptionsByDoctor(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { doctor_id } = req.params;
 
       if (!doctor_id) {
-        res.status(400).json({ message: "Doctor ID is required" });
+        res.status(HTTP_statusCode.BadRequest).json({ message: RESPONSE_MESSAGES.DOCTOR_ID_REQUIRED });
         return;
       }
 
       const prescriptions = await this.doctorService.fetchPrescriptions(doctor_id);
 
-      res.status(200).json(prescriptions);
+      res.status(HTTP_statusCode.OK).json(prescriptions);
     } catch (error) {
       console.error("Error fetching prescriptions:", error);
       next(error);
@@ -767,7 +768,7 @@ async getReports(req: Request, res: Response): Promise<any> {
     try {
       const response = await this.doctorService.getDashboardData()
 
-      res.status(200).json({ data: response })
+      res.status(HTTP_statusCode.OK).json({ data: response })
     } catch (error) {
       next(error)
     }
@@ -781,28 +782,28 @@ async getReports(req: Request, res: Response): Promise<any> {
 
       const result = await this.doctorService.cancelAppoinment(appoinmentId)
 
-      res.status(200).json({ success: true, appoinment: result })
+      res.status(HTTP_statusCode.OK).json({ success: true, appoinment: result })
     } catch (error) {
       next(error)
     }
   }
 
   async rescheduleAppointment(req: Request, res: Response, next: NextFunction) {
-  try {
-    const { rescheduleAppointmentId } = req.params;
-    const updatedData = req.body;
+    try {
+      const { rescheduleAppointmentId } = req.params;
+      const updatedData = req.body;
 
-    const result = await this.doctorService.rescheduleAppointment(rescheduleAppointmentId, updatedData);
+      const result = await this.doctorService.rescheduleAppointment(rescheduleAppointmentId, updatedData);
 
-    res.status(200).json({ 
-      success: true, 
-      message: "Appointment rescheduled successfully",
-      appointment: result 
-    });
-  } catch (error) {
-    next(error);
+      res.status(HTTP_statusCode.OK).json({
+        success: true,
+        message: RESPONSE_MESSAGES.APPOINTMENT_RESCHEDULED_SUCCESS,
+        appointment: result
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-}
 
 
 

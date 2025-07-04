@@ -28,6 +28,7 @@ export interface IAuthRepository {
     fetchSpecializations():Promise<any>
     fetchUserData(userId:string):Promise<User|null>
     editUserData(userId:string,userData:User):Promise<any>
+    getUserById(userId:string):Promise<any>
     fetchBookings(user_id:string):Promise<any>
     cancelAppoinment(bookId:string,userId:string,doctorId:string):Promise<any>
     getbookedDoctor(userId:string):Promise<any>

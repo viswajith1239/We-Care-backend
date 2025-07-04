@@ -527,14 +527,23 @@ async getNotifications(userId: string) {
  }
 
 
-async editUserData( userId: string,userData: User,) {
-  try {
-    return await this.authRepository.editUserData(userId,userData);
-  } catch (error: any) {
-    console.log(error);
-    throw new Error(error);
+async editUserData(userId: string, userData: any) {
+    try {
+      return await this.authRepository.editUserData(userId, userData);
+    } catch (error: any) {
+      console.log(error);
+      throw new Error(error);
+    }
   }
-}
+
+  async getUserById(userId: string) {
+    try {
+      return await this.authRepository.getUserById(userId);
+    } catch (error: any) {
+      console.log(error);
+      throw new Error(error);
+    }
+  }
 async getAllBookings(user_id: string) {
   try {
     return await this.authRepository.fetchBookings(user_id);

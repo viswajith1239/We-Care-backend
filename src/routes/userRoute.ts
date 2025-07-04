@@ -30,7 +30,7 @@ route.get("/schedules", verifyToken('user'), AuthControllerInstance.getAppoinmen
 route.post("/payment/:appoinmentId", verifyToken('user'), AuthControllerInstance.checkoutPayment.bind(AuthControllerInstance))
 route.post("/bookings", verifyToken('user'), AuthControllerInstance.createBooking.bind(AuthControllerInstance))
 route.get('/users/:userId', AuthControllerInstance.getUser.bind(AuthControllerInstance))
-route.patch('/update-user', AuthControllerInstance.updateUserData.bind(AuthControllerInstance));
+route.patch('/update-user', upload.single('profileImage'),AuthControllerInstance.updateUserData.bind(AuthControllerInstance));
 route.get('/bookings-details/:user_id', AuthControllerInstance.getAllBookings.bind(AuthControllerInstance));
 route.post("/cancel-appoinment", AuthControllerInstance.cancelAppoinment.bind(AuthControllerInstance))
 route.get("/fetchdoctors/:userId", verifyToken('user'), AuthControllerInstance.getbookedDoctor.bind(AuthControllerInstance))

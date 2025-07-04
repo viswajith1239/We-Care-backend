@@ -18,17 +18,17 @@ import ReportModel from "../../models/reportModel";
 import BaseRepository from "../base/baseRepository";
 
 class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository {
-  private specializationModel = SpecializationModel;
-  private doctorModel = DoctorModel
-  private otpModel = OtpModel
-  private kycModel = KYCModel;
-  private appoinmentModel = AppoinmentModel
-  private bookingModel = BookingModel
-  private walletModel = WalletModel
-  private prescriptionModel = PrescriptionModel
-  private userModel = UserModel
-  private notificationModel = NotificationModel
-  private reportModel=ReportModel
+  private _specializationModel = SpecializationModel;
+  private _doctorModel = DoctorModel
+  private _otpModel = OtpModel
+  private _kycModel = KYCModel;
+  private _appoinmentModel = AppoinmentModel
+  private _bookingModel = BookingModel
+  private _walletModel = WalletModel
+  private _prescriptionModel = PrescriptionModel
+  private _userModel = UserModel
+  private _notificationModel = NotificationModel
+  private _reportModel=ReportModel
 
   constructor() {
     super(DoctorModel);  
@@ -36,7 +36,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
   async findAllSpecializations() {
     try {
-      return await this.specializationModel.find({});
+      return await this._specializationModel.find({});
     } catch (error) {
       console.error("Error fetching specializations:", error);
       throw error;
@@ -47,7 +47,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
     try {
       let email = doctorData.email;
 
-      return await this.doctorModel.findOne({ email });
+      return await this._doctorModel.findOne({ email });
     } catch (error) {
       console.log("error ", error);
       throw error;
@@ -56,7 +56,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
   async saveOtp(email: string, OTP: string, OTPExpirey: Date) {
     try {
-      const saveotp = await new this.otpModel({
+      const saveotp = await new this._otpModel({
         email,
         otp: OTP,
         expiresAt: OTPExpirey,
@@ -71,7 +71,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   async getOtpByEmail(email: string): Promise<IOtp[] | []> {
 
     try {
-      return await this.otpModel.find({ email });
+      return await this._otpModel.find({ email });
     } catch (error) {
       console.error("error in otp getting:", error);
       throw error;
@@ -102,7 +102,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
       }
 
 
-      const doctor = new this.doctorModel({
+      const doctor = new this._doctorModel({
         ...doctorData,
         specializations: specializationIds,
       });
@@ -120,7 +120,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
       if (!otpId) {
         throw new Error("OTP ID is undefined");
       }
-      await this.otpModel.findByIdAndDelete(otpId.toString());
+      await this._otpModel.findByIdAndDelete(otpId.toString());
       console.log(`OTP with ID ${otpId} deleted successfully.`);
     } catch (error) {
       console.error("Error in deleting OTP:", error);
@@ -131,7 +131,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
   async findDoctor(email: string): Promise<Interface_Doctor | null> {
     try {
-      return await this.doctorModel.findOne({ email });
+      return await this._doctorModel.findOne({ email });
     } catch (error) {
       console.log("error finding user login:", error);
       return null;
@@ -144,7 +144,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
 
     try {
-      let doctor = await this.doctorModel.findOne({ _id: formData.doctor_id }).select('specializations');
+      let doctor = await this._doctorModel.findOne({ _id: formData.doctor_id }).select('specializations');
       if (!doctor) {
         throw new Error("Doctor not found for the given doctor ID");
       }
@@ -163,7 +163,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
       };
 
 
-      const savedKyc = await this.kycModel.create(kycData);
+      const savedKyc = await this._kycModel.create(kycData);
       console.log("KYC Data saved successfully:", savedKyc);
       return savedKyc;
     } catch (error) {
@@ -176,7 +176,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   async changeKycStatus(doctorId: string, profileImage: string | undefined): Promise<string | undefined> {
     try {
 
-      const doctorUpdate = await this.doctorModel.findByIdAndUpdate(
+      const doctorUpdate = await this._doctorModel.findByIdAndUpdate(
         doctorId,
         {
           kycStatus: "submitted",
@@ -190,7 +190,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
       }
 
 
-      await this.kycModel.findOneAndUpdate(
+      await this._kycModel.findOneAndUpdate(
         { doctorId: doctorId },
         { kycStatus: "submitted" },
         { new: true, runValidators: true }
@@ -207,7 +207,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   async getDoctorStatus(doctorId: string) {
     console.log("gggg", doctorId)
     try {
-      const doctor = await this.doctorModel.findById(doctorId).select("kycStatus")
+      const doctor = await this._doctorModel.findById(doctorId).select("kycStatus")
       console.log(",,,,,,,,,,,,,,,,,,", doctor)
 
 
@@ -231,13 +231,13 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
     password: string | null;
     isKycApproved?: boolean;
   }): Promise<any> {
-    const users = new this.doctorModel({ ...user, isKycApproved: false });
+    const users = new this._doctorModel({ ...user, isKycApproved: false });
     return await users.save();
   }
 
   async existingUser(email: string): Promise<Interface_Doctor | null> {
     try {
-      return await this.doctorModel.findOne({ email });
+      return await this._doctorModel.findOne({ email });
     } catch (error) {
       throw error;
     }
@@ -250,7 +250,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
         console.log("doctor id is not found")
         return
       }
-      const specialisations = await this.doctorModel.findById(doctorid).populate("specializations")
+      const specialisations = await this._doctorModel.findById(doctorid).populate("specializations")
       console.log("specialisation sare....", specialisations?.specializations)
       return specialisations
     } catch (error) {
@@ -314,7 +314,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
     try {
 
-      const findDoctor = await this.doctorModel.findById(appointmentData.doctorId);
+      const findDoctor = await this._doctorModel.findById(appointmentData.doctorId);
 
       if (!findDoctor) {
         throw new Error("Doctor not found");
@@ -324,10 +324,10 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
       appointmentData.price = Number(appointmentData.price);
 
 
-      const createdAppointment = await this.appoinmentModel.create(appointmentData);
+      const createdAppointment = await this._appoinmentModel.create(appointmentData);
 
 
-      return await this.appoinmentModel.populate(createdAppointment, 'specializationId');
+      return await this._appoinmentModel.populate(createdAppointment, 'specializationId');
     } catch (error) {
       console.error('Error in creating single appointment:', error);
       throw error;
@@ -353,7 +353,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
         throw new Error("No doctor ID provided in the first appointment");
       }
 
-      const findDoctor = await this.doctorModel.findById(doctorId);
+      const findDoctor = await this._doctorModel.findById(doctorId);
 
       if (!findDoctor) {
         throw new Error("Doctor not found");
@@ -373,10 +373,10 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
       });
 
 
-      const createdAppointments = await this.appoinmentModel.create(processedAppointments);
+      const createdAppointments = await this._appoinmentModel.create(processedAppointments);
 
 
-      return await this.appoinmentModel.populate(createdAppointments, 'specializationId');
+      return await this._appoinmentModel.populate(createdAppointments, 'specializationId');
     } catch (error) {
       console.error('Error in creating multiple appointments:', error);
       throw error;
@@ -384,7 +384,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   }
 
   async findConflictingAppointments(appointmentData: any) {
-    return this.appoinmentModel.find({
+    return this._appoinmentModel.find({
       doctorId: appointmentData.doctorId,
       selectedDate: appointmentData.selectedDate,
       $or: [
@@ -401,7 +401,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
     try {
       console.log("reached fetch appoinmetn");
       
-      const appoinmentData = await this.appoinmentModel
+      const appoinmentData = await this._appoinmentModel
         .find({
           doctorId: doctor_id,
         })
@@ -424,7 +424,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
     try {
 
 
-      const bookingDetails = await this.bookingModel.find({ doctorId }).sort({ createdAt: -1 }).populate("userId", "name").exec()
+      const bookingDetails = await this._bookingModel.find({ doctorId }).sort({ createdAt: -1 }).populate("userId", "name").exec()
 
       const response = bookingDetails.map((booking: any) => {
         return {
@@ -446,7 +446,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
     try {
       console.log("Fetching booked users for doctor:", doctorId);
 
-      const bookedUsers = await BookingModel.find({ doctorId }).populate("userId");
+      const bookedUsers = await this._bookingModel.find({ doctorId }).populate("userId");
       console.log("Booked Users:", bookedUsers);
 
       const uniqueUsersMap = new Map<string, any>();
@@ -488,7 +488,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
   async getAllBookings(doctor_id: string) {
     try {
-      const bookings = await this.bookingModel.find({ doctorId: doctor_id })
+      const bookings = await this._bookingModel.find({ doctorId: doctor_id })
         .populate("userId", "name email profileImage").sort({ createdAt: -1 })
         .exec();
 
@@ -511,7 +511,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   doctorId: string,
   userId: string
 ): Promise<any>{
-  return await this.bookingModel.find({ doctorId, userId });
+  return await this._bookingModel.find({ doctorId, userId });
 };
 
 
@@ -521,7 +521,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
     try {
       console.log("fetching notificatin in repo try");
-      const notificationsDoc = await this.notificationModel.findOne({ receiverId: doctorId });
+      const notificationsDoc = await this._notificationModel.findOne({ receiverId: doctorId });
       if (notificationsDoc && notificationsDoc.notifications) {
         notificationsDoc.notifications.sort((a, b) => {
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -536,7 +536,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   }
   async deleteDoctorNotifications(doctorId: string) {
     try {
-      await this.notificationModel.deleteOne({ receiverId: doctorId })
+      await this._notificationModel.deleteOne({ receiverId: doctorId })
     } catch (error) {
       console.error('Error delete notifications');
       throw new Error('Failed to delete notifications');
@@ -547,7 +547,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
   async getDoctor(doctor_id: string) {
     try {
-      const doctorData = await this.doctorModel.aggregate([
+      const doctorData = await this._doctorModel.aggregate([
         {
           $match: { _id: new mongoose.Types.ObjectId(doctor_id) },
         },
@@ -570,7 +570,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
     try {
       console.log("hhhh", doctor_id);
 
-      const walletData = await this.walletModel.findOne({
+      const walletData = await this._walletModel.findOne({
         doctorId: doctor_id,
       });
       console.log("Wallet Data Found:", walletData);
@@ -581,7 +581,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
   async withdrawMoney(doctor_id: string, amount: number) {
     try {
-      const wallet = await this.walletModel.findOne({ doctorId: doctor_id });
+      const wallet = await this._walletModel.findOne({ doctorId: doctor_id });
       if (!wallet) {
         throw new Error("Wallet not found for the specified Doctor.");
       }
@@ -607,7 +607,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
   async getDoctorProfile(doctor_id: string) {
     try {
-      const doctorData = await this.doctorModel.findById(doctor_id)
+      const doctorData = await this._doctorModel.findById(doctor_id)
       return doctorData?.profileImage
     } catch (error) {
 
@@ -617,7 +617,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
   async updateDoctorData(doctor_id: string) {
     try {
-      const existingDoctor = await this.doctorModel.findByIdAndUpdate(doctor_id);
+      const existingDoctor = await this._doctorModel.findByIdAndUpdate(doctor_id);
       if (!existingDoctor) {
         throw new Error("Doctor not found");
       }
@@ -630,7 +630,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
   async findUserEmail(email: string) {
     try {
-      return await this.doctorModel.findOne({ email });
+      return await this._doctorModel.findOne({ email });
     } catch (error) {
       console.log("error finding user login:", error);
       return null;
@@ -641,7 +641,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
     console.log("save otp");
 
     try {
-      const newOtp = new this.otpModel({
+      const newOtp = new this._otpModel({
         email,
         otp: OTP,
         expiresAt: OTPExpiry,
@@ -657,7 +657,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   async getOtpsByEmail(email: string): Promise<IOtp[]> {
     console.log("Getting OTP for email:", email);
     try {
-      const otps = await this.otpModel.find({ email: email });
+      const otps = await this._otpModel.find({ email: email });
       if (!otps || otps.length === 0) {
         console.log("No OTPs found for the given email.");
       } else {
@@ -674,11 +674,11 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
     console.log("hee", email);
     console.log("reset reached in repos", hashedPassword);
     try {
-      const user = await this.doctorModel.findOne({ email });
+      const user = await this._doctorModel.findOne({ email });
       if (!user) {
         console.log("User Not found  for this email", email);
       }
-      const result = await this.doctorModel.updateOne(
+      const result = await this._doctorModel.updateOne(
         { email },
         { $set: { password: hashedPassword } }
       );
@@ -724,7 +724,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
     doctorImage?: string;
   };
 }) {
-  const newPrescription = new this.prescriptionModel({
+  const newPrescription = new this._prescriptionModel({
     doctorId: data.doctorId,
     userId: data.userId,
     bookingId: data.bookingId,
@@ -739,13 +739,13 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   return await newPrescription.save();
 }
   async getPrescriptionsByDoctor(doctorId: string) {
-    return await this.prescriptionModel.find({ doctorId })
+    return await this._prescriptionModel.find({ doctorId })
       .populate('userId', 'name')
       .sort({ createdAt: -1 });
   }
 
   async getReportsByUserId(doctorId: string): Promise<IReportData[]> {
-  const report= await this.reportModel.find({ doctorId }).sort({ createdAt: -1 });
+  const report= await this._reportModel.find({ doctorId }).sort({ createdAt: -1 });
   console.log("report",report);
   return report
   
@@ -755,7 +755,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
 
   
-    const revenueData = await this.bookingModel.aggregate([
+    const revenueData = await this._bookingModel.aggregate([
       { $match: { paymentStatus: "Confirmed" } },
       {
         $group: {
@@ -774,7 +774,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
     startDate.setMonth(currentDate.getMonth() - 12);
 
     // Fetch user registration data
-    const userRegistrationData = await this.userModel.aggregate([
+    const userRegistrationData = await this._userModel.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
       {
         $group: {
@@ -813,7 +813,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
     });
 
     // Fetch revenue by month
-    const revenueByMonth = await this.bookingModel.aggregate([
+    const revenueByMonth = await this._bookingModel.aggregate([
       { $match: { paymentStatus: "Confirmed", bookingDate: { $gte: startDate } } },
       {
         $group: {
@@ -828,7 +828,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
 
     // Fetch revenue by doctor
-    const revenueByDoctor = await this.bookingModel.aggregate([
+    const revenueByDoctor = await this._bookingModel.aggregate([
       { $match: { paymentStatus: "Confirmed", bookingDate: { $gte: startDate } } },
       {
         $group: {
@@ -895,11 +895,11 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   }
 
   async cancelAppoinment(id: any): Promise<IAppoinment | null> {
-    return await this.appoinmentModel.findByIdAndUpdate(id, {$set : {status : "Cancelled"}})
+    return await this._appoinmentModel.findByIdAndUpdate(id, {$set : {status : "Cancelled"}})
   }
 
  async findAppointmentById(id: string): Promise<IAppoinment | null> {
-  return await this.appoinmentModel.findById(id);
+  return await this._appoinmentModel.findById(id);
 }
 
 async checkSchedulingConflicts(
@@ -909,7 +909,7 @@ async checkSchedulingConflicts(
   startTime: string,
   endTime: string
 ): Promise<IAppoinment[]> {
-  return await this.appoinmentModel.find({
+  return await this._appoinmentModel.find({
     doctorId,
     selectedDate: date,
     _id: { $ne: appointmentId }, 
@@ -923,7 +923,7 @@ async checkSchedulingConflicts(
 }
 
 async rescheduleAppointment(id: string, updatedData: any): Promise<IAppoinment | null> {
-  return await this.appoinmentModel.findByIdAndUpdate(
+  return await this._appoinmentModel.findByIdAndUpdate(
     id,
     {
       $set: {
