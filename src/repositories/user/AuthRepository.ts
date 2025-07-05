@@ -348,6 +348,15 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
 
     }
   }
+ async getAllUsers(): Promise<User[] | null> {
+  try {
+    const users = await this._userModel.find();
+    return users as unknown as User[];
+  } catch (error) {
+    console.log("error in getall user in repository", error);
+    return null;
+  }
+}
 
 
   async createNotification(bookingDetails: IBooking) {

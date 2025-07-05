@@ -338,6 +338,16 @@ export class AuthController {
 
   }
 
+  async getAllusers(req:Request,res:Response,next:NextFunction){
+    try {
+      const response = await this.authService.getAllUsers();
+       res.status(HTTP_statusCode.OK).json({ response })
+    } catch (error) {
+      console.log("error in controler",error);
+      
+    }
+  }
+
   async getNotifications(req: Request, res: Response, next: NextFunction) {
     try {
       const { user_id } = req.params;

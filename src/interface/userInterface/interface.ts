@@ -22,7 +22,7 @@ export interface User {
     _id?: string;
     id?: string;
     password?: string;
-    profileImage?: string; // Add this field
+    profileImage?: string; 
     createdAt?: Date;
     updatedAt?: Date;
     

@@ -27,6 +27,7 @@ export interface IAuthRepository {
     createBooking(bookingDetails:IBooking):Promise<IBooking>
     fetchSpecializations():Promise<any>
     fetchUserData(userId:string):Promise<User|null>
+    getAllUsers():Promise<any>
     editUserData(userId:string,userData:User):Promise<any>
     getUserById(userId:string):Promise<any>
     fetchBookings(user_id:string):Promise<any>

@@ -18,6 +18,7 @@ export interface IAuthService {
     findBookingDetails(session_id: string, user_id: string, stripe_session_id: string):Promise<any>
     fetchSpecialization():Promise<any>
     fechtUserData(userId:string):Promise<User|null>
+    getAllUsers():Promise<any>
     // getBookedsessionData(userId:string|undefined):Promise<any>
     // findBookings(user_id:string,doctor_id:string):Promise<any>
     getUserStatus(userId: string): Promise<{ isBlocked: boolean }>;

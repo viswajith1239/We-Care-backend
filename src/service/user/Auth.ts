@@ -510,6 +510,14 @@ async fechtUserData(userId:string):Promise<User|null>{
   }
 }
 
+async getAllUsers():Promise<User|null>{
+  try {
+     return  await this.authRepository.getAllUsers() 
+  } catch (error) {
+    return null
+  }
+}
+
 async getNotifications(userId: string) {
   try {
     return await this.authRepository.fetchNotifications(userId)
