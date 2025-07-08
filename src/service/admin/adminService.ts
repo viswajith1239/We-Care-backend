@@ -66,7 +66,11 @@ class AdminService implements IAdminService {
   }
 
   async getAllUsers(){
-    return await this.adminRepository.fetchAllUsers()
+    return  await this.adminRepository.fetchAllUsers()
+  }
+
+  async getallcontact(){
+    return await this.adminRepository.getallcontact()
   }
 
 
@@ -90,6 +94,10 @@ class AdminService implements IAdminService {
      deleteSpecializationService =  async (id: string): Promise<void> => {
       await this.adminRepository.deleteSpecializationRepository(id);
     };
+    deletesubmission =  async (id: string): Promise<void> => {
+      await this.adminRepository.deletesubmission(id);
+    };
+
 
 
     async blockUnblockUser(user_id: string, userState: boolean):Promise<any> {

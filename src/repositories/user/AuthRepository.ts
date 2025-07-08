@@ -18,6 +18,7 @@ import ReviewModel from "../../models/reviewModel";
 import NotificationModel from "../../models/notificationModel";
 import ReportModel from "../../models/reportModel";
 import BaseRepository from "../base/baseRepository";
+import ContactModel from "../../models/contactModel";
 
 
 
@@ -35,6 +36,7 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
   private _reviewModel = ReviewModel
   private _notificationModel = NotificationModel;
   private _reportModel = ReportModel
+  private _contactModel=ContactModel
 
 
   constructor() {
@@ -331,6 +333,44 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
       throw new Error("Failed to create booking.");
     }
 
+  }
+
+
+  async contact(
+    name: string,
+    email: string,
+    subject: string,
+    phone: string,
+    message: string,
+    timestamp: string
+  ) {
+    try {
+      console.log("entered in to contact form repository");
+      
+ 
+      const contactData = {
+        name,
+        email,
+        subject,
+        phone,
+        message,
+        timestamp: new Date(timestamp),
+        createdAt: new Date()
+      };
+
+     
+      const savedContact = await this._contactModel.create(contactData);
+      
+      return {
+        success: true,
+        data: savedContact,
+        message: 'Contact form submitted successfully'
+      };
+      
+    } catch (error) {
+      console.error('Error saving contact:', error);
+      throw new Error('Failed to save contact information');
+    }
   }
   async fetchUserData(userId: string): Promise<User | null> {
     console.log(">>>>>>");

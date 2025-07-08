@@ -9,8 +9,9 @@ const adminSchema=new Schema<LoginAdmin_interface>({
     password:{
         type:String,
         required:true
-    }
-})
+    },
+    
+}, { timestamps: true})
 
 const AdminModel = model("Admin", adminSchema);
 export default AdminModel;

@@ -7,6 +7,7 @@ import KYCModel from "../../models/kycModel";
 import DoctorModel from "../../models/doctorModel";
 import KycRejectionReasonModel from "../../models/KycRejectionReason";
 import BookingModel from "../../models/bookingModel";
+import ContactModel from "../../models/contactModel";
 import { IAdminRepository } from "../../interface/admin/Admin.repository.interface";
 import { IUser } from "../../interface/common";
 import { MonthlyStats } from "../../interface/admin/admin_interface";
@@ -23,6 +24,7 @@ private _kycModel = KYCModel
 private _doctorModel=DoctorModel
 private _kycRejectionReasonModel = KycRejectionReasonModel
 private _bookingModel=BookingModel
+private _contactModel=ContactModel
 
 constructor() {
       super(AdminModel);  
@@ -53,6 +55,12 @@ console.log("admin repo create");
 async fetchAllUsers(): Promise<IUserDocument[] | undefined> {
   return await this._userModel.find().lean<IUserDocument[]>(); 
 }
+async getallcontact():Promise<any>{
+  const contact= await this._contactModel.find()
+  console.log("reppoo",contact);
+  
+  return contact
+}
 
 async saveSpecialization({name,description}:{name:string,description:string}){
     
@@ -65,7 +73,7 @@ async saveSpecialization({name,description}:{name:string,description:string}){
 }
 
 async getAllSpecializations() {
-    return await this._specializationModel.find()
+    return await this._specializationModel.find().sort({ createdAt: -1 }) 
   }
   async saveupdatespecialization(name:string,description:string,specializationId:string){
     try{
@@ -84,6 +92,12 @@ async getAllSpecializations() {
   const result = await this. _specializationModel.findByIdAndDelete(id);
   if (!result) {
     throw new Error(`Specialization with id ${id} not found`);
+  }
+};
+deletesubmission = async (id: string): Promise<void> => {
+  const result = await this. _contactModel.findByIdAndDelete(id);
+  if (!result) {
+    throw new Error(`contact with id ${id} not found`);
   }
 };
 

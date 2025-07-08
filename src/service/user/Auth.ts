@@ -497,6 +497,25 @@ async findBookingDetails(session_id: string, user_id: string, stripe_session_id:
   }
 }
 
+async contact(name:string, email:string, subject:string,phone:string,message:string,timestamp:string){
+  try {
+    console.log("entered in to contact form service");
+    
+    return await this.authRepository.contact(
+
+       name,
+        email,
+        subject,
+        phone,
+        message,
+        timestamp
+    )
+  } catch (error) {
+    console.log("error in contact form service",error);
+    
+  }
+}
+
 
 async fechtUserData(userId:string):Promise<User|null>{
   console.log("nnnn");

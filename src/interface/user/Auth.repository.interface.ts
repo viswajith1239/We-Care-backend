@@ -26,6 +26,7 @@ export interface IAuthRepository {
     findExistingBooking(bookingDetails:IBooking):Promise<any>
     createBooking(bookingDetails:IBooking):Promise<IBooking>
     fetchSpecializations():Promise<any>
+    contact(name:string, email:string, subject:string,phone:string,message:string,timestamp:string):Promise<any>
     fetchUserData(userId:string):Promise<User|null>
     getAllUsers():Promise<any>
     editUserData(userId:string,userData:User):Promise<any>

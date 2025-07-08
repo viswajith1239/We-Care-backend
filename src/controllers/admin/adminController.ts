@@ -65,6 +65,17 @@ class AdminController {
     }
   }
 
+  async getallcontact(req:Request,res:Response,Next:NextFunction){
+    try {
+      const response= await this.adminService.getallcontact()
+      console.log("pp",response);
+      
+      res.status(HTTP_statusCode.OK).json({response:response})
+    } catch (error) {
+      
+    }
+  }
+
 
   async addspecialization(req: Request, res: Response, next: NextFunction) {
     try {
@@ -112,6 +123,20 @@ class AdminController {
     try {
       const { id } = req.params;
       const response = await this.adminService.deleteSpecializationService(id);
+      res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.SPECIALIZATION_DELETE_SUCCESS });
+      return response
+    } catch (error) {
+      console.error('Error deleting specialization:', error);
+      res.status(HTTP_statusCode.InternalServerError).json({ message: RESPONSE_MESSAGES.SPECIALIZATION_DELETE_FAILED });
+    }
+  };
+
+   deletesubmission = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      console.log("inside try delete");
+      
+      const { id } = req.params;
+      const response = await this.adminService.deletesubmission(id);
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.SPECIALIZATION_DELETE_SUCCESS });
       return response
     } catch (error) {

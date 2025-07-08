@@ -46,6 +46,7 @@ route.get('/notifications/:user_id', verifyToken('user'), AuthControllerInstance
 route.delete('/clear-notifications/:user_id', verifyToken('user'), AuthControllerInstance.clearNotifications.bind(AuthControllerInstance));
 route.post('/add-reports',verifyToken('user'),upload.single('image'),AuthControllerInstance.addReport.bind(AuthControllerInstance))
 route.get('/reports/:userId', verifyToken('user'), AuthControllerInstance.getReports.bind(AuthControllerInstance));
+route.post('/contact/:userId',verifyToken('user'),AuthControllerInstance.contact.bind(AuthControllerInstance))
 
 route.post("/logout", verifyToken('user'), AuthControllerInstance.logout.bind(AuthControllerInstance));
 

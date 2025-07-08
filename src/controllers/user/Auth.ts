@@ -286,6 +286,8 @@ export class AuthController {
     }
   }
 
+
+
   async checkoutPayment(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.body.userData.id
@@ -318,6 +320,26 @@ export class AuthController {
       console.log("Error in create booking in controller", error);
     }
 
+  }
+
+  async contact(req:Request,res:Response,next:NextFunction){
+    try {
+      const { name, email, subject,phone,message,timestamp } = req.body;
+      console.log("contacts",name, email, subject,phone,message,timestamp);
+     const response = await this.authService.contact(
+        name,
+        email,
+        subject,
+        phone,
+        message,
+        timestamp
+      );
+         res.status(HTTP_statusCode.OK).json(response);
+      
+    } catch (error) {
+      console.log("error in contact form",error);
+      
+    }
   }
 
   async getUser(req: Request, res: Response, next: NextFunction) {
