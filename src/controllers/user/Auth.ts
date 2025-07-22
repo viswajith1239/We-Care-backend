@@ -126,6 +126,8 @@ export class AuthController {
     try {
       const { email, password }: ILoginUser = req.body;
       const user = await this.authService.login(email, password);
+      console.log("????????????",user);
+      
 
       res.cookie("RefreshToken", user.refreshToken, {
         httpOnly: true,
@@ -141,7 +143,8 @@ export class AuthController {
       });
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.LOGIN_SUCCESS, user: user.user });
     } catch (error: any) {
-      console.log("errrrrr", error);
+      console.log("errrrrr", error.message);
+    
 
       if (error.message === RESPONSE_MESSAGES.ACCOUNT_BLOCKED) {
 
@@ -428,14 +431,17 @@ export class AuthController {
 
 
   async getAllBookings(req: Request, res: Response, next: NextFunction) {
-    try {
-      const user_id = req.params.user_id;
-      const bookings = await this.authService.getAllBookings(user_id);
-      res.status(HTTP_statusCode.OK).json(bookings);
-    } catch (error) {
-      next(error);
-    }
+  try {
+    const user_id = req.params.user_id;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 5;
+
+    const result = await this.authService.getAllBookings(user_id, page, limit);
+    res.status(HTTP_statusCode.OK).json(result);
+  } catch (error) {
+    next(error);
   }
+}
 
 
   async cancelAppoinment(req: Request, res: Response, next: NextFunction) {
@@ -468,6 +474,19 @@ export class AuthController {
   }
 
 
+  async getWalletData(req: Request, res: Response, next: NextFunction) {
+      try {
+        const userId = req.params.user_id
+         const page = parseInt(req.query.page as string) || 1;
+         const limit = parseInt(req.query.limit as string) || 5;
+        const walletData = await this.authService.getWallet(userId,page,limit)
+        res.status(HTTP_statusCode.OK).json(walletData)
+      } catch (error) {
+        next(error)
+      }
+    }
+
+
 
   async resetPasswords(req: Request, res: Response, next: NextFunction) {
     try {
@@ -487,13 +506,15 @@ export class AuthController {
   async getprescription(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { user_id } = req.params;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 5;
 
       if (!user_id) {
         res.status(HTTP_statusCode.BadRequest).json({ message: RESPONSE_MESSAGES.DOCTOR_ID_REQUIRED });
         return;
       }
 
-      const prescriptions = await this.authService.fetchPrescriptions(user_id);
+      const prescriptions = await this.authService.fetchPrescriptions(user_id,page,limit);
 
       res.status(HTTP_statusCode.OK).json(prescriptions);
     } catch (error) {

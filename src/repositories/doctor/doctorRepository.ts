@@ -16,6 +16,7 @@ import UserModel from "../../models/userModel";
 import NotificationModel from "../../models/notificationModel";
 import ReportModel from "../../models/reportModel";
 import BaseRepository from "../base/baseRepository";
+import {PaginatedWalletResponse} from "../../interface/doctor/doctor_interface"
 
 class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository {
   private _specializationModel = SpecializationModel;
@@ -397,21 +398,35 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   }
 
 
-  async fetchAppoinmentData(doctor_id: string) {
+  async fetchAppoinmentData(doctor_id: string, page: number = 1, limit: number = 5) {
     try {
+      const skip = (page - 1) * limit;
       console.log("reached fetch appoinmetn");
-      
+          const totalSchedules = await this._appoinmentModel.countDocuments({ doctorId: doctor_id });
       const appoinmentData = await this._appoinmentModel
         .find({
           doctorId: doctor_id,
         })
         .populate("specializationId")
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
         console.log("appppo",appoinmentData);
         console.log("hello");
         
         
-      return appoinmentData;
+      return{
+
+         appoinmentData: appoinmentData,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalSchedules / limit),
+        totalSchedules,
+        hasNextPage: page < Math.ceil(totalSchedules / limit),
+        hasPreviousPage: page > 1,
+        limit
+      }
+      } 
     } catch (error) {
       console.log("eddd",error);
       
@@ -566,17 +581,37 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
     }
   }
 
-  async fetchWalletData(doctor_id: string): Promise<IWallet | null | undefined> {
-    try {
-      console.log("hhhh", doctor_id);
+ async fetchWalletData(doctor_id: string, page: number = 1, limit: number = 5): Promise<PaginatedWalletResponse | null | undefined> {
+  try {
+    const wallet = await this._walletModel.findOne({ doctorId: doctor_id }).exec();
 
-      const walletData = await this._walletModel.findOne({
-        doctorId: doctor_id,
-      });
-      console.log("Wallet Data Found:", walletData);
-      return walletData;
-    } catch (error) { }
+    if (!wallet) return null;
+
+    const totalTransactions = wallet.transactions.length;
+    const skip = (page - 1) * limit;
+
+    const paginatedTransactions = wallet.transactions.slice(skip, skip + limit);
+
+    return {
+      walletData: {
+        ...wallet.toObject(),
+        transactions: paginatedTransactions, 
+      },
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalTransactions / limit),
+        tatalTransctions:totalTransactions,
+        hasNextPage: page < Math.ceil(totalTransactions / limit),
+        hasPreviousPage: page > 1,
+        limit
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching wallet data:', error);
+    return null;
   }
+}
+
 
 
   async withdrawMoney(doctor_id: string, amount: number) {

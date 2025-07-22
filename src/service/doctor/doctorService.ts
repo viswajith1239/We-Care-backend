@@ -9,6 +9,8 @@ import jwt, { JwtPayload } from "jsonwebtoken"
 import { uploadToCloudinary } from "../../config/cloudinary";
 import { IDoctorService } from "../../interface/doctor/Doctor.Srevice.interface";
 import { IDoctorRepository } from "../../interface/doctor/Doctor.repository.interface";
+import { toDoctorDTO, toDoctorProfileDTO } from "../../utils/doctorMapper";
+import { DoctorProfileDTO } from "../../dtos/doctor.dto";
 
 
 class Doctorservice implements IDoctorService {
@@ -420,11 +422,11 @@ class Doctorservice implements IDoctorService {
   }
 
 
-  async getAppoinmentSchedules(doctor_id: string) {
+  async getAppoinmentSchedules(doctor_id: string, page: number = 1, limit: number = 5) {
     try {
       console.log("service get app");
       
-      return await this.doctorRepository.fetchAppoinmentData(doctor_id)
+      return await this.doctorRepository.fetchAppoinmentData(doctor_id,page,limit)
     } catch (error) {
       throw new Error("Error getting sessin shedule data");
     }
@@ -456,13 +458,16 @@ class Doctorservice implements IDoctorService {
       console.log("Error in fetching doctor's bookings:", error);
     }
   }
-  async getDoctor(doctor_id: string) {
-    try {
-      return await this.doctorRepository.getDoctor(doctor_id)
-    } catch (error: any) {
-      throw Error(error);
-    }
+async getDoctor(doctor_id: string): Promise<DoctorProfileDTO | null> {
+  try {
+    const doctorData = await this.doctorRepository.getDoctor(doctor_id);
+    if (!doctorData || doctorData.length === 0) return null;
+    
+    return toDoctorProfileDTO(doctorData[0]); // because aggregate returns an array
+  } catch (error: any) {
+    throw new Error(error);
   }
+}
 
   async forgotpassword(UserEmail: string): Promise<any> {
     try {
@@ -559,8 +564,8 @@ class Doctorservice implements IDoctorService {
   }
 
 
-  async getWallet(doctor_id: string) {
-    return await this.doctorRepository.fetchWalletData(doctor_id)
+  async getWallet(doctor_id: string, page: number = 1, limit: number = 5) {
+    return await this.doctorRepository.fetchWalletData(doctor_id,page,limit)
   }
 
 

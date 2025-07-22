@@ -12,6 +12,7 @@ import { IAdminRepository } from "../../interface/admin/Admin.repository.interfa
 import { IUser } from "../../interface/common";
 import { MonthlyStats } from "../../interface/admin/admin_interface";
 import BaseRepository from "../base/baseRepository";
+import { PaginatedUserResponse, UserResponseDTO } from "../../dtos/user.dto";
 type IUserDocument = IUser & Document;
 
 class AdminRepository extends BaseRepository<any>  implements IAdminRepository{
@@ -52,8 +53,29 @@ console.log("admin repo create");
 }
 
 
-async fetchAllUsers(): Promise<IUserDocument[] | undefined> {
-  return await this._userModel.find().lean<IUserDocument[]>(); 
+async fetchAllUsers(page: number = 1, limit: number = 5): Promise<PaginatedUserResponse | undefined> {
+  try {
+    const skip = (page - 1) * limit;
+    const totalUsers = await this._userModel.countDocuments();
+     const users =  await this._userModel.find().lean<UserResponseDTO []>().skip(skip)
+      .limit(limit); 
+
+      return{
+        users:users,
+         pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalUsers / limit),
+        totalUsers,
+        hasNextPage: page < Math.ceil(totalUsers / limit),
+        hasPreviousPage: page > 1,
+        limit
+      }
+      }
+  } catch (error) {
+    console.log("error fetching users",error);
+    
+  }
+ 
 }
 async getallcontact():Promise<any>{
   const contact= await this._contactModel.find()
@@ -72,9 +94,38 @@ async saveSpecialization({name,description}:{name:string,description:string}){
 }
 }
 
-async getAllSpecializations() {
-    return await this._specializationModel.find().sort({ createdAt: -1 }) 
+async getAllSpecializations(page: number = 1, limit: number = 5) {
+  try {
+    const skip = (page - 1) * limit;
+
+    // Get total count
+    const totalCount = await this._specializationModel.countDocuments();
+
+    // Get paginated data
+    const specializations = await this._specializationModel
+      .find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    return {
+      specializations,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit),
+       totalCount: totalCount, 
+        itemsPerPage: limit,
+        hasNextPage: page < Math.ceil(totalCount / limit),
+        hasPreviousPage: page > 1,
+       
+      }
+    };
+  } catch (error) {
+    console.log("Error in fetching specializations", error);
+    throw error;
   }
+}
+
   async saveupdatespecialization(name:string,description:string,specializationId:string){
     try{
 

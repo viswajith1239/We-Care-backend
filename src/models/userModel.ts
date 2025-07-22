@@ -7,6 +7,15 @@ interface IImage {
     type: string;
 }
 
+
+export interface IUserDocument {
+  _id: string;
+  name: string;
+  email: string;
+  password: string;
+  isAdmin: boolean;
+}
+
 interface Iuser extends Document {
     userId: string;
     name: string;

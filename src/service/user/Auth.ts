@@ -12,6 +12,8 @@ import stripeClient from "../../config/stripeClients";
 import mongoose from "mongoose";
 import { IAuthRepository } from "../../interface/user/Auth.repository.interface";
 import cloudinary, { uploadToCloudinary } from "../../config/cloudinary";
+import { toUserDTO } from "../../utils/userMapper";
+import { UserDTO } from "../../dtos/user.dto";
 
 
 export class AuthService implements IAuthService {
@@ -191,7 +193,7 @@ export class AuthService implements IAuthService {
     const userData: IUser | null = await this.authRepository.findUser(email);
     if (userData) {
       if (userData.isBlocked) {
-        throw new Error("userblocked");
+        throw new Error("Your account is blocked.");
       }
 
       const isPasswordMatch = await bcrypt.compare(password, userData.password || "");
@@ -517,15 +519,14 @@ async contact(name:string, email:string, subject:string,phone:string,message:str
 }
 
 
-async fechtUserData(userId:string):Promise<User|null>{
-  console.log("nnnn");
-  
+async fechtUserData(userId: string): Promise<UserDTO | null> {
   try {
-    console.log("gggg");
-   return  await this.authRepository.fetchUserData(userId) 
+    const user = await this.authRepository.fetchUserData(userId);
+    if (!user) return null;
+    return toUserDTO(user);
   } catch (error) {
-    console.log("Error in fetch Data",error)
-    return null
+    console.log("Error in fetch Data", error);
+    return null;
   }
 }
 
@@ -571,42 +572,57 @@ async editUserData(userId: string, userData: any) {
       throw new Error(error);
     }
   }
-async getAllBookings(user_id: string) {
+async getAllBookings(user_id: string, page: number = 1, limit: number = 5) {
   try {
-    return await this.authRepository.fetchBookings(user_id);
+    return await this.authRepository.fetchBookings(user_id, page, limit);
   } catch (error) {
     console.log(error);
+    throw error;
   }
 }
-async cancelAppoinment(bookId:string,userId:string,doctorId:string){
-    
+async cancelAppoinment(bookId: string, userId: string, doctorId: string) {
   try {
-    const bookedsession=await this.authRepository.cancelAppoinment(bookId,userId,doctorId)
+    const bookedsession = await this.authRepository.cancelAppoinment(bookId, userId, doctorId);
     
-
-    //refund all amount into user account
-    // const refund = await stripeClient.refunds.create({
-    //   payment_intent:   bookedsession.payment_intent,
-    //   amount: bookedsession.Amount
-    // });
-    // if (refund.status === 'succeeded') {
-    //   return {
-    //     success: true,
-    //     message: 'Refund processed successfully',
-    //   };
-    // } else {
-    //   throw new Error('Refund processing failed');
-    // }
-    console.log("hhh",bookedsession);
+    // Process Stripe refund if booking was successfully cancelled
+    if (bookedsession && bookedsession.paymentStatus === "Cancelled" && bookedsession.payment_intent) {
+      try {
+        const refund = await stripeClient.refunds.create({
+          payment_intent: bookedsession.payment_intent,
+          amount: bookedsession.amount 
+        });
+        
+        if (refund.status === 'succeeded') {
+          // Add refunded amount to user wallet
+          await this.authRepository.addToUserWallet(userId, bookedsession.amount, bookId);
+          
+          return {
+            success: true,
+            message: 'Appointment cancelled and refund processed successfully',
+            booking: bookedsession,
+            refund: refund
+          };
+        } else {
+          throw new Error('Refund processing failed');
+        }
+      } catch (refundError) {
+        console.log("Refund error:", refundError);
+        // Still return the cancelled booking even if refund fails
+        return {
+          success: false,
+          message: 'Appointment cancelled but refund failed. Please contact support.',
+          booking: bookedsession,
+          error: refundError
+        };
+      }
+    }
     
- 
-    return bookedsession
-
+    return bookedsession;
   } catch (error) {
-    console.log("Error cancel and refund",error)
+    console.log("Error cancel and refund", error);
+    throw error;
   }
-
- }
+}
  async getbookedDoctor(userId:any){
   try {
     return await this.authRepository.getbookedDoctor(userId)
@@ -614,6 +630,10 @@ async cancelAppoinment(bookId:string,userId:string,doctorId:string){
     
   }
  }
+
+ async getWallet(user_id: string, page: number = 1, limit: number = 5) {
+    return await this.authRepository.fetchWalletData(user_id,page,limit)
+  }
 
  async resetPasswords(userId: string, currentPassword: string, newPassword: string) {
   try {
@@ -636,8 +656,8 @@ async cancelAppoinment(bookId:string,userId:string,doctorId:string){
   }
 }
 
-async fetchPrescriptions(user_id: string) {
-  return await this.authRepository.getPrescriptionsByuser(user_id);
+async fetchPrescriptions(user_id: string,page: number = 1, limit: number = 5) {
+  return await this.authRepository.getPrescriptionsByuser(user_id, page, limit);
 }
 
 async findBookings(user_id: string, doctorId: string) {

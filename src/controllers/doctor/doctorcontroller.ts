@@ -453,8 +453,12 @@ class DoctorController {
       const doctor_id = req.params.doctorId;
       console.log("dddo", doctor_id);
 
+      const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 5;
+
+
       const sheduleData = await this.doctorService.getAppoinmentSchedules(
-        doctor_id
+        doctor_id,page,limit
       );
       console.log('sheduleData', sheduleData);
 
@@ -523,7 +527,9 @@ class DoctorController {
   async getWalletData(req: Request, res: Response, next: NextFunction) {
     try {
       const doctorId = req.params.doctor_id
-      const walletData = await this.doctorService.getWallet(doctorId)
+       const page = parseInt(req.query.page as string) || 1;
+       const limit = parseInt(req.query.limit as string) || 5;
+      const walletData = await this.doctorService.getWallet(doctorId,page,limit)
       res.status(HTTP_statusCode.OK).json(walletData)
     } catch (error) {
       next(error)

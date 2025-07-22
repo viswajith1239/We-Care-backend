@@ -2,7 +2,7 @@ import { Document } from "mongoose";
 import { IReportData, User, userType,} from "../userInterface/interface";
 import { IUser,IOtp,IBooking,IUsers} from "../common";
 import mongoose, { Types } from "mongoose";
-import { Interface_Doctor, IAppoinment } from "../doctor/doctor_interface";
+import { Interface_Doctor, IAppoinment, PaginatedWalletResponse } from "../doctor/doctor_interface";
 
 export interface IAuthRepository {
     existUser(email:string,phone:string): Promise<{ existEmail: boolean; existPhone: boolean }>;
@@ -31,11 +31,13 @@ export interface IAuthRepository {
     getAllUsers():Promise<any>
     editUserData(userId:string,userData:User):Promise<any>
     getUserById(userId:string):Promise<any>
-    fetchBookings(user_id:string):Promise<any>
+    fetchBookings(user_id:string,page?: number, limit?: number):Promise<any>
     cancelAppoinment(bookId:string,userId:string,doctorId:string):Promise<any>
+    addToUserWallet(userId:string, amount:number, bookId:string):Promise<any>
+     fetchWalletData(user_id: string,page?:number,limit?:number): Promise<PaginatedWalletResponse | null | undefined>
     getbookedDoctor(userId:string):Promise<any>
     fetchUser(userId:string):Promise<any>
-    getPrescriptionsByuser(user_id:string):Promise<any>
+    getPrescriptionsByuser(user_id:string,page?: number, limit?: number):Promise<any>
     findBookings(user_id:string,doctorId:string):Promise<any>
     fetchNotifications(userId:string):Promise<any>
     deleteUserNotifications(userId:string):Promise<any>

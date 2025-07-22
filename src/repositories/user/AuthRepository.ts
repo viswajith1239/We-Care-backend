@@ -8,10 +8,10 @@ import OtpModel from "../../models/otpModel";
 import DoctorModel from "../../models/doctorModel";
 import SpecializationModel from "../../models/specializationModel";
 import AppoinmentModel from "../../models/appoinmentModel";
-import { ISpecialization } from "../../interface/doctor/doctor_interface"
+import { ISpecialization, PaginatedWalletResponse } from "../../interface/doctor/doctor_interface"
 import BookingModel from "../../models/bookingModel";
 import { INotification, INotificationContent, IUsers } from "../../interface/common";
-import { ITransaction } from "../../models/walletModel";
+import { ITransaction,ITransactions } from "../../models/walletModel";
 import WalletModel from "../../models/walletModel";
 import PrescriptionModel from "../../models/prescriptionModel";
 import ReviewModel from "../../models/reviewModel";
@@ -521,79 +521,153 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
       throw new Error("Failed to delete notifications");
     }
   }
-  async fetchBookings(user_id: string) {
-    try {
+  async fetchBookings(user_id: string, page: number = 1, limit: number = 5) {
+  try {
+    const skip = (page - 1) * limit;
 
+    
+    const totalBookings = await this._bookingModel.countDocuments({ userId: user_id });
 
-      const bookings = await this._bookingModel.find({ userId: user_id }).populate("doctorId", "name profileImage").sort({ createdAt: -1 }).exec()
-      const response = bookings.map((booking: any) => {
-        return {
-          ...booking.toObject(),
-          doctorName: booking.doctorId ? booking.doctorId.name : 'Doctor not found',
-          profileImage: booking.doctorId ? booking.doctorId.profileImage : "Doctor not found"
-        };
-      });
+  
+    const bookings = await this._bookingModel
+      .find({ userId: user_id })
+      .populate("doctorId", "name profileImage")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .exec();
 
+    const response = bookings.map((booking: any) => {
+      return {
+        ...booking.toObject(),
+        doctorName: booking.doctorId ? booking.doctorId.name : 'Doctor not found',
+        profileImage: booking.doctorId ? booking.doctorId.profileImage : "Doctor not found"
+      };
+    });
 
-      return response
+    return {
+      bookings: response,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalBookings / limit),
+        totalBookings,
+        hasNextPage: page < Math.ceil(totalBookings / limit),
+        hasPreviousPage: page > 1,
+        limit
+      }
+    };
 
-    } catch (error) {
-      console.log("Error in fetching userData in repository", error)
-    }
+  } catch (error) {
+    console.log("Error in fetching userData in repository", error);
+    throw error;
   }
+}
 
+  
   async cancelAppoinment(bookId: string, userId: string, doctorId: string) {
+  try {
+    const bookingDetails = await this._bookingModel.findOne({ 
+      _id: bookId, 
+      doctorId: doctorId, 
+      userId: userId 
+    });
 
-
-    try {
-      const bookingDetails = await this._bookingModel.findOne({ _id: bookId, doctorId: doctorId, userId: userId })
-
-      if (bookingDetails?.paymentStatus === "Cancelled") {
-        throw new Error('session is already cancelled');
-      }
-      if (bookingDetails?.paymentStatus === "Confirmed") {
-        bookingDetails.paymentStatus = "Cancelled"
-        await bookingDetails.save()
-        await this._appoinmetModel.updateOne(
-          { _id: bookingDetails.appoinmentId },
-          { $set: { status: "Cancelled", isBooked: false } }
-        );
-        // const wallet = await this._walletModel.findOne({ trainerId });
-
-        // if (wallet) {
-        //   const refundAmount = 0.9 * (bookingDetails.amount??0); // Deduct the 90% credited amount
-
-        //   // Ensure balance is not negative after refund
-        //   if (wallet.balance >= refundAmount) {
-        //     wallet.balance -= refundAmount;
-        //   } else {
-        //     wallet.balance = 0;
-        //   }
-
-        //   // Add transaction record for refund
-        //   const refundTransaction: ITransaction = {
-        //     amount: -refundAmount,
-        //     transactionId: "txn_refund_" + Date.now() + Math.floor(Math.random() * 10000),
-        //     transactionType: "debit",
-        //     bookingId: bookId,
-        //     date: new Date(),
-        //   };
-
-        //   wallet.transactions.push(refundTransaction);
-        //   await wallet.save();
-        // }
-
-
-      }
-
-      return bookingDetails
-
-
-    } catch (error) {
-      console.log("cancel booking details", error)
-
+    if (!bookingDetails) {
+      throw new Error('Booking not found');
     }
+
+    if (bookingDetails?.paymentStatus === "Cancelled") {
+      throw new Error('Session is already cancelled');
+    }
+
+    if (bookingDetails?.paymentStatus === "Confirmed") {
+      bookingDetails.paymentStatus = "Cancelled";
+      await bookingDetails.save();
+      
+      await this._appoinmetModel.updateOne(
+        { _id: bookingDetails.appoinmentId },
+        { $set: { status: "Cancelled", isBooked: false } }
+      );
+    }
+
+    return bookingDetails;
+  } catch (error) {
+    console.log("cancel booking details", error);
+    throw error;
   }
+}
+
+async addToUserWallet(userId: string, amount: number, bookingId: string) {
+  try {
+    // Find or create user wallet
+    let wallet = await this._walletModel.findOne({ userId });
+    
+    if (!wallet) {
+      // Create new wallet if doesn't exist
+      wallet = new this._walletModel({
+        userId,
+        balance: 0,
+        transactions: []
+      });
+    }
+
+    // Add refunded amount to wallet balance
+    wallet.balance += amount;
+
+    // Create transaction record for refund
+    const refundTransaction: ITransactions = {
+      amount: amount,
+      transactionId: "txn_refund_" + Date.now() + Math.floor(Math.random() * 10000),
+      transactionType: "credit",
+      bookingId: bookingId,
+      date: new Date(),
+      description: "Refund for cancelled appointment"
+    };
+
+    console.log("refuncd",refundTransaction);
+    
+
+    wallet.transactions.push(refundTransaction);
+    await wallet.save();
+
+    return wallet;
+  } catch (error) {
+    console.log("Error adding to user wallet:", error);
+    throw error;
+  }
+}
+
+
+async fetchWalletData(user_id: string, page: number = 1, limit: number = 5): Promise<PaginatedWalletResponse | null | undefined> {
+  try {
+    const wallet = await this._walletModel.findOne({ userId: user_id }).exec();
+
+    if (!wallet) return null;
+
+    const totalTransactions = wallet.transactions.length;
+    const skip = (page - 1) * limit;
+
+    const paginatedTransactions = wallet.transactions.slice(skip, skip + limit);
+
+    return {
+      walletData: {
+        ...wallet.toObject(),
+        transactions: paginatedTransactions, 
+      },
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalTransactions / limit),
+        tatalTransctions:totalTransactions,
+        hasNextPage: page < Math.ceil(totalTransactions / limit),
+        hasPreviousPage: page > 1,
+        limit
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching wallet data:', error);
+    return null;
+  }
+}
   async getbookedDoctor(userId: string) {
     try {
       console.log("reached repo", userId);
@@ -627,7 +701,16 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
     }
   }
 
-  async getPrescriptionsByuser(user_id: string) {
+ async getPrescriptionsByuser(user_id: string, page: number = 1, limit: number = 5) {
+  try {
+    const skip = (page - 1) * limit;
+
+    // First, get the total count of prescriptions for this user
+    const totalCount = await this._prescriptionModel.countDocuments({
+      userId: new mongoose.Types.ObjectId(user_id)
+    });
+
+    // Then get the paginated prescriptions
     const prescriptions = await this._prescriptionModel.aggregate([
       {
         $match: {
@@ -693,12 +776,33 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
           createdAt: -1,
         },
       },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      },
     ]);
 
     console.log('Fetched prescriptions:', prescriptions);
 
-    return prescriptions;
+    return {
+      prescriptions,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit),
+        totalPrescriptions: totalCount,
+        hasNextPage: page < Math.ceil(totalCount / limit),
+        hasPreviousPage: page > 1,
+        limit
+      }
+    };
+
+  } catch (error) {
+    console.log("Error in fetching prescriptions in repository", error);
+    throw error;
   }
+}
 
 
 

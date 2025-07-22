@@ -99,7 +99,37 @@ export interface IOtp {
     balance: number;
     transactions: any[]; 
   }
+
+   export interface PaginatedWalletResponse {
+  walletData: IWallet | null;
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+    limit: number;
+    tatalTransctions:number
+  };
+}
   
+
+  export interface IPaginatedWallet {
+  doctorId: string;
+  balance: number;
+  transactions: [];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalTransactions: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
+export interface IPaginationOptions {
+  page?: number;
+  limit?: number;
+}
   export interface IDoctor {
     _id?: Types.ObjectId;
     id?: string; 

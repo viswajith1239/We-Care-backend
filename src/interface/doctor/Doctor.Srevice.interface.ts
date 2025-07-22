@@ -1,6 +1,7 @@
 
+import { DoctorProfileDTO } from "../../dtos/doctor.dto"
 import { IBooking, JwtPayload, JwtPayloads } from "../common"
-import { IAppoinment, IDoctor, IKYC, Interface_Doctor, ISpecialization, IWallet, PrescriptionData } from "./doctor_interface"
+import { IAppoinment, IDoctor, IKYC, Interface_Doctor, ISpecialization, IWallet, PaginatedWalletResponse, PrescriptionData } from "./doctor_interface"
 
 
 export interface IDoctorService {
@@ -15,7 +16,7 @@ export interface IDoctorService {
     resetapassword(doctorData: string, payload: { newPassword: string }): Promise<any>
     kycStatus(doctorId: string): Promise<IKYC[]>
     getSpecialization(trainerId: string): Promise<ISpecialization>
-    getAppoinmentSchedules(doctor_id: string): Promise<Interface_Doctor>
+    getAppoinmentSchedules(doctor_id: string,page?: number, limit?: number): Promise<Interface_Doctor>
     storeAppoinmentData(appoinmentData: IAppoinment): Promise<IAppoinment>
     fetchBookingDetails(doctor_id: string): Promise<IBooking>
     googleSignUpUser(decodedToken: JwtPayloads): Promise<any>
@@ -23,8 +24,8 @@ export interface IDoctorService {
     fetchusers(doctorId: string): Promise<any>
     getAllBookings(doctor_id: string): Promise<any>
     storeMultipleAppointments(appointments: IAppoinment[]): Promise<IAppoinment[]>
-    getDoctor(doctor_id: string): Promise<any>
-    getWallet(doctorId: any): Promise<IWallet | null | undefined>
+    getDoctor(doctor_id: string): Promise<DoctorProfileDTO|null>
+    getWallet(doctorId: string,page?:number,limit?:number): Promise<PaginatedWalletResponse | null | undefined>
     withdraw(doctor_id: any, amount: any): Promise<IWallet | null | undefined>
     fetchDoctor(doctor_id: string): Promise<any>
     getNotifications(doctor_id: any): Promise<any>

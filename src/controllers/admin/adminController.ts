@@ -56,7 +56,12 @@ class AdminController {
 
   async getAllUsers(req: Request, res: Response, next: NextFunction) {
     try {
-      const allUsers = await this.adminService.getAllUsers();
+
+      const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 5;
+      const allUsers = await this.adminService.getAllUsers(page, limit);
+
+      
       res
         .status(HTTP_statusCode.OK)
         .json({ message: RESPONSE_MESSAGES.FETCH_ALL_USERS_SUCCESS, users: allUsers });
@@ -94,8 +99,11 @@ class AdminController {
 
   async getAllSpecializations(req: Request, res: Response, next: NextFunction) {
     try {
-      const allSpecializations = await this.adminService.getAllSpecializations();
 
+        const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 5;
+      const allSpecializations = await this.adminService.getAllSpecializations(page,limit);
+       
       res.status(HTTP_statusCode.OK).json(allSpecializations);
     } catch (error) {
       console.error('Error fetching specializations:', error);
@@ -149,6 +157,10 @@ class AdminController {
     try {
       const user_id = req.params.user_id
       const userState = req.body.status
+
+      console.log("jjj",user_id);
+       console.log("iiii",userState);
+      
 
       const responsestatus = await this.adminService.blockUnblockUser(user_id, userState)
       console.log("response data issssss", responsestatus)

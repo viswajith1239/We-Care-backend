@@ -6,6 +6,15 @@ export interface ITransaction {
     transactionType: 'credit' | 'debit';
     date?: Date;
     bookingId?: string;
+    
+}
+export interface ITransactions {
+    amount: number;
+    transactionId: string;
+    transactionType: 'credit' | 'debit';
+    date?: Date;
+    bookingId?: string;
+    description:string
 }
 
 export interface IWallet {
@@ -14,6 +23,7 @@ export interface IWallet {
     transactions: ITransaction[];
     createdAt?: Date;
     updatedAt: Date;
+    userId:string
 }
 
 const transactionSchema = new Schema<ITransaction>({
@@ -25,7 +35,8 @@ const transactionSchema = new Schema<ITransaction>({
 })
 const walletSchema = new Schema<IWallet>(
     {
-        doctorId: { type: String, required: true },
+      doctorId: { type: String,},
+      userId:{type:String},
       balance: { type: Number, required: true, default: 0 },
       transactions: [transactionSchema],
     },

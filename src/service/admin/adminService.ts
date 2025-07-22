@@ -7,6 +7,9 @@ import dotenv from "dotenv"
 import { IAdminRepository } from "../../interface/admin/Admin.repository.interface";
 import { IAdminService } from "../../interface/admin/Admin.service.interface";
 import { IUser } from "../../interface/common";
+import { PaginatedUserResponse, UserResponseDTO } from "../../dtos/user.dto";
+import { mapUserToDTO } from "../../utils/userMapper";
+import { IUserDocument } from "../../models/userModel";
 dotenv.config();
 
 class AdminService implements IAdminService {
@@ -65,9 +68,34 @@ class AdminService implements IAdminService {
     }
   }
 
-  async getAllUsers(){
-    return  await this.adminRepository.fetchAllUsers()
+ async getAllUsers(page: number = 1, limit: number = 5): Promise<PaginatedUserResponse> {
+  const result = await this.adminRepository.fetchAllUsers(page, limit);
+  
+  if (!result) {
+    return {
+      users: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 1,
+        totalUsers: 0,
+        hasNextPage: false,
+        hasPreviousPage: false,
+        limit: limit
+      }
+    };
   }
+
+
+  const { users, pagination } = result;
+  
+
+  const mappedUsers = (users as unknown as IUserDocument[]).map(mapUserToDTO);
+  
+  return {
+    users: mappedUsers,
+    pagination: pagination
+  };
+}
 
   async getallcontact(){
     return await this.adminRepository.getallcontact()
@@ -81,8 +109,8 @@ class AdminService implements IAdminService {
     return specialization
     }
 
-    async getAllSpecializations() {
-      const specializations = await this.adminRepository.getAllSpecializations()    
+    async getAllSpecializations(page: number = 1, limit: number = 5) {
+      const specializations = await this.adminRepository.getAllSpecializations(page,limit)    
       return specializations
     }
 

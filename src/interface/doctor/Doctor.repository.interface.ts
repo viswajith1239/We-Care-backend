@@ -1,5 +1,5 @@
 
-import { IAppoinment, Interface_Doctor, IWallet, PrescriptionData } from "./doctor_interface"
+import { IAppoinment, Interface_Doctor, IWallet, PaginatedWalletResponse, PrescriptionData } from "./doctor_interface"
 import { IOtp, IUser } from "../common"
 import mongoose from "mongoose"
 export interface IDoctorRepository {
@@ -16,7 +16,7 @@ export interface IDoctorRepository {
     changeKycStatus(doctorId: string, profileImage: string | undefined): Promise<string | undefined>
     getSpecialization(trainerid: string): Promise<any>
     createNewAppoinment(sessiondata: IAppoinment): Promise<any>
-    fetchAppoinmentData(doctor_id: string): Promise<any>
+    fetchAppoinmentData(doctor_id: string,page?: number, limit?: number): Promise<any>
     fecthBookingDetails(doctor_id: string): Promise<any>
     existingUser(email: string): Promise<Interface_Doctor | null>;
     createUsers(user: { email: string; name: string; password: string | null; }): Promise<any>
@@ -25,7 +25,7 @@ export interface IDoctorRepository {
     createMultipleAppointments(appointments: IAppoinment[]): Promise<IAppoinment[]>;
     findConflictingAppointments(appointmentData: Partial<IAppoinment>): Promise<IAppoinment[]>;
     getDoctor(doctor_id: string): Promise<any>
-    fetchWalletData(doctor_id: string): Promise<IWallet | null | undefined>
+    fetchWalletData(doctor_id: string,page?:number,limit?:number): Promise<PaginatedWalletResponse | null | undefined>
     withdrawMoney(doctor_id: any, amount: any): Promise<any>
     getDoctorProfile(doctor_id: string): Promise<any>
     updateDoctorData(doctor_id: string): Promise<any>

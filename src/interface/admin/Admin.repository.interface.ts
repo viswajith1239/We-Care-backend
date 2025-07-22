@@ -1,15 +1,16 @@
+import { PaginatedUserResponse, UserResponseDTO } from "../../dtos/user.dto";
 import { IUser } from "../common";
 import { IDoctorKYC, IKYC } from "../doctor/doctor_interface";
-import { ISpecialization, LoginAdmin_interface } from "./admin_interface";
+import { ISpecialization, ISpecializationPaginationResponse, LoginAdmin_interface } from "./admin_interface";
 
 type IUserDocument = IUser & Document;
 export interface IAdminRepository{
 
     findAdmin(email:string):Promise<LoginAdmin_interface|undefined|null>
     createAdmin(email:string,password:string):Promise<LoginAdmin_interface|null>
-    fetchAllUsers():Promise<IUserDocument[] |undefined>
+    fetchAllUsers(page?: number, limit?: number):Promise<PaginatedUserResponse  |undefined>
     getallcontact():Promise<any>
-    getAllSpecializations():Promise<ISpecialization[]|undefined|null>
+    getAllSpecializations(page?: number, limit?: number):Promise<ISpecializationPaginationResponse|undefined|null>
     saveSpecialization({name,description}:{name:string,description:string}):Promise<any>
     blockUnblockUser(user_id:string,userState:boolean):Promise<IUser|undefined|null>
     fetchKycData(doctorId:string):Promise<IKYC|undefined|null>
