@@ -1,6 +1,6 @@
 
 import userModel from "../../models/userModel"
-import { UserProfile, userType, IOtp, IUser, IBooking, User, IReportData } from "../../interface/userInterface/interface";
+import { UserProfile, userType, IOtp, IUser, IBooking, User, IReportData, userProfileUpdate } from "../../interface/userInterface/interface";
 import { IAuthRepository } from "../../interface/user/Auth.repository.interface";
 import { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
@@ -11,7 +11,7 @@ import AppoinmentModel from "../../models/appoinmentModel";
 import { ISpecialization, PaginatedWalletResponse } from "../../interface/doctor/doctor_interface"
 import BookingModel from "../../models/bookingModel";
 import { INotification, INotificationContent, IUsers } from "../../interface/common";
-import { ITransaction,ITransactions } from "../../models/walletModel";
+import { ITransaction, ITransactions } from "../../models/walletModel";
 import WalletModel from "../../models/walletModel";
 import PrescriptionModel from "../../models/prescriptionModel";
 import ReviewModel from "../../models/reviewModel";
@@ -36,7 +36,7 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
   private _reviewModel = ReviewModel
   private _notificationModel = NotificationModel;
   private _reportModel = ReportModel
-  private _contactModel=ContactModel
+  private _contactModel = ContactModel
 
 
   constructor() {
@@ -45,7 +45,7 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
   async existUser(email: string, phone: string): Promise<{ existEmail: boolean; existPhone: boolean }> {
     try {
 
-      console.log("this is  repo");
+
 
       let existEmail = true;
       let existPhone = true;
@@ -67,9 +67,9 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
     }
   }
   async createUser(userData: any): Promise<Document> {
-    console.log("evie")
+
     try {
-      console.log("user data", userData);
+
 
       const newUser = new userModel(userData);
       return await newUser.save();
@@ -96,7 +96,7 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
   }
 
   async saveOTP(email: string, OTP: string, OTPExpiry: Date): Promise<void> {
-    console.log("save otp");
+
 
     try {
       const newOtp = new this._otpModel({
@@ -113,7 +113,7 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
 
 
   async getOtpsByEmail(email: string): Promise<IOtp[]> {
-    console.log("Getting OTP for email:", email);
+
     try {
       const otps = await this._otpModel.find({ email: email });
       if (!otps || otps.length === 0) {
@@ -135,7 +135,7 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
         throw new Error("OTP ID is undefined");
       }
       await this._otpModel.findByIdAndDelete(otpId.toString());
-      console.log(`OTP with ID ${otpId} deleted successfully.`);
+
     } catch (error) {
       console.error("Error in deleting OTP:", error);
       throw error;
@@ -145,7 +145,7 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
   async createNewUser(userData: IUser): Promise<void> {
     try {
       await this._userModel.create(userData);
-      console.log("User created successfully.");
+
     } catch (error) {
       console.error("Error in creating User:", error);
       throw error;
@@ -162,8 +162,14 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
   }
 
   async findUserEmail(email: string) {
+   
+    
     try {
-      return await this._userModel.findOne({ email });
+       const hi= await this._userModel.findOne({ email }).lean<IUser>();
+     
+       
+
+       return hi
     } catch (error) {
       console.log("error finding user login:", error);
       return null;
@@ -171,8 +177,7 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
   }
 
   async saveResetPassword(email: string, hashedPassword: string) {
-    console.log("hee", email);
-    console.log("reset reached in repos", hashedPassword);
+
     try {
       const user = await this._userModel.findOne({ email });
       if (!user) {
@@ -183,11 +188,13 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
         { $set: { password: hashedPassword } }
       );
       if (result.modifiedCount === 0) {
-        console.error("Failed to update password for email:", email);
+
         throw new Error("Password update failed.");
       }
+      console.log("re",result);
+      
 
-      console.log("Password reset successfully for email:", email);
+
       return result;
     } catch (error) {
       console.log("Error in Resetting password", error);
@@ -199,7 +206,7 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
     try {
 
       const response = await this._specializationModel.find({})
-
+    
       return response
     } catch (error) {
       console.log("Error in fetching specialization repository", error)
@@ -207,11 +214,10 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
   }
 
   async getAllDoctors() {
-    console.log("ïn repo")
+
     try {
       const Doctors = await this._doctorModel.find({}).populate("specializations", "name")
-
-
+      
       return Doctors
     }
     catch (error) {
@@ -258,7 +264,7 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
       });
 
       if (existingBooking) {
-        console.log("Booking already exists.");
+
 
 
         if (existingBooking.paymentStatus === "Cancelled") {
@@ -290,7 +296,7 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
 
   async createBooking(bookingDetails: IBooking) {
     try {
-      console.log("booking details is", bookingDetails)
+
       const bookingnew = await this._bookingModel.create(bookingDetails)
 
 
@@ -346,8 +352,8 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
   ) {
     try {
       console.log("entered in to contact form repository");
-      
- 
+
+
       const contactData = {
         name,
         email,
@@ -358,27 +364,27 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
         createdAt: new Date()
       };
 
-     
+
       const savedContact = await this._contactModel.create(contactData);
-      
+
       return {
         success: true,
         data: savedContact,
         message: 'Contact form submitted successfully'
       };
-      
+
     } catch (error) {
       console.error('Error saving contact:', error);
       throw new Error('Failed to save contact information');
     }
   }
   async fetchUserData(userId: string): Promise<User | null> {
-    console.log(">>>>>>");
+
 
     try {
-      console.log("sssssss");
+
       const user = await this._userModel.findById(userId)
-      console.log("vvv", user);
+
 
       return user as User | null;
 
@@ -388,15 +394,15 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
 
     }
   }
- async getAllUsers(): Promise<User[] | null> {
-  try {
-    const users = await this._userModel.find();
-    return users as unknown as User[];
-  } catch (error) {
-    console.log("error in getall user in repository", error);
-    return null;
+  async getAllUsers(): Promise<User[] | null> {
+    try {
+      const users = await this._userModel.find();
+      return users as unknown as User[];
+    } catch (error) {
+      console.log("error in getall user in repository", error);
+      return null;
+    }
   }
-}
 
 
   async createNotification(bookingDetails: IBooking) {
@@ -464,20 +470,21 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
   }
 
 
-  async editUserData(userId: string, userData: User){
+  async editUserData(userId: string, userData: User):Promise<userProfileUpdate|null> {
     try {
-      console.log("Received userData for update:", userData);
-      
-      // Remove sensitive fields that shouldn't be updated
+
+
+
       const { password, ...updateData } = userData;
-      
+
       const response = await this._userModel.findByIdAndUpdate(
-        userId, 
-        { $set: { ...updateData } }, 
+        userId,
+        { $set: { ...updateData } },
         { new: true, runValidators: true }
-      ).select('-password'); // Don't return password in response
+      ).select('-password').lean<userProfileUpdate>().exec();
+
+   
       
-      console.log("updated", response);
       return response;
     } catch (error) {
       console.log("Error in UserEdit in Repository", error);
@@ -488,6 +495,8 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
   async getUserById(userId: string) {
     try {
       const user = await this._userModel.findById(userId).select('-password');
+      
+      
       return user;
     } catch (error) {
       console.log("Error in getUserById in Repository", error);
@@ -507,7 +516,8 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
       }
-
+      console.log("noti",notificationsDoc);
+      
       return notificationsDoc;
     } catch (error) {
       throw new Error("Failed to find notifications");
@@ -521,156 +531,167 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
       throw new Error("Failed to delete notifications");
     }
   }
-  async fetchBookings(user_id: string, page: number = 1, limit: number = 5) {
+  async fetchBookings(user_id: string, page: number = 1, limit: number = 5, search: string = '') {
   try {
     const skip = (page - 1) * limit;
 
-    
-    const totalBookings = await this._bookingModel.countDocuments({ userId: user_id });
-
-  
+   
     const bookings = await this._bookingModel
       .find({ userId: user_id })
       .populate("doctorId", "name profileImage")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .exec();
+      .sort({ createdAt: -1 });
 
-    const response = bookings.map((booking: any) => {
-      return {
-        ...booking.toObject(),
-        doctorName: booking.doctorId ? booking.doctorId.name : 'Doctor not found',
-        profileImage: booking.doctorId ? booking.doctorId.profileImage : "Doctor not found"
-      };
-    });
+    
+    const filteredBookings = search
+      ? bookings.filter((booking: any) =>
+          booking.doctorId?.name?.toLowerCase().includes(search.toLowerCase())
+        )
+      : bookings;
+     
+      
+
+    const totalBookings = filteredBookings.length;
+    const totalPages = Math.ceil(totalBookings / limit);
+
+ 
+    const paginatedBookings = filteredBookings.slice(skip, skip + limit);
+
+ 
+    const response = paginatedBookings.map((booking: any) => ({
+      ...booking.toObject(),
+      doctorName: booking.doctorId?.name || 'Doctor not found',
+      profileImage: booking.doctorId?.profileImage || 'Doctor not found',
+    }));
 
     return {
       bookings: response,
       pagination: {
         currentPage: page,
-        totalPages: Math.ceil(totalBookings / limit),
+        totalPages,
         totalBookings,
-        hasNextPage: page < Math.ceil(totalBookings / limit),
+        hasNextPage: page < totalPages,
         hasPreviousPage: page > 1,
-        limit
+        limit,
       }
     };
 
   } catch (error) {
-    console.log("Error in fetching userData in repository", error);
+    console.log("Error in fetching booking details", error);
     throw error;
   }
 }
 
-  
+
+
   async cancelAppoinment(bookId: string, userId: string, doctorId: string) {
-  try {
-    const bookingDetails = await this._bookingModel.findOne({ 
-      _id: bookId, 
-      doctorId: doctorId, 
-      userId: userId 
-    });
-
-    if (!bookingDetails) {
-      throw new Error('Booking not found');
-    }
-
-    if (bookingDetails?.paymentStatus === "Cancelled") {
-      throw new Error('Session is already cancelled');
-    }
-
-    if (bookingDetails?.paymentStatus === "Confirmed") {
-      bookingDetails.paymentStatus = "Cancelled";
-      await bookingDetails.save();
-      
-      await this._appoinmetModel.updateOne(
-        { _id: bookingDetails.appoinmentId },
-        { $set: { status: "Cancelled", isBooked: false } }
-      );
-    }
-
-    return bookingDetails;
-  } catch (error) {
-    console.log("cancel booking details", error);
-    throw error;
-  }
-}
-
-async addToUserWallet(userId: string, amount: number, bookingId: string) {
-  try {
-    // Find or create user wallet
-    let wallet = await this._walletModel.findOne({ userId });
-    
-    if (!wallet) {
-      // Create new wallet if doesn't exist
-      wallet = new this._walletModel({
-        userId,
-        balance: 0,
-        transactions: []
-      });
-    }
-
-    // Add refunded amount to wallet balance
-    wallet.balance += amount;
-
-    // Create transaction record for refund
-    const refundTransaction: ITransactions = {
-      amount: amount,
-      transactionId: "txn_refund_" + Date.now() + Math.floor(Math.random() * 10000),
-      transactionType: "credit",
-      bookingId: bookingId,
-      date: new Date(),
-      description: "Refund for cancelled appointment"
-    };
-
-    console.log("refuncd",refundTransaction);
-    
-
-    wallet.transactions.push(refundTransaction);
-    await wallet.save();
-
-    return wallet;
-  } catch (error) {
-    console.log("Error adding to user wallet:", error);
-    throw error;
-  }
-}
-
-
-async fetchWalletData(user_id: string, page: number = 1, limit: number = 5): Promise<PaginatedWalletResponse | null | undefined> {
-  try {
-    const wallet = await this._walletModel.findOne({ userId: user_id }).exec();
-
-    if (!wallet) return null;
-
-    const totalTransactions = wallet.transactions.length;
-    const skip = (page - 1) * limit;
-
-    const paginatedTransactions = wallet.transactions.slice(skip, skip + limit);
-
-    return {
-      walletData: {
-        ...wallet.toObject(),
-        transactions: paginatedTransactions, 
-      },
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalTransactions / limit),
-        tatalTransctions:totalTransactions,
-        hasNextPage: page < Math.ceil(totalTransactions / limit),
-        hasPreviousPage: page > 1,
-        limit
-      }
-    };
-  } catch (error) {
-    console.error('Error fetching wallet data:', error);
-    return null;
-  }
-}
-  async getbookedDoctor(userId: string) {
     try {
-      console.log("reached repo", userId);
+      const bookingDetails = await this._bookingModel.findOne({
+        _id: bookId,
+        doctorId: doctorId,
+        userId: userId
+      });
+
+      if (!bookingDetails) {
+        throw new Error('Booking not found');
+      }
+
+      if (bookingDetails?.paymentStatus === "Cancelled") {
+        throw new Error('Session is already cancelled');
+      }
+
+      if (bookingDetails?.paymentStatus === "Confirmed") {
+        bookingDetails.paymentStatus = "Cancelled";
+        await bookingDetails.save();
+
+        await this._appoinmetModel.updateOne(
+          { _id: bookingDetails.appoinmentId },
+          { $set: { status: "Cancelled", isBooked: false } }
+        );
+      }
+console.log("ooo",bookingDetails);
+
+      return bookingDetails;
+    } catch (error) {
+      console.log("cancel booking details", error);
+      throw error;
+    }
+  }
+
+  async addToUserWallet(userId: string, amount: number, bookingId: string) {
+    try {
+
+      let wallet = await this._walletModel.findOne({ userId });
+
+      if (!wallet) {
+
+        wallet = new this._walletModel({
+          userId,
+          balance: 0,
+          transactions: []
+        });
+      }
+
+
+      wallet.balance += amount;
+
+
+      const refundTransaction: ITransactions = {
+        amount: amount,
+        transactionId: "txn_refund_" + Date.now() + Math.floor(Math.random() * 10000),
+        transactionType: "credit",
+        bookingId: bookingId,
+        date: new Date(),
+        description: "Refund for cancelled appointment"
+      };
+
+
+
+
+      wallet.transactions.push(refundTransaction);
+      await wallet.save();
+      console.log("8888",wallet);
+      
+      return wallet;
+    } catch (error) {
+      console.log("Error adding to user wallet:", error);
+      throw error;
+    }
+  }
+
+
+  async fetchWalletData(user_id: string, page: number = 1, limit: number = 5): Promise<PaginatedWalletResponse | null | undefined> {
+    try {
+      const wallet = await this._walletModel.findOne({ userId: user_id }).exec();
+
+      if (!wallet) return null;
+
+      const totalTransactions = wallet.transactions.length;
+      const skip = (page - 1) * limit;
+
+      const paginatedTransactions = wallet.transactions.slice(skip, skip + limit);
+
+      return {
+        walletData: {
+          ...wallet.toObject(),
+          transactions: paginatedTransactions,
+        },
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(totalTransactions / limit),
+          tatalTransctions: totalTransactions,
+          hasNextPage: page < Math.ceil(totalTransactions / limit),
+          hasPreviousPage: page > 1,
+          limit
+        }
+      };
+    } catch (error) {
+      console.error('Error fetching wallet data:', error);
+      return null;
+    }
+  }
+  async getBookedDoctor(userId: string) {
+    try {
+
 
       const bookings = await this._bookingModel
         .find({ userId })
@@ -683,7 +704,8 @@ async fetchWalletData(user_id: string, page: number = 1, limit: number = 5): Pro
           uniqueDoctors.set(booking.doctorId._id.toString(), booking.doctorId);
         }
       });
-
+    
+      
       return Array.from(uniqueDoctors.values());
 
     } catch (error) {
@@ -701,102 +723,226 @@ async fetchWalletData(user_id: string, page: number = 1, limit: number = 5): Pro
     }
   }
 
- async getPrescriptionsByuser(user_id: string, page: number = 1, limit: number = 5) {
+
+  async getPrescriptionById(prescriptionId: string, userId: string) {
+  try {
+   
+    const response = await this._prescriptionModel.findOne({
+      _id: prescriptionId,
+      userId: userId,
+    })
+    .populate('bookingId','amount ')
+    .populate('doctorId', 'name') 
+    .populate('userId', 'name')
+   
+
+
+   
+ 
+
+
+
+    
+    return response;
+  } catch (error) {
+    console.log("Error in getting prescription by id repository", error);
+    throw error;
+  }
+}
+
+ async getPrescriptionsByUser(user_id: string, page: number = 1, limit: number = 5, search: string = '') {
   try {
     const skip = (page - 1) * limit;
 
-    // First, get the total count of prescriptions for this user
-    const totalCount = await this._prescriptionModel.countDocuments({
-      userId: new mongoose.Types.ObjectId(user_id)
-    });
-
-    // Then get the paginated prescriptions
-    const prescriptions = await this._prescriptionModel.aggregate([
-      {
-        $match: {
-          userId: new mongoose.Types.ObjectId(user_id),
-        },
-      },
-      {
-        $lookup: {
-          from: 'doctors',
-          localField: 'doctorId',
-          foreignField: '_id',
-          as: 'doctorDetails',
-        },
-      },
-      { $unwind: '$doctorDetails' },
-      {
-        $lookup: {
-          from: 'bookings',
-          localField: 'bookingId',
-          foreignField: 'appoinmentId',
-          as: 'bookingDetails',
-        },
-      },
-      {
-        $unwind: {
-          path: '$bookingDetails',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'userId',
-          foreignField: '_id',
-          as: 'userDetails',
-        },
-      },
-      {
-        $unwind: {
-          path: '$userDetails',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $project: {
-          _id: 1,
-          userId: 1,
-          bookingId: 1,
-          prescriptions: 1,
-          createdAt: 1,
-          doctorName: '$doctorDetails.name',
-          specializationId: '$bookingDetails.specialization',
-          bookingAmount: '$bookingDetails.amount',
-          bookingStartDate: '$bookingDetails.startDate',
-          bookingEndTime: '$bookingDetails.endTime',
-          bookingStartTime: '$bookingDetails.startTime',
-          bookingDate: '$bookingDetails.bookingDate',
-          userName: '$userDetails.name',
-        },
-      },
-      {
-        $sort: {
-          createdAt: -1,
-        },
-      },
-      {
-        $skip: skip,
-      },
-      {
-        $limit: limit,
-      },
-    ]);
-
-    console.log('Fetched prescriptions:', prescriptions);
-
-    return {
-      prescriptions,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalCount / limit),
-        totalPrescriptions: totalCount,
-        hasNextPage: page < Math.ceil(totalCount / limit),
-        hasPreviousPage: page > 1,
-        limit
-      }
+    const matchCondition: any = {
+      userId: new mongoose.Types.ObjectId(user_id),
     };
+
+    if (search) {
+    
+      const allPrescriptions = await this._prescriptionModel.aggregate([
+        {
+          $match: matchCondition,
+        },
+        {
+          $lookup: {
+            from: 'doctors',
+            localField: 'doctorId',
+            foreignField: '_id',
+            as: 'doctorDetails',
+          },
+        },
+        { $unwind: '$doctorDetails' },
+        {
+          $lookup: {
+            from: 'bookings',
+            localField: 'bookingId',
+            foreignField: '_id',
+            as: 'bookingDetails',
+          },
+        },
+        {
+          $unwind: {
+            path: '$bookingDetails',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'userDetails',
+          },
+        },
+        {
+          $unwind: {
+            path: '$userDetails',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            userId: 1,
+            bookingId: 1,
+            prescriptions: 1,
+            createdAt: 1,
+            doctorName: '$doctorDetails.name',
+            specializationId: '$bookingDetails.specialization',
+            bookingAmount: '$bookingDetails.amount',
+            bookingStartDate: '$bookingDetails.startDate',
+            bookingEndTime: '$bookingDetails.endTime',
+            bookingStartTime: '$bookingDetails.startTime',
+            bookingDate: '$bookingDetails.bookingDate',
+            userName: '$userDetails.name',
+          },
+        },
+        {
+          $sort: {
+            createdAt: -1,
+          },
+        },
+      ]);
+
+
+      const filteredPrescriptions = allPrescriptions.filter((prescription: any) => {
+        const searchTerm = search.toLowerCase();
+        
+
+        const doctorNameMatch = prescription.doctorName?.toLowerCase().includes(searchTerm);
+   
+        const medicineNameMatch = prescription.prescriptions?.some((med: any) => 
+          med.medicineName?.toLowerCase().includes(searchTerm)
+        );
+        
+        return doctorNameMatch || medicineNameMatch;
+      });
+
+      const totalCount = filteredPrescriptions.length;
+      const totalPages = Math.ceil(totalCount / limit);
+
+
+      const paginatedPrescriptions = filteredPrescriptions.slice(skip, skip + limit);
+
+      return {
+        prescriptions: paginatedPrescriptions,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalPrescriptions: totalCount,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+          limit
+        }
+      };
+    } else {
+   
+      const totalCount = await this._prescriptionModel.countDocuments(matchCondition);
+
+      const prescriptions = await this._prescriptionModel.aggregate([
+        {
+          $match: matchCondition,
+        },
+        {
+          $lookup: {
+            from: 'doctors',
+            localField: 'doctorId',
+            foreignField: '_id',
+            as: 'doctorDetails',
+          },
+        },
+        { $unwind: '$doctorDetails' },
+        {
+          $lookup: {
+            from: 'bookings',
+            localField: 'bookingId',
+            foreignField: '_id',
+            as: 'bookingDetails',
+          },
+        },
+        {
+          $unwind: {
+            path: '$bookingDetails',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'userDetails',
+          },
+        },
+        {
+          $unwind: {
+            path: '$userDetails',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            userId: 1,
+            bookingId: 1,
+            prescriptions: 1,
+            createdAt: 1,
+            doctorName: '$doctorDetails.name',
+            specializationId: '$bookingDetails.specialization',
+            bookingAmount: '$bookingDetails.amount',
+            bookingStartDate: '$bookingDetails.startDate',
+            bookingEndTime: '$bookingDetails.endTime',
+            bookingStartTime: '$bookingDetails.startTime',
+            bookingDate: '$bookingDetails.bookingDate',
+            userName: '$userDetails.name',
+          },
+        },
+        {
+          $sort: {
+            createdAt: -1,
+          },
+        },
+        {
+          $skip: skip,
+        },
+        {
+          $limit: limit,
+        },
+      ]);
+
+      return {
+        prescriptions,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(totalCount / limit),
+          totalPrescriptions: totalCount,
+          hasNextPage: page < Math.ceil(totalCount / limit),
+          hasPreviousPage: page > 1,
+          limit
+        }
+      };
+    }
 
   } catch (error) {
     console.log("Error in fetching prescriptions in repository", error);
@@ -814,6 +960,8 @@ async fetchWalletData(user_id: string, page: number = 1, limit: number = 5): Pro
         paymentStatus: "Confirmed",
       });
 
+      console.log("pp",bookingData);
+      
       return bookingData;
     } catch (error) {
       throw new Error("Failed to find bookings");
@@ -842,7 +990,11 @@ async fetchWalletData(user_id: string, page: number = 1, limit: number = 5): Pro
 
 
   async getReportsByUserId(userId: string): Promise<IReportData[]> {
-    return await this._reportModel.find({ userId }).sort({ createdAt: -1 });
+    const report= await this._reportModel.find({ userId }).sort({ createdAt: -1 });
+  
+    
+    return report
+
   }
 
 
@@ -873,7 +1025,7 @@ async fetchWalletData(user_id: string, page: number = 1, limit: number = 5): Pro
 
     try {
       const reviews = await this._reviewModel
-        .find({ doctorId: doctor_id }) // Find reviews by trainerId
+        .find({ doctorId: doctor_id })
         .populate({
           path: "userId",
           select: "name image",
@@ -910,34 +1062,34 @@ async fetchWalletData(user_id: string, page: number = 1, limit: number = 5): Pro
   }
 
   async getAvgReviewsRating(doctor_id: string) {
-  try {
-    const avgRatingAndReviews = await this._reviewModel.aggregate([
-      {
-        $match: { doctorId: new mongoose.Types.ObjectId(doctor_id) },
-      },
-      {
-        $group: {
-          _id: null,
-          averageRating: { $avg: "$rating" },
-          totalReviews: { $sum: 1 },
+    try {
+      const avgRatingAndReviews = await this._reviewModel.aggregate([
+        {
+          $match: { doctorId: new mongoose.Types.ObjectId(doctor_id) },
         },
-      },
-      {
-        $project: {
-          _id: 0,
-          // Option 1: Keep full precision (recommended)
-          averageRating: 1,
-          totalReviews: 1,
+        {
+          $group: {
+            _id: null,
+            averageRating: { $avg: "$rating" },
+            totalReviews: { $sum: 1 },
+          },
         },
-      },
-    ]);
+        {
+          $project: {
+            _id: 0,
 
-    return avgRatingAndReviews;
-  } catch (error) {
-    console.error("Error finding review avg summary:", error);
-    throw new Error("Failed to find review avg summary");
+            averageRating: 1,
+            totalReviews: 1,
+          },
+        },
+      ]);
+
+      return avgRatingAndReviews;
+    } catch (error) {
+      console.error("Error finding review avg summary:", error);
+      throw new Error("Failed to find review avg summary");
+    }
   }
-}
 
 }
 

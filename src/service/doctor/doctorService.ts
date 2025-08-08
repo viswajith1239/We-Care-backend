@@ -14,13 +14,13 @@ import { DoctorProfileDTO } from "../../dtos/doctor.dto";
 
 
 class Doctorservice implements IDoctorService {
-  private doctorRepository: IDoctorRepository
-  private OTP: string | null = null;
-  private expiryOTP_time: Date | null = null
+  private _doctorRepository: IDoctorRepository
+  private _OTP: string | null = null;
+  private _expiryOTP_time: Date | null = null
 
 
   constructor(doctorRepository: IDoctorRepository) {
-    this.doctorRepository = doctorRepository;
+    this._doctorRepository = doctorRepository;
   }
   findAppointmentById(id: string): Promise<IAppoinment | null> {
     throw new Error("Method not implemented.");
@@ -28,7 +28,7 @@ class Doctorservice implements IDoctorService {
 
   async findAllSpecializations() {
     try {
-      return await this.doctorRepository.findAllSpecializations();
+      return await this._doctorRepository.findAllSpecializations();
     } catch (error) {
       console.error("Error in service while fetching specializations:", error);
       throw error;
@@ -36,28 +36,30 @@ class Doctorservice implements IDoctorService {
   }
 
   async registerDoctor(doctorData: Interface_Doctor) {
-    console.log("doctor data is", doctorData)
+
     try {
 
-      const existingDoctor = await this.doctorRepository.existsDoctor(doctorData);
-      console.log("existingdoctor", existingDoctor)
+      const existingDoctor = await this._doctorRepository.existsDoctor(doctorData);
+
       if (existingDoctor) {
         throw new Error("Email already exist")
       }
       const generateOtp = Math.floor(1000 + Math.random() * 9000).toString()
-      this.OTP = generateOtp
-      console.log("the otp is:...", this.OTP)
+      this._OTP = generateOtp
+
       let text = `Your OTP is ${generateOtp}`;
+      console.log(text);
+      
       let subject = 'OTP Verification';
 
-      console.log("Doctor email is:", doctorData.email)
+
       const sentEmail = await sendMail(doctorData.email, subject, text)
       if (!sentEmail) { throw new Error("Email not sent") }
       const OTP_createdTime = new Date()
-      this.expiryOTP_time = new Date(OTP_createdTime.getTime() + 1 * 60 * 1000)
+      this._expiryOTP_time = new Date(OTP_createdTime.getTime() + 1 * 60 * 1000)
 
 
-      await this.doctorRepository.saveOtp(doctorData.email, this.OTP, this.expiryOTP_time)
+      await this._doctorRepository.saveOtp(doctorData.email, this._OTP, this._expiryOTP_time)
 
     } catch (error) {
       console.error("Error in service:", error);
@@ -67,13 +69,13 @@ class Doctorservice implements IDoctorService {
 
 
   async verifyOtp(doctorData: Interface_Doctor, otp: string) {
-    console.log("11111111111111", doctorData)
+
 
     try {
-      const validateOtp = await this.doctorRepository.getOtpByEmail(doctorData.email)
-      console.log("the validateOtp is..", validateOtp)
+      const validateOtp = await this._doctorRepository.getOtpByEmail(doctorData.email)
+
       if (validateOtp.length === 0) {
-        console.log("there is no otp in email")
+
         throw new Error("no OTP found for this email")
       }
       const sortedOtp = validateOtp.sort((a: { createdAt: { getTime: () => number; }; expiresAt: { getTime: () => number; }; }, b: { createdAt: { getTime: () => number; }; expiresAt: { getTime: () => number; }; }) => {
@@ -91,24 +93,23 @@ class Doctorservice implements IDoctorService {
 
       if (latestOtp.otp === otp) {
         if (latestOtp.expiresAt > new Date()) {
-          console.log("otp expiration not working");
 
-          console.log("OTP is valid and verified", latestOtp.expiresAt);
+
+
 
 
           const hashedPassword = await bcrypt.hash(doctorData.password, 10);
 
           const newUserData = { ...doctorData, password: hashedPassword };
-          await this.doctorRepository.createNewUser(newUserData);
-          console.log("User successfully stored.");
-          await this.doctorRepository.deleteOtpById(latestOtp._id);
+          await this._doctorRepository.createNewUser(newUserData);
+
+          await this._doctorRepository.deleteOtpById(latestOtp._id);
         } else {
-          console.log("OTP has expired");
-          await this.doctorRepository.deleteOtpById(latestOtp._id);
+
+          await this._doctorRepository.deleteOtpById(latestOtp._id);
           throw new Error("OTP has expired");
         }
       } else {
-        console.log("Invalid OTP");
         throw new Error("Invalid OTP");
       }
 
@@ -124,21 +125,19 @@ class Doctorservice implements IDoctorService {
 
   async resendOTP(email: string): Promise<void> {
     try {
-      console.log("Email received for resendOTP:", email);
       const generatedOTP: string = Math.floor(
         1000 + Math.random() * 9000
       ).toString();
-      this.OTP = generatedOTP;
+      this._OTP = generatedOTP;
       const OTP_createdTime = new Date();
-      this.expiryOTP_time = new Date(OTP_createdTime.getTime() + 1 * 60 * 1000);
-      await this.doctorRepository.saveOtp(email, this.OTP, this.expiryOTP_time);
-      const isMailSent = await sendMail(email, 'Resend OTP', `Your OTP is ${this.OTP}`);
+      this._expiryOTP_time = new Date(OTP_createdTime.getTime() + 1 * 60 * 1000);
+      await this._doctorRepository.saveOtp(email, this._OTP, this._expiryOTP_time);
+      const isMailSent = await sendMail(email, 'Resend OTP', `Your OTP is ${this._OTP}`);
 
 
       if (!isMailSent) {
         throw new Error("Failed to resend OTP email.");
       }
-      console.log(`Resent OTP ${this.OTP} to ${email}`);
     } catch (error) {
       console.error("Error in resendOTP:", (error as Error).message);
       throw error;
@@ -148,7 +147,11 @@ class Doctorservice implements IDoctorService {
   async LoginDoctor(email: string, password: string): Promise<any> {
     try {
 
-      const doctor: Interface_Doctor | null = await this.doctorRepository.findDoctor(email);
+      const doctor: Interface_Doctor | null = await this._doctorRepository.findDoctor(email);
+       if (doctor) {
+        if (doctor.isBlocked) {
+          throw new Error("Your account is blocked.");
+        }
 
 
       if (!doctor) {
@@ -194,6 +197,7 @@ class Doctorservice implements IDoctorService {
           phone: doctor.phone,
         },
       };
+    }
     } catch (error: any) {
       console.log("Error in login:", error);
       throw error;
@@ -202,9 +206,9 @@ class Doctorservice implements IDoctorService {
 
   async kycSubmit(formData: any, files: { [fieldname: string]: Express.Multer.File[] }): Promise<any> {
     try {
-      console.log("fff", files);
 
-      console.log("got....", formData)
+
+
       const documents: { [key: string]: string | undefined } = {};
 
 
@@ -244,11 +248,11 @@ class Doctorservice implements IDoctorService {
       }
 
 
-      await this.doctorRepository.saveKyc(formData, documents);
+      await this._doctorRepository.saveKyc(formData, documents);
 
 
 
-      return await this.doctorRepository.changeKycStatus(
+      return await this._doctorRepository.changeKycStatus(
         formData.doctor_id,
         documents.profileImageUrl
       );
@@ -260,11 +264,10 @@ class Doctorservice implements IDoctorService {
 
 
   async kycStatus(doctorId: string) {
-    console.log("reached in service")
-    console.log("doctor id is", doctorId)
+
 
     try {
-      const kycStatus = await this.doctorRepository.getDoctorStatus(doctorId)
+      const kycStatus = await this._doctorRepository.getDoctorStatus(doctorId)
       return kycStatus;
     } catch (error) {
       console.error("Error in kycStatus service:", error);
@@ -274,12 +277,12 @@ class Doctorservice implements IDoctorService {
   async googleSignUpUser(decodedToken: JwtPayload): Promise<any> {
     const email = decodedToken.email;
     const name = decodedToken.name;
-    let existedemail = await this.doctorRepository.existingUser(email);
+    let existedemail = await this._doctorRepository.existingUser(email);
     if (!existedemail) {
       try {
         const newUser = { email, name, password: null };
-        const createdUser = await this.doctorRepository.createUsers(newUser);
-        console.log("hhhh", createdUser);
+        const createdUser = await this._doctorRepository.createUsers(newUser);
+
 
         return createdUser;
       } catch (error) {
@@ -294,7 +297,7 @@ class Doctorservice implements IDoctorService {
   async getSpecialization(doctorId: string) {
 
     try {
-      return await this.doctorRepository.getSpecialization(doctorId)
+      return await this._doctorRepository.getSpecialization(doctorId)
     } catch (error) {
       console.log("Error in service while specialization fetching", error)
     }
@@ -341,14 +344,14 @@ class Doctorservice implements IDoctorService {
   //  }
 
   async storeAppoinmentData(appointmentData: any) {
-    console.log("single service");
+
 
     try {
 
       const validatedAppointment = await this.validateSingleAppointment(appointmentData);
 
 
-      const createdAppointment = await this.doctorRepository.createNewAppoinment(validatedAppointment);
+      const createdAppointment = await this._doctorRepository.createNewAppoinment(validatedAppointment);
 
       return createdAppointment;
     } catch (error) {
@@ -358,15 +361,14 @@ class Doctorservice implements IDoctorService {
   }
 
   async storeMultipleAppointments(appointments: any[]) {
-    console.log("multiple service");
-    console.log("tttt", appointments);
+
 
     try {
 
       const validAppointments = await this.validateAppointments(appointments);
 
 
-      const createdAppointments = await this.doctorRepository.createMultipleAppointments(validAppointments);
+      const createdAppointments = await this._doctorRepository.createMultipleAppointments(validAppointments);
 
       return createdAppointments;
     } catch (error) {
@@ -412,7 +414,7 @@ class Doctorservice implements IDoctorService {
     }
 
 
-    const existingAppointments = await this.doctorRepository.findConflictingAppointments(appointmentData);
+    const existingAppointments = await this._doctorRepository.findConflictingAppointments(appointmentData);
 
     if (existingAppointments.length > 0) {
       throw new Error("Time conflict with an existing appointment.");
@@ -424,9 +426,9 @@ class Doctorservice implements IDoctorService {
 
   async getAppoinmentSchedules(doctor_id: string, page: number = 1, limit: number = 5) {
     try {
-      console.log("service get app");
-      
-      return await this.doctorRepository.fetchAppoinmentData(doctor_id,page,limit)
+
+
+      return await this._doctorRepository.fetchAppoinmentData(doctor_id, page, limit)
     } catch (error) {
       throw new Error("Error getting sessin shedule data");
     }
@@ -436,74 +438,74 @@ class Doctorservice implements IDoctorService {
   async fetchBookingDetails(doctor_id: string) {
     try {
 
-      const response = await this.doctorRepository.fecthBookingDetails(doctor_id)
+      const response = await this._doctorRepository.fecthBookingDetails(doctor_id)
       return response
     } catch (error) {
       console.log("Error fect booking details", error)
     }
   }
 
-  async fetchusers(doctorId: any) {
+  async fetchUsers(doctorId: any) {
     try {
-      return await this.doctorRepository.fetchusers(doctorId)
+      return await this._doctorRepository.fetchUsers(doctorId)
     } catch (error) {
 
     }
   }
 
-  async getAllBookings(doctor_id: string) {
+  async getAllBookings(doctor_id: string, page: number = 1, limit: number = 5, search: string = '') {
     try {
-      return await this.doctorRepository.getAllBookings(doctor_id);
+      return await this._doctorRepository.getAllBookings(doctor_id,page,limit,search);
     } catch (error) {
       console.log("Error in fetching doctor's bookings:", error);
     }
   }
-async getDoctor(doctor_id: string): Promise<DoctorProfileDTO | null> {
-  try {
-    const doctorData = await this.doctorRepository.getDoctor(doctor_id);
-    if (!doctorData || doctorData.length === 0) return null;
-    
-    return toDoctorProfileDTO(doctorData[0]); // because aggregate returns an array
-  } catch (error: any) {
-    throw new Error(error);
-  }
-}
-
-  async forgotpassword(UserEmail: string): Promise<any> {
+  async getDoctor(doctor_id: string): Promise<DoctorProfileDTO | null> {
     try {
-      console.log("checccc", UserEmail);
+      const doctorData = await this._doctorRepository.getDoctor(doctor_id);
+      if (!doctorData || doctorData.length === 0) return null;
 
-      const userResponse = await this.doctorRepository.findUserEmail(UserEmail);
+      return toDoctorProfileDTO(doctorData[0]);
+    } catch (error: any) {
+      throw new Error(error);
+    }
+  }
+
+  async forgotPassword(UserEmail: string): Promise<any> {
+    try {
+
+
+      const userResponse = await this._doctorRepository.findUserEmail(UserEmail);
       if (!userResponse) {
-        console.log("user not already exist", userResponse);
+
         throw new Error("Invalid email Address");
       }
       const generateOtp = Math.floor(1000 + Math.random() * 9000).toString();
-      this.OTP = generateOtp;
-      console.log("Generated OTP is", this.OTP);
+      this._OTP = generateOtp;
 
-      //send otp to the email:
-      const isMailSet = await sendMail(UserEmail, "otp", this.OTP);
+
+
+      const isMailSet = await sendMail(UserEmail, "otp", this._OTP);
 
       if (!isMailSet) {
         throw new Error("Email not sent");
       }
 
       const OTP_createdTime = new Date();
-      this.expiryOTP_time = new Date(OTP_createdTime.getTime() + 1 * 60 * 1000);
+      this._expiryOTP_time = new Date(OTP_createdTime.getTime() + 1 * 60 * 1000);
 
 
-      console.log("Saving OTP:", {
-        email: UserEmail,
-        otp: this.OTP,
-        expiresAt: this.expiryOTP_time
-      });
-      await this.doctorRepository.saveOTP(
+      // console.log("Saving OTP:", {
+      //   email: UserEmail,
+      //   otp: this._OTP,
+      //   expiresAt: this._expiryOTP_time
+      // });
+      await this._doctorRepository.saveOTP(
         UserEmail,
-        this.OTP,
-        this.expiryOTP_time
+        this._OTP,
+        this._expiryOTP_time
       );
-      console.log(`OTP will expire at: ${this.expiryOTP_time}`);
+
 
       return userResponse;
     } catch (error) {
@@ -513,10 +515,10 @@ async getDoctor(doctor_id: string): Promise<DoctorProfileDTO | null> {
 
   async verifyForgotOTP(doctorData: string, otp: string): Promise<void> {
     try {
-      const validateOtp = await this.doctorRepository.getOtpsByEmail(doctorData);
-      console.log("the validateOtp is..", validateOtp);
+      const validateOtp = await this._doctorRepository.getOtpsByEmail(doctorData);
+
       if (validateOtp.length === 0) {
-        console.log("there is no otp in email");
+
         throw new Error("no OTP found for this email");
       }
       const latestOtp = validateOtp.sort(
@@ -524,18 +526,18 @@ async getDoctor(doctor_id: string): Promise<DoctorProfileDTO | null> {
       )[0];
       if (latestOtp.otp === otp) {
         if (latestOtp.expiresAt > new Date()) {
-          console.log("otp expiration not working");
 
-          console.log("OTP is valid and verified", latestOtp.expiresAt);
 
-          await this.doctorRepository.deleteOtpById(latestOtp._id);
+
+
+          await this._doctorRepository.deleteOtpById(latestOtp._id);
         } else {
-          console.log("OTP has expired");
-          await this.doctorRepository.deleteOtpById(latestOtp._id);
+
+          await this._doctorRepository.deleteOtpById(latestOtp._id);
           throw new Error("OTP has expired");
         }
       } else {
-        console.log("Invalid OTP");
+
         throw new Error("Invalid OTP");
       }
     } catch (error) {
@@ -546,17 +548,17 @@ async getDoctor(doctor_id: string): Promise<DoctorProfileDTO | null> {
     }
   }
 
-  async resetapassword(doctorData: string, payload: { newPassword: string }) {
-    console.log("got pay load", payload, doctorData);
+  async resetPassword(doctorData: string, payload: { newPassword: string }) {
+
     try {
       const { newPassword }: { newPassword: string } = payload;
       const hashedPassword = await bcrypt.hash(newPassword, 10);
-      console.log("hashed", hashedPassword);
-      const response = await this.doctorRepository.saveResetPassword(
+
+      const response = await this._doctorRepository.saveResetPassword(
         doctorData,
         hashedPassword
       );
-      console.log("response check in userservice ", response);
+
       return response;
     } catch (error) {
       console.log("Error is", error)
@@ -565,20 +567,20 @@ async getDoctor(doctor_id: string): Promise<DoctorProfileDTO | null> {
 
 
   async getWallet(doctor_id: string, page: number = 1, limit: number = 5) {
-    return await this.doctorRepository.fetchWalletData(doctor_id,page,limit)
+    return await this._doctorRepository.fetchWalletData(doctor_id, page, limit)
   }
 
 
   async withdraw(doctor_id: string, amount: number) {
     try {
-      return await this.doctorRepository.withdrawMoney(doctor_id, amount)
+      return await this._doctorRepository.withdrawMoney(doctor_id, amount)
     } catch (error: any) {
       throw Error(error)
     }
   }
 
   async fetchDoctor(doctor_id: string) {
-    return await this.doctorRepository.getDoctorProfile(doctor_id)
+    return await this._doctorRepository.getDoctorProfile(doctor_id)
   }
 
   async updateDoctor(doctor_id: string, doctorData: Partial<IDoctor>) {
@@ -596,7 +598,7 @@ async getDoctor(doctor_id: string): Promise<DoctorProfileDTO | null> {
         specializations
       } = doctorData;
 
-      const existingDoctor = await this.doctorRepository.updateDoctorData(
+      const existingDoctor = await this._doctorRepository.updateDoctorData(
         doctor_id
       );
       if (!existingDoctor) {
@@ -618,7 +620,7 @@ async getDoctor(doctor_id: string): Promise<DoctorProfileDTO | null> {
         existingDoctor.specializations = specializations
       }
       await existingDoctor.save();
-      console.log("nnnn", existingDoctor);
+
 
       return existingDoctor;
     } catch (error) {
@@ -628,56 +630,56 @@ async getDoctor(doctor_id: string): Promise<DoctorProfileDTO | null> {
   }
 
   async savePrescription(data: {
-  doctorId: string;
-  userId: string;
-  bookingId?: string;
-  specializationId?: string;
-  prescriptions: {
-    medicineName: string;
-    dosage: string;
-    frequency: string;
-    duration: string;
-    instruction: string;
-  }[];
-  patientDetails?: {
-    patientId: string;
-    patientName: string;
-    patientEmail?: string;
-    patientAddress?: string;
-    appointmentId: string;
-    bookingAmount?: number;
-  };
-  doctorDetails?: {
     doctorId: string;
-    doctorName?: string;
-    doctorImage?: string;
+    userId: string;
+    bookingId?: string;
+    specializationId?: string;
+    prescriptions: {
+      medicineName: string;
+      dosage: string;
+      frequency: string;
+      duration: string;
+      instruction: string;
+    }[];
+    patientDetails?: {
+      patientId: string;
+      patientName: string;
+      patientEmail?: string;
+      patientAddress?: string;
+      appointmentId: string;
+      bookingAmount?: number;
+    };
+    doctorDetails?: {
+      doctorId: string;
+      doctorName?: string;
+      doctorImage?: string;
+    };
+  }) {
+    return await this._doctorRepository.create(data);
+  }
+
+  async fetchPrescriptions(doctor_id: string, page: number = 1, limit: number = 5,search: string = '') {
+    return await this._doctorRepository.getPrescriptionsByDoctor(doctor_id,page,limit,search);
+  }
+
+  async getReportsByUserId(doctorId: string, page: number = 1, limit: number = 5, search: string = ''): Promise<IReportData[]> {
+    return await this._doctorRepository.getReportsByUserId(doctorId,page,limit,search);
+  }
+
+
+  async getBookingsByDoctorAndUser(
+    doctorId: string,
+    userId: string
+  ): Promise<any> {
+    return await this._doctorRepository.findByDoctorAndUser(doctorId, userId);
   };
-}) {
-  return await this.doctorRepository.create(data);
-}
-
-  async fetchPrescriptions(doctor_id: string) {
-    return await this.doctorRepository.getPrescriptionsByDoctor(doctor_id);
-  }
-
-   async getReportsByUserId(doctorId: string): Promise<IReportData[]> {
-    return await this.doctorRepository.getReportsByUserId(doctorId);
-  }
-  
-
-  async getBookingsByDoctorAndUser  (
-  doctorId: string,
-  userId: string
-): Promise<any>  {
-  return await this.doctorRepository.findByDoctorAndUser(doctorId, userId);
-};
 
 
   async getNotifications(doctorId: string) {
-    console.log("fetching notificatin in service ");
+
     try {
-      console.log("fetching notificatin in srcice try");
-      return await this.doctorRepository.fetchNotifications(doctorId)
+
+      return await this._doctorRepository.fetchNotifications(doctorId)
     } catch (error) {
       throw new Error('failed to find notifications')
     }
@@ -685,7 +687,7 @@ async getDoctor(doctor_id: string): Promise<DoctorProfileDTO | null> {
 
   async clearNotifications(doctorId: string) {
     try {
-      return await this.doctorRepository.deleteDoctorNotifications(doctorId)
+      return await this._doctorRepository.deleteDoctorNotifications(doctorId)
     } catch (error) {
       throw new Error('failed to delete notifications')
     }
@@ -693,7 +695,7 @@ async getDoctor(doctor_id: string): Promise<DoctorProfileDTO | null> {
 
   async getDashboardData() {
     try {
-      return await this.doctorRepository.getAllStatistics()
+      return await this._doctorRepository.getAllStatistics()
     } catch (error: any) {
       throw Error(error)
     }
@@ -701,7 +703,7 @@ async getDoctor(doctor_id: string): Promise<DoctorProfileDTO | null> {
 
   async cancelAppoinment(id: string) {
     try {
-      const appoinment = await this.doctorRepository.cancelAppoinment(id)
+      const appoinment = await this._doctorRepository.cancelAppoinment(id)
 
       if (!appoinment) {
         throw new Error('Appoinment not found')
@@ -713,44 +715,44 @@ async getDoctor(doctor_id: string): Promise<DoctorProfileDTO | null> {
     }
   }
 
-  
+
 
   async rescheduleAppointment(id: string, updatedData: any): Promise<IAppoinment | null> {
-  try {
-    console.log("ethhhiii");
-    
-    // First check if the appointment exists and can be rescheduled
-    const existingAppointment = await this.doctorRepository.findAppointmentById(id);
-    
-    if (!existingAppointment) {
-      throw new Error('Appointment not found');
+    try {
+
+
+
+      const existingAppointment = await this._doctorRepository.findAppointmentById(id);
+
+      if (!existingAppointment) {
+        throw new Error('Appointment not found');
+      }
+
+      if (existingAppointment.status !== "Confirmed") {
+        throw new Error('Only confirmed appointments can be rescheduled');
+      }
+
+
+      const conflicts = await this._doctorRepository.checkSchedulingConflicts(
+        existingAppointment.doctorId,
+        id,
+        updatedData.selectedDate,
+        updatedData.startTime,
+        updatedData.endTime
+      );
+
+      if (conflicts && conflicts.length > 0) {
+        throw new Error('There is a scheduling conflict with another appointment');
+      }
+
+
+      const appointment = await this._doctorRepository.rescheduleAppointment(id, updatedData);
+
+      return appointment;
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to reschedule appointment');
     }
-    
-    if (existingAppointment.status !== "Confirmed") {
-      throw new Error('Only confirmed appointments can be rescheduled');
-    }
-    
-    
-    const conflicts = await this.doctorRepository.checkSchedulingConflicts(
-      existingAppointment.doctorId, 
-      id,
-      updatedData.selectedDate,
-      updatedData.startTime,
-      updatedData.endTime
-    );
-    
-    if (conflicts && conflicts.length > 0) {
-      throw new Error('There is a scheduling conflict with another appointment');
-    }
-    
-    
-    const appointment = await this.doctorRepository.rescheduleAppointment(id, updatedData);
-    
-    return appointment;
-  } catch (error: any) {
-    throw new Error(error.message || 'Failed to reschedule appointment');
   }
-}
 
 }
 

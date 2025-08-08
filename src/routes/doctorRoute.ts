@@ -2,7 +2,7 @@ import { Router } from "express";
 import upload from "../utils/multer"
 import DoctorRepository from "../repositories/doctor/doctorRepository"
 import DoctorService from "../service/doctor/doctorService";
-import DoctorController from "../controllers/doctor/doctorcontroller";
+import DoctorController from "../controllers/doctor/doctorController";
 import authMiddlewares from "../middlewares/authmiddleware";
 import { verifyToken } from "../config/JwtConfig";
 
@@ -29,7 +29,7 @@ router.post('/logindoctor', doctorController.loginDoctor.bind(doctorController))
 router.post('/googlesignup', doctorController.googleSignUpUser.bind(doctorController));
 router.post('/kyc', uploadDoctorDataFiles, doctorController.kycSubmission.bind(doctorController))
 router.get('/kycStatus/:doctorId', doctorController.doctorKycStatus.bind(doctorController))
-router.post("/forgotpassword", doctorController.forgotpassword.bind(doctorController))
+router.post("/forgotpassword", doctorController.forgotPassword.bind(doctorController))
 router.post("/forgototp", doctorController.verifyForgotOtp.bind(doctorController))
 router.post("/resetpassword", doctorController.resetPassword.bind(doctorController))
 router.get("/specializations/:doctorId", verifyToken('doctor'), doctorController.getSpecialization.bind(doctorController))
@@ -39,8 +39,8 @@ router.get('/shedules/:doctorId', verifyToken('doctor'), doctorController.getApp
 router.patch('/shedules/:appoinmentId/appoinment', verifyToken('doctor'), doctorController.cancelAppoinment.bind(doctorController))
 router.put('/shedules/:rescheduleAppointmentId/reschedule', verifyToken('doctor'), doctorController.rescheduleAppointment.bind(doctorController))
 router.get('/:doctor_id', doctorController.getDoctor.bind(doctorController));
-router.get(`/bookingdetails/:doctorId`, verifyToken('doctor'), doctorController.fetchbookingDetails.bind(doctorController))
-router.get('/fetchusers/:doctorId', doctorController.fetchusers.bind(doctorController))
+router.get(`/bookingdetails/:doctorId`, verifyToken('doctor'), doctorController.fetchBookingDetails.bind(doctorController))
+router.get('/fetchusers/:doctorId', doctorController.fetchUsers.bind(doctorController))
 router.get('/bookings/:doctor_id', doctorController.getAllBookings.bind(doctorController));
 router.get('/wallet-data/:doctor_id', doctorController.getWalletData.bind(doctorController));
 router.post('/withdraw/:doctor_id', doctorController.withdraw.bind(doctorController));
@@ -48,7 +48,7 @@ router.get('/notifications/:doctor_id', verifyToken('doctor'), doctorController.
 router.delete('/clear-notifications/:doctor_id', verifyToken('doctor'), doctorController.clearNotifications.bind(doctorController));
 router.post('/prescription/:doctor_id/:user_id', doctorController.createPrescription.bind(doctorController));
 router.get('/booking/:doctorId/:userId', doctorController.getPatientBookingForDoctor.bind(doctorController));
-router.get('/reports/:doctorId',verifyToken('doctor'),doctorController.getReports.bind(doctorController))
+router.get('/reports/:doctorId', verifyToken('doctor'), doctorController.getReports.bind(doctorController))
 router.get('/prescriptions/:doctor_id', doctorController.getPrescriptionsByDoctor.bind(doctorController));
 router.get('/dashboard/:doctor_id', verifyToken('doctor'), doctorController.getDashboardData.bind(doctorController));
 

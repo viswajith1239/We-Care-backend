@@ -7,9 +7,9 @@
 // let io: SocketServer;
 
 // const configSocketIO = (server: HttpServer) => {
-    
-        
-    
+
+
+
 //       io = new SocketServer(server, {
 //         cors: {
 //            origin: "http://localhost:5173",
@@ -22,18 +22,18 @@
 
 
 //  const getReceiverSocketId=(receiverId:string)=>{
-   
+
 //     return userSocketMap[receiverId]
 // }
 
 // io.on("connection", (socket) => {
 //     const userId = socket.handshake.query.userId as string; 
 //     console.log("$$$$$$$$$$$$$",userId);
-    
-  
-    
+
+
+
 // if (userId) {
- 
+
 //     userSocketMap[userId] = socket.id; 
 //     console.log(`User ${userId} connected with socket ${socket.id}`);
 // }
@@ -46,8 +46,8 @@
 
 // socket.on('sendMessage', (data) => {
 //     if (userId) {
-      
-      
+
+
 //       io.emit('messageUpdate',data) 
 //     } else {
 //       console.error("receiverId is missing in sendMessage data");
@@ -136,22 +136,22 @@ io.on("connection", (socket) => {
 
 
   socket.on("messageDeleted", (data) => {
-  console.log(`Message deleted: ${data.messageId} by user: ${data.senderId}`);
-  
-  // Send to receiver
-  const receiverSocketIds = getReceiverSocketId(data.receiverId);
-  if (receiverSocketIds.length > 0) {
-    receiverSocketIds.forEach((socketId) => {
+    console.log(`Message deleted: ${data.messageId} by user: ${data.senderId}`);
+
+    // Send to receiver
+    const receiverSocketIds = getReceiverSocketId(data.receiverId);
+    if (receiverSocketIds.length > 0) {
+      receiverSocketIds.forEach((socketId) => {
+        io.to(socketId).emit("messageDeleted", { messageId: data.messageId });
+      });
+    }
+
+    // Also send to sender's other sockets (if they have multiple tabs open)
+    const senderSocketIds = getReceiverSocketId(data.senderId);
+    senderSocketIds.forEach((socketId) => {
       io.to(socketId).emit("messageDeleted", { messageId: data.messageId });
     });
-  }
-  
-  // Also send to sender's other sockets (if they have multiple tabs open)
-  const senderSocketIds = getReceiverSocketId(data.senderId);
-  senderSocketIds.forEach((socketId) => {
-    io.to(socketId).emit("messageDeleted", { messageId: data.messageId });
   });
-});
 
   // New messageRead event handler
   socket.on("markMessageRead", ({ messageId, senderId }) => {

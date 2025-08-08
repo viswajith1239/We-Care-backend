@@ -9,11 +9,11 @@ interface IImage {
 
 
 export interface IUserDocument {
-  _id: string;
-  name: string;
-  email: string;
-  password: string;
-  isAdmin: boolean;
+    _id: string;
+    name: string;
+    email: string;
+    password: string;
+    isAdmin: boolean;
 }
 
 interface Iuser extends Document {
@@ -24,49 +24,49 @@ interface Iuser extends Document {
     password: string;
     dob: string;
     address: string;
-    image: IImage; 
+    image: IImage;
     createdAt: Date;
     lastLogin: Date;
     referral?: string;
     isBlocked: boolean;
-    gender:string
-    profileImage:String
+    gender: string
+    profileImage: String
 }
 
 const userSchema = new Schema<Iuser>({
-    userId: { 
-        type: String, 
+    userId: {
+        type: String,
         required: true,
-        unique: true ,
-        default: uuidv4, 
+        unique: true,
+        default: uuidv4,
 
     },
-    name: { 
+    name: {
         type: String,
-        required: true 
+        required: true
     },
-    email: { 
-        type: String, 
-        required: true 
+    email: {
+        type: String,
+        required: true
     },
-    phone: { 
-        type: String, 
-        
+    phone: {
+        type: String,
+
     },
     password: {
-        type: String, 
-       
+        type: String,
+
     },
     createdAt: {
-        type: Date, 
-        default: Date.now 
+        type: Date,
+        default: Date.now
     },
     lastLogin: {
-        type: Date 
+        type: Date
     },
-    image:{
-        type:String,
-        required:false
+    image: {
+        type: String,
+        required: false
     },
     dob: {
         type: String,
@@ -77,26 +77,26 @@ const userSchema = new Schema<Iuser>({
     //     default: null
     // },
     // image: {
-        
+
     //         url: { type: String, default: "" }, // Optional profileUrl
     //         type: { type: String, default: "" } // Optional type
-        
-        
+
+
     // },
     referral: {
-        type: String 
+        type: String
     },
     isBlocked: {
-        type: Boolean, 
-        default: false 
+        type: Boolean,
+        default: false
     },
-    gender:{
-        type:String,
-        required:false
+    gender: {
+        type: String,
+        required: false
     },
     profileImage: {
-         type: String, 
-         default: ''
+        type: String,
+        default: ''
     },
 });
 

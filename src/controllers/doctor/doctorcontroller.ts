@@ -15,18 +15,17 @@ import moment from 'moment';
 
 
 class DoctorController {
-  private doctorService: IDoctorService
+  private _doctorService: IDoctorService
 
   constructor(doctorService: IDoctorService) {
-    this.doctorService = doctorService;
+    this._doctorService = doctorService;
   }
 
 
   async getAllSpecializations(req: Request, res: Response, next: NextFunction) {
     try {
 
-      const specializationsData = await this.doctorService.findAllSpecializations();
-      console.log("specialisationdaTA", specializationsData)
+      const specializationsData = await this._doctorService.findAllSpecializations();
       res.status(HTTP_statusCode.OK).json({ success: true, data: specializationsData });
     } catch (error) {
       console.error(
@@ -41,8 +40,7 @@ class DoctorController {
   async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const doctorData: Interface_Doctor = req.body;
-      console.log("datass", doctorData)
-      const doctor = await this.doctorService.registerDoctor(doctorData);
+      const doctor = await this._doctorService.registerDoctor(doctorData);
 
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.OTP_SEND });
 
@@ -61,8 +59,7 @@ class DoctorController {
   async verifyOtp(req: Request, res: Response, next: NextFunction) {
     try {
       let { doctorData, otp } = req.body
-      console.log("the otp entered from frontend", otp)
-      await this.doctorService.verifyOtp(doctorData, otp)
+      await this._doctorService.verifyOtp(doctorData, otp)
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.OTP_VERIFIED, doctor: doctorData })
     } catch (error) {
       console.error("OTP Verification Controller error:", error);
@@ -84,7 +81,7 @@ class DoctorController {
       const { email } = req.body;
 
 
-      await this.doctorService.resendOTP(email);
+      await this._doctorService.resendOTP(email);
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.OTP_RESEND });
     } catch (error) {
       console.error("Resend OTP Controller error:", error);
@@ -101,7 +98,7 @@ class DoctorController {
       const { email, password }: ILoginUser = req.body;
 
 
-      const user = await this.doctorService.LoginDoctor(email, password);
+      const user = await this._doctorService.LoginDoctor(email, password);
 
       if (user) {
         const { accessToken, refreshToken } = user;
@@ -110,7 +107,7 @@ class DoctorController {
           httpOnly: true,
           secure: true,
           sameSite: "strict",
-          maxAge: 7 * 24 * 60 * 60 * 1000,
+          maxAge: 1 * 24 * 60 * 60 * 1000,
         });
 
 
@@ -129,8 +126,11 @@ class DoctorController {
       }
     } catch (error: any) {
       console.error("Error in loginDoctor:", error.message);
+      if (error.message === RESPONSE_MESSAGES.ACCOUNT_BLOCKED) {
 
-      if (error.message === RESPONSE_MESSAGES.USER_NOT_FOUND) {
+        res.status(HTTP_statusCode.NoAccess).json({ message: RESPONSE_MESSAGES.ACCOUNT_BLOCKED });
+
+      }else if (error.message === RESPONSE_MESSAGES.USER_NOT_FOUND) {
         res.status(HTTP_statusCode.NotFound).json({ message: RESPONSE_MESSAGES.USER_NOT_FOUND });
       } else if (error.message === "PasswordIncorrect") {
         res.status(HTTP_statusCode.Unauthorized).json({ message: RESPONSE_MESSAGES.INVALID_CREDENTIALSS });
@@ -155,11 +155,9 @@ class DoctorController {
         phone,
         doctor_id
       };
-      console.log("------------>>>>", formData)
-      console.log("---->>>-------->>>>", files)
 
 
-      const kycStatus = await this.doctorService.kycSubmit(formData, files);
+      const kycStatus = await this._doctorService.kycSubmit(formData, files);
 
 
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.KYC_SUBMIT_SUCCESS, kycStatus });
@@ -173,7 +171,7 @@ class DoctorController {
   async doctorKycStatus(req: Request, res: Response, next: NextFunction) {
     try {
       const doctorId = req.params.doctorId;
-      const kycStatus = await this.doctorService.kycStatus(doctorId);
+      const kycStatus = await this._doctorService.kycStatus(doctorId);
 
       res.status(HTTP_statusCode.OK).json({ kycStatus });
     } catch (error) {
@@ -188,7 +186,7 @@ class DoctorController {
 
 
       const decodedToken: JwtPayloads = jwtDecode(token)
-      const response = await this.doctorService.googleSignUpUser(decodedToken)
+      const response = await this._doctorService.googleSignUpUser(decodedToken)
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.SIGNUP_SUCCESS })
       res.status(HTTP_statusCode.OK).json({
         message: RESPONSE_MESSAGES.SIGNUP_SUCCESS,
@@ -207,8 +205,7 @@ class DoctorController {
 
     try {
       const doctorId = req.params.doctorId
-      console.log("doctor id for specialization", doctorId)
-      const specialisations = await this.doctorService.getSpecialization(doctorId)
+      const specialisations = await this._doctorService.getSpecialization(doctorId)
 
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.SPECIALIZATION_FETCH_SUCCESS, data: specialisations })
 
@@ -271,8 +268,6 @@ class DoctorController {
 
 
   async storeAppoinmentData(req: Request, res: Response, next: NextFunction): Promise<any> {
-
-    console.log("ssss")
     try {
       const {
         selectedDate,
@@ -306,9 +301,9 @@ class DoctorController {
           daysOfWeek
         });
 
-        console.log("nnnn", appointments);
 
-        const apponmentscreated = await this.doctorService.storeMultipleAppointments(appointments);
+
+        const apponmentscreated = await this._doctorService.storeMultipleAppointments(appointments);
 
         return res
           .status(201)
@@ -332,7 +327,7 @@ class DoctorController {
           daysOfWeek: []
         }
 
-        const apponmentscreated = await this.doctorService.storeAppoinmentData(appoinmentData);
+        const apponmentscreated = await this._doctorService.storeAppoinmentData(appoinmentData);
 
         return res
           .status(201)
@@ -373,18 +368,12 @@ class DoctorController {
       daysOfWeek
     } = config;
 
-    console.log('Input Configuration:');
-    console.log('Start Date:', selectedDate);
-    console.log('Recurrence End Date:', recurrenceEnd);
-    console.log('Recurrence Type:', recurrenceType);
-    console.log('Days of Week:', daysOfWeek);
-
     let rruleOptions: any = {
       dtstart: new Date(selectedDate),
       until: new Date(recurrenceEnd),
       interval: recurrenceInterval
     };
-    console.log('RRule Options Before:', rruleOptions);
+
 
     switch (recurrenceType) {
       case 'Daily':
@@ -404,11 +393,11 @@ class DoctorController {
       default:
         throw new Error('Invalid recurrence type');
     }
-    console.log('RRule Options After:', rruleOptions);
+
 
     const rule = new RRule(rruleOptions);
     const dates = rule.all();
-    console.log('Generated Dates:', dates);
+
 
     const appoinments = dates.map(date => ({
       selectedDate: moment(date).format('YYYY-MM-DD'),
@@ -419,7 +408,7 @@ class DoctorController {
       doctorId,
       status: status || 'Pending'
     }));
-    console.log('Generated Appointments:', appoinments);
+
     return appoinments
   }
 
@@ -448,19 +437,19 @@ class DoctorController {
 
   async getAppoinmentSchedules(req: Request, res: Response, next: NextFunction) {
     try {
-      console.log("entered in to get appoinment try");
+
 
       const doctor_id = req.params.doctorId;
-      console.log("dddo", doctor_id);
+
 
       const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 5;
+      const limit = parseInt(req.query.limit as string) || 5;
 
 
-      const sheduleData = await this.doctorService.getAppoinmentSchedules(
-        doctor_id,page,limit
+      const sheduleData = await this._doctorService.getAppoinmentSchedules(
+        doctor_id, page, limit
       );
-      console.log('sheduleData', sheduleData);
+
 
       res
         .status(HTTP_statusCode.OK)
@@ -471,11 +460,11 @@ class DoctorController {
     }
   }
 
-  async fetchbookingDetails(req: Request, res: Response, next: NextFunction) {
+  async fetchBookingDetails(req: Request, res: Response, next: NextFunction) {
     try {
 
       const doctor_id = req.params.doctorId;
-      const bookingDetails = await this.doctorService.fetchBookingDetails(doctor_id)
+      const bookingDetails = await this._doctorService.fetchBookingDetails(doctor_id)
 
       res.status(HTTP_statusCode.OK).json({ data: bookingDetails })
     } catch (error) {
@@ -487,12 +476,12 @@ class DoctorController {
     }
   }
 
-  async fetchusers(req: Request, res: Response, next: NextFunction): Promise<any> {
+  async fetchUsers(req: Request, res: Response, next: NextFunction): Promise<any> {
     try {
       const { doctorId } = req.params
-      console.log("hh", doctorId);
-      const users = await this.doctorService.fetchusers(doctorId)
-      console.log("cccccccccccc", users)
+
+      const users = await this._doctorService.fetchUsers(doctorId)
+
       return res.status(HTTP_statusCode.OK).json(users);
     } catch (error) {
 
@@ -502,8 +491,13 @@ class DoctorController {
 
   async getAllBookings(req: Request, res: Response, next: NextFunction): Promise<any> {
     try {
-      const doctor_id = req.params.doctor_id; // Get doctorId from request params
-      const bookings = await this.doctorService.getAllBookings(doctor_id);
+      const doctor_id = req.params.doctor_id;
+       const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 5;
+      const search = req.query.search as string || '';
+      console.log("sea",search);
+      
+      const bookings = await this._doctorService.getAllBookings(doctor_id,page,limit,search);
       res.status(HTTP_statusCode.OK).json(bookings);
     } catch (error) {
       next(error);
@@ -514,7 +508,7 @@ class DoctorController {
   async getDoctor(req: Request, res: Response, next: NextFunction) {
     try {
       const doctor_id = req.params.doctor_id;
-      const DoctorData = await this.doctorService.getDoctor(doctor_id);
+      const DoctorData = await this._doctorService.getDoctor(doctor_id);
       res.status(HTTP_statusCode.OK).json({
         DoctorData: DoctorData,
       });
@@ -527,9 +521,9 @@ class DoctorController {
   async getWalletData(req: Request, res: Response, next: NextFunction) {
     try {
       const doctorId = req.params.doctor_id
-       const page = parseInt(req.query.page as string) || 1;
-       const limit = parseInt(req.query.limit as string) || 5;
-      const walletData = await this.doctorService.getWallet(doctorId,page,limit)
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 5;
+      const walletData = await this._doctorService.getWallet(doctorId, page, limit)
       res.status(HTTP_statusCode.OK).json(walletData)
     } catch (error) {
       next(error)
@@ -541,7 +535,7 @@ class DoctorController {
       const { doctor_id } = req.params
       const { amount } = req.body
 
-      const withdrawed = await this.doctorService.withdraw(doctor_id, amount)
+      const withdrawed = await this._doctorService.withdraw(doctor_id, amount)
       res.status(HTTP_statusCode.OK).json(withdrawed)
     } catch (error) {
       next(error)
@@ -552,7 +546,7 @@ class DoctorController {
     try {
       const doctor_id = req.params.doctor_id;
       const doctorData = req.body;
-      const existingDoctorProfile = await this.doctorService.fetchDoctor(doctor_id)
+      const existingDoctorProfile = await this._doctorService.fetchDoctor(doctor_id)
       if (existingDoctorProfile) {
         await deleteFromCloudinary(existingDoctorProfile)
       }
@@ -565,7 +559,7 @@ class DoctorController {
         documents.profileImage = profileImageUrl.secure_url;
       }
       const updatedDoctorData = { ...doctorData, ...documents };
-      const updatedDoctor = await this.doctorService.updateDoctor(
+      const updatedDoctor = await this._doctorService.updateDoctor(
         doctor_id,
         updatedDoctorData
       );
@@ -578,12 +572,12 @@ class DoctorController {
     }
   }
 
-  async forgotpassword(req: Request, res: Response, next: NextFunction): Promise<any> {
+  async forgotPassword(req: Request, res: Response, next: NextFunction): Promise<any> {
     try {
       const { emailData } = req.body
-      console.log("got email from body", emailData)
-      const response = await this.doctorService.forgotpassword(emailData)
-      console.log("noll", response)
+
+      const response = await this._doctorService.forgotPassword(emailData)
+
       if (!response) {
         return res.status(HTTP_statusCode.BadRequest).json({ message: RESPONSE_MESSAGES.EMAIL_NOT_FOUND })
 
@@ -596,12 +590,12 @@ class DoctorController {
   }
 
   async verifyForgotOtp(req: Request, res: Response, next: NextFunction) {
-    console.log("verify otp controller");
+
     try {
-      console.log("verify otp controller");
+
       const { doctorData, otp } = req.body;
 
-      await this.doctorService.verifyForgotOTP(doctorData, otp);
+      await this._doctorService.verifyForgotOTP(doctorData, otp);
 
       res
         .status(HTTP_statusCode.OK)
@@ -622,12 +616,12 @@ class DoctorController {
 
   async resetPassword(req: Request, res: Response, next: NextFunction): Promise<any> {
     try {
-      console.log("Request body:", req.body);
-      const { doctorData, payload } = req.body
-      console.error("Missing required fields:", { doctorData, payload });
 
-      const result = await this.doctorService.resetapassword(doctorData, payload)
-      console.log("what is the response got?", result)
+      const { doctorData, payload } = req.body
+      // console.error("Missing required fields:", { doctorData, payload });
+
+      const result = await this._doctorService.resetPassword(doctorData, payload)
+
       if (result?.modifiedCount === 1) {
         return res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.PASSWORD_RESET_SUCCESS });
 
@@ -637,7 +631,7 @@ class DoctorController {
       }
 
     } catch (error) {
-      console.log("User Controller Error", error)
+
       return res.status(HTTP_statusCode.InternalServerError).json({ message: RESPONSE_MESSAGES.INTERNAL_SERVER_ERROR });
 
     }
@@ -663,32 +657,39 @@ class DoctorController {
   }
 
 
-  // doctor.controller.ts
+
 
   async createPrescription(req: Request, res: Response, next: NextFunction): Promise<void> {
-    console.log("Creating prescription");
+
     try {
       const { doctor_id, user_id } = req.params;
       const { prescriptions, patientDetails, doctorDetails } = req.body;
 
-      console.log("Prescription data:", { doctor_id, user_id, prescriptions, patientDetails, doctorDetails });
+
 
       if (!doctor_id || !user_id || !prescriptions || prescriptions.length === 0) {
         res.status(HTTP_statusCode.BadRequest).json({ message: RESPONSE_MESSAGES.MISSING_REQUIRED_FIELDS });
         return;
       }
 
+      
+      // userId kittunint athil ninn booking id kand pikanm aa kittunna booking id athin appointmentId replace booking id aakenmath aakiya therrunna prshnm ollu 
+
+      console.log('Pateincede Deatailssssssss:',patientDetails)
+
       const formData = {
         doctorId: doctor_id,
         userId: user_id,
-        bookingId: patientDetails?.appointmentId,
+        bookingId: patientDetails?.bookingIds,
         specializationId: doctorDetails?.specializationId,
         prescriptions: prescriptions,
         patientDetails,
         doctorDetails
       };
 
-      const result = await this.doctorService.savePrescription(formData);
+      console.log("oo",formData);
+      
+      const result = await this._doctorService.savePrescription(formData);
 
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.PRESCRIPTION_SUBMIT_SUCCESS, result });
     } catch (error) {
@@ -701,8 +702,11 @@ class DoctorController {
   async getReports(req: Request, res: Response): Promise<any> {
     try {
       const doctorId = req.params.doctorId;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 5;
+      const search = req.query.search as string || '';
 
-      const reports = await this.doctorService.getReportsByUserId(doctorId);
+      const reports = await this._doctorService.getReportsByUserId(doctorId,page,limit,search);
 
       res.status(HTTP_statusCode.OK).json({
         message: RESPONSE_MESSAGES.REPORT_FETCH_SUCCESS,
@@ -717,11 +721,11 @@ class DoctorController {
 
   async getPatientBookingForDoctor(req: Request, res: Response): Promise<any> {
     const { doctorId, userId } = req.params;
-    console.log("userid", userId, doctorId);
+
 
 
     try {
-      const bookings = await this.doctorService.getBookingsByDoctorAndUser(doctorId, userId);
+      const bookings = await this._doctorService.getBookingsByDoctorAndUser(doctorId, userId);
       res.status(HTTP_statusCode.OK).json(bookings);
     } catch (error) {
       console.error("Error in controller:", error);
@@ -730,11 +734,10 @@ class DoctorController {
   };
 
   async getNotifications(req: Request, res: Response, next: NextFunction) {
-    console.log("fetching notificatin in controller");
     try {
-      console.log("fetching notificatin in controller try");
+
       const { doctor_id } = req.params;
-      const notifications = await this.doctorService.getNotifications(doctor_id);
+      const notifications = await this._doctorService.getNotifications(doctor_id);
       res.status(HTTP_statusCode.OK).json(notifications);
     } catch (error) {
       next(error);
@@ -743,7 +746,7 @@ class DoctorController {
   async clearNotifications(req: Request, res: Response, next: NextFunction) {
     try {
       const { doctor_id } = req.params
-      await this.doctorService.clearNotifications(doctor_id)
+      await this._doctorService.clearNotifications(doctor_id)
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.NOTIFICATIONS_CLEAR_SUCCESS })
     } catch (error) {
       next(error)
@@ -755,12 +758,17 @@ class DoctorController {
     try {
       const { doctor_id } = req.params;
 
+       const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 5;
+      const search = req.query.search as string || '';
+
+
       if (!doctor_id) {
         res.status(HTTP_statusCode.BadRequest).json({ message: RESPONSE_MESSAGES.DOCTOR_ID_REQUIRED });
         return;
       }
 
-      const prescriptions = await this.doctorService.fetchPrescriptions(doctor_id);
+      const prescriptions = await this._doctorService.fetchPrescriptions(doctor_id,page,limit,search);
 
       res.status(HTTP_statusCode.OK).json(prescriptions);
     } catch (error) {
@@ -772,7 +780,7 @@ class DoctorController {
 
   async getDashboardData(req: Request, res: Response, next: NextFunction) {
     try {
-      const response = await this.doctorService.getDashboardData()
+      const response = await this._doctorService.getDashboardData()
 
       res.status(HTTP_statusCode.OK).json({ data: response })
     } catch (error) {
@@ -786,7 +794,7 @@ class DoctorController {
     try {
       const { appoinmentId } = req.params
 
-      const result = await this.doctorService.cancelAppoinment(appoinmentId)
+      const result = await this._doctorService.cancelAppoinment(appoinmentId)
 
       res.status(HTTP_statusCode.OK).json({ success: true, appoinment: result })
     } catch (error) {
@@ -799,7 +807,7 @@ class DoctorController {
       const { rescheduleAppointmentId } = req.params;
       const updatedData = req.body;
 
-      const result = await this.doctorService.rescheduleAppointment(rescheduleAppointmentId, updatedData);
+      const result = await this._doctorService.rescheduleAppointment(rescheduleAppointmentId, updatedData);
 
       res.status(HTTP_statusCode.OK).json({
         success: true,

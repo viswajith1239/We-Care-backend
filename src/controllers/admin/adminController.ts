@@ -10,18 +10,21 @@ import { jwtDecode } from "jwt-decode";
 import { IAdminService } from "../../interface/admin/Admin.service.interface";
 
 class AdminController {
-  private adminService: IAdminService;
+  private _adminService: IAdminService;
   constructor(adminService: IAdminService) {
-    this.adminService = adminService;
+    this._adminService = adminService;
   }
 
   async adminLogin(req: Request, res: Response, next: NextFunction): Promise<any> {
-    console.log("admin controller ethi");
+
 
     try {
+
+
       const { email, password }: LoginAdmin_interface = req.body;
 
-      const adminResponse = await this.adminService.adminLogin(email, password);
+      const adminResponse = await this._adminService.adminLogin(email, password);
+
 
 
       if (adminResponse.status === 401) {
@@ -35,13 +38,13 @@ class AdminController {
         httpOnly: true,
         secure: true,
         sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: 1 * 24 * 60 * 60 * 1000,
       });
       res.cookie("AccessToken", adminResponse.accessToken, {
         httpOnly: true,
         secure: true,
         sameSite: "strict",
-        maxAge: 1 * 24 * 60 * 60 * 1000,
+        maxAge: 1 * 24 * 60 * 60 * 1000
       });
 
       return res.status(HTTP_statusCode.OK).json({
@@ -58,10 +61,11 @@ class AdminController {
     try {
 
       const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 5;
-      const allUsers = await this.adminService.getAllUsers(page, limit);
+      const limit = parseInt(req.query.limit as string) || 5;
+       const search = req.query.search as string || '';
+      const allUsers = await this._adminService.getAllUsers(page, limit,search);
 
-      
+
       res
         .status(HTTP_statusCode.OK)
         .json({ message: RESPONSE_MESSAGES.FETCH_ALL_USERS_SUCCESS, users: allUsers });
@@ -69,25 +73,39 @@ class AdminController {
       console.log(error);
     }
   }
-
-  async getallcontact(req:Request,res:Response,Next:NextFunction){
+  async getAllDoctors(req: Request, res: Response, next: NextFunction) {
     try {
-      const response= await this.adminService.getallcontact()
-      console.log("pp",response);
-      
-      res.status(HTTP_statusCode.OK).json({response:response})
+
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 5;
+       const search = req.query.search as string || '';
+      const allDoctors = await this._adminService.getAllDoctors(page, limit,search);
+
+
+      res
+        .status(HTTP_statusCode.OK)
+        .json({ message: RESPONSE_MESSAGES.FETCH_ALL_USERS_SUCCESS, doctors: allDoctors });
     } catch (error) {
-      
+      console.log(error);
+    }
+  }
+
+  async getAllContact(req: Request, res: Response, Next: NextFunction) {
+    try {
+      const response = await this._adminService.getAllContact()
+
+      res.status(HTTP_statusCode.OK).json({ response: response })
+    } catch (error) {
+
     }
   }
 
 
-  async addspecialization(req: Request, res: Response, next: NextFunction) {
+  async addSpecialization(req: Request, res: Response, next: NextFunction) {
     try {
-      console.log("reached controller")
       const specializationData = req.body;
 
-      const specializationresponse = await this.adminService.addSpecialization(specializationData)
+      const specializationresponse = await this._adminService.addSpecialization(specializationData)
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.SPECIALIZATION_ADD_SUCCESS, specializationresponse });
       if (!specializationData) {
         res.status(HTTP_statusCode.BadRequest).json({ message: RESPONSE_MESSAGES.SPECIALIZATION_NAME_REQUIRED });
@@ -100,10 +118,10 @@ class AdminController {
   async getAllSpecializations(req: Request, res: Response, next: NextFunction) {
     try {
 
-        const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 5;
-      const allSpecializations = await this.adminService.getAllSpecializations(page,limit);
-       
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 5;
+      const allSpecializations = await this._adminService.getAllSpecializations(page, limit);
+
       res.status(HTTP_statusCode.OK).json(allSpecializations);
     } catch (error) {
       console.error('Error fetching specializations:', error);
@@ -111,12 +129,12 @@ class AdminController {
     }
   }
 
-  async updatespecialisation(req: Request, res: Response, next: NextFunction) {
+  async updateSpecialisation(req: Request, res: Response, next: NextFunction) {
 
     try {
       const { name, description } = req.body
       const specializationId = req.params.id
-      const response = await this.adminService.updatespecialisation(name, description, specializationId)
+      const response = await this._adminService.updateSpecialisation(name, description, specializationId)
       // const specialization={name: response?.name,description: response?.description,}
       //  console.log("response what",response?.name,response?.description)
       const specialization = response
@@ -130,7 +148,7 @@ class AdminController {
   deleteSpecialization = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const response = await this.adminService.deleteSpecializationService(id);
+      const response = await this._adminService.deleteSpecializationService(id);
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.SPECIALIZATION_DELETE_SUCCESS });
       return response
     } catch (error) {
@@ -139,12 +157,12 @@ class AdminController {
     }
   };
 
-   deletesubmission = async (req: Request, res: Response, next: NextFunction) => {
+  deleteSubmission = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log("inside try delete");
-      
+
+
       const { id } = req.params;
-      const response = await this.adminService.deletesubmission(id);
+      const response = await this._adminService.deleteSubmission(id);
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.SPECIALIZATION_DELETE_SUCCESS });
       return response
     } catch (error) {
@@ -158,12 +176,27 @@ class AdminController {
       const user_id = req.params.user_id
       const userState = req.body.status
 
-      console.log("jjj",user_id);
-       console.log("iiii",userState);
-      
 
-      const responsestatus = await this.adminService.blockUnblockUser(user_id, userState)
-      console.log("response data issssss", responsestatus)
+
+      const responsestatus = await this._adminService.blockUnblockUser(user_id, userState)
+
+      res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.USER_STATUS_UPDATE_SUCCESS, data: responsestatus?.isBlocked })
+
+
+    } catch (error) {
+      console.log("Error in controller userblockunblock ", error)
+    }
+  }
+
+  async blockUnblockDoctor(req: Request, res: Response, next: NextFunction) {
+    try {
+      const doctor_id = req.params.doctor_id
+      const doctorState = req.body.status
+
+
+
+      const responsestatus = await this._adminService.blockUnblockDoctor(doctor_id, doctorState)
+
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.USER_STATUS_UPDATE_SUCCESS, data: responsestatus?.isBlocked })
 
 
@@ -176,8 +209,8 @@ class AdminController {
   async getAllDoctorKycDatas(req: Request, res: Response, next: NextFunction) {
     try {
 
-      const allDoctorsKycData = await this.adminService.DoctorsKycData();
-      // 
+      const allDoctorsKycData = await this._adminService.doctorsKycData();
+
 
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.DOCTOR_KYC_DATA_FETCH_SUCCESS, data: allDoctorsKycData });
     } catch (error) {
@@ -189,8 +222,7 @@ class AdminController {
   async doctorsKycData(req: Request, res: Response, next: NextFunction): Promise<any> {
     try {
       const doctorId = req.params.doctor_id;
-      const doctorKycDetails = await this.adminService.fetchKycData(doctorId);
-      console.log("response check", doctorKycDetails)
+      const doctorKycDetails = await this._adminService.fetchKycData(doctorId);
       return res.json({ kycData: doctorKycDetails });
 
 
@@ -208,7 +240,7 @@ class AdminController {
       const doctor_id = req.params.doctor_id;
       const rejectionReason = req.body.rejectionReason || null;
 
-      await this.adminService.updateKycStatus(status, doctor_id, rejectionReason);
+      await this._adminService.updateKycStatus(status, doctor_id, rejectionReason);
 
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.DOCTOR_KYC_STATUS_UPDATE_SUCCESS, status });
     } catch (error) {
@@ -222,7 +254,7 @@ class AdminController {
 
   async getDashboardData(req: Request, res: Response, next: NextFunction) {
     try {
-      const response = await this.adminService.getDashboardData()
+      const response = await this._adminService.getDashboardData()
       res.status(HTTP_statusCode.OK).json({ data: response })
     } catch (error) {
       next(error)
@@ -235,11 +267,13 @@ class AdminController {
 
   async logoutAdmin(req: Request, res: Response): Promise<void> {
     try {
-      // Clear the access token and refresh token cookies
+
+
+
       res.clearCookie('AccessToken', { httpOnly: true, expires: new Date(0) });
       res.clearCookie('RefreshToken', { httpOnly: true, expires: new Date(0) });
 
-      // Send success response
+
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.ADMIN_LOGOUT_SUCCESS });
     } catch (error: any) {
       console.error('Logout error:', error);

@@ -1,10 +1,11 @@
-// models/Prescription.ts
+
 
 import mongoose, { Schema, Document, model } from 'mongoose';
 
 interface IPrescription extends Document {
   doctorId: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
+  bookingId:mongoose.Types.ObjectId;
   prescriptions: {
     medicineName: string;
     dosage: string;
@@ -31,5 +32,5 @@ const PrescriptionSchema: Schema = new Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-const PrescriptionModel=model<IPrescription>('Prescription', PrescriptionSchema);
+const PrescriptionModel = model<IPrescription>('Prescription', PrescriptionSchema);
 export default PrescriptionModel

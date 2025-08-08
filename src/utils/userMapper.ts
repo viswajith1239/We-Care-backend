@@ -1,5 +1,5 @@
 import { IUserDocument } from "../../src/models/userModel";
-import { UserResponseDTO,UserDTO, BookedDoctorDTO } from "../../src/dtos/user.dto";
+import { UserResponseDTO, UserDTO, BookedDoctorDTO } from "../../src/dtos/user.dto";
 
 export function mapUserToDTO(user: IUserDocument): UserResponseDTO {
   return {

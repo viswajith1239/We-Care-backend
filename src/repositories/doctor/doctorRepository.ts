@@ -16,9 +16,9 @@ import UserModel from "../../models/userModel";
 import NotificationModel from "../../models/notificationModel";
 import ReportModel from "../../models/reportModel";
 import BaseRepository from "../base/baseRepository";
-import {PaginatedWalletResponse} from "../../interface/doctor/doctor_interface"
+import { PaginatedWalletResponse } from "../../interface/doctor/doctor_interface"
 
-class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository {
+class DoctorRepository extends BaseRepository<any> implements IDoctorRepository {
   private _specializationModel = SpecializationModel;
   private _doctorModel = DoctorModel
   private _otpModel = OtpModel
@@ -29,10 +29,10 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   private _prescriptionModel = PrescriptionModel
   private _userModel = UserModel
   private _notificationModel = NotificationModel
-  private _reportModel=ReportModel
+  private _reportModel = ReportModel
 
   constructor() {
-    super(DoctorModel);  
+    super(DoctorModel);
   }
 
   async findAllSpecializations() {
@@ -80,14 +80,14 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   }
   async createNewUser(doctorData: Interface_Doctor): Promise<void> {
     try {
-      console.log("doctor data have reached in repository", doctorData)
+
       const userexisted = await this.existsDoctor(doctorData);
       if (userexisted) {
         throw new Error("Email already exists");
       }
 
       let specializationIds: Types.ObjectId[] = [];
-      console.log("Specializations before processing:", doctorData.specializations);
+
 
       if (doctorData.specializations && doctorData.specializations.length > 0) {
 
@@ -122,7 +122,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
         throw new Error("OTP ID is undefined");
       }
       await this._otpModel.findByIdAndDelete(otpId.toString());
-      console.log(`OTP with ID ${otpId} deleted successfully.`);
+
     } catch (error) {
       console.error("Error in deleting OTP:", error);
       throw error;
@@ -141,7 +141,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
 
   async saveKyc(formData: any, documents: any): Promise<any> {
-    console.log("nnnn", documents);
+
 
 
     try {
@@ -150,7 +150,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
         throw new Error("Doctor not found for the given doctor ID");
       }
 
-      console.log("-----specializations:", doctor.specializations);
+
 
       const kycData = {
         doctorId: new Types.ObjectId(formData.doctor_id),
@@ -165,10 +165,10 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
 
       const savedKyc = await this._kycModel.create(kycData);
-      console.log("KYC Data saved successfully:", savedKyc);
+
       return savedKyc;
     } catch (error) {
-      console.error("Error in saveKyc repository:", error);
+
       throw new Error("Failed to save KYC data");
     }
   }
@@ -206,10 +206,10 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
 
   async getDoctorStatus(doctorId: string) {
-    console.log("gggg", doctorId)
+
     try {
       const doctor = await this._doctorModel.findById(doctorId).select("kycStatus")
-      console.log(",,,,,,,,,,,,,,,,,,", doctor)
+
 
 
 
@@ -217,7 +217,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
         throw new Error(`Doctor with ID ${doctor} not found`);
       }
 
-      console.log("..............doctorkycstatus", doctor.kycStatus)
+
 
 
       return doctor.kycStatus;
@@ -252,7 +252,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
         return
       }
       const specialisations = await this._doctorModel.findById(doctorid).populate("specializations")
-      console.log("specialisation sare....", specialisations?.specializations)
+
       return specialisations
     } catch (error) {
       console.log("Error in Repository specialisation fetch", error)
@@ -311,7 +311,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
 
   async createNewAppoinment(appointmentData: any) {
-    console.log("single repos");
+
 
     try {
 
@@ -336,10 +336,10 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   }
 
   async createMultipleAppointments(appointments: any[]) {
-    console.log("multiple repos");
 
 
-    console.log("aaaaaaaaaa", appointments);
+
+
 
     if (!appointments || !Array.isArray(appointments) || appointments.length === 0) {
       throw new Error("Invalid appointments data: empty or not an array");
@@ -401,8 +401,8 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   async fetchAppoinmentData(doctor_id: string, page: number = 1, limit: number = 5) {
     try {
       const skip = (page - 1) * limit;
-      console.log("reached fetch appoinmetn");
-          const totalSchedules = await this._appoinmentModel.countDocuments({ doctorId: doctor_id });
+
+      const totalSchedules = await this._appoinmentModel.countDocuments({ doctorId: doctor_id });
       const appoinmentData = await this._appoinmentModel
         .find({
           doctorId: doctor_id,
@@ -411,25 +411,26 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        console.log("appppo",appoinmentData);
-        console.log("hello");
-        
-        
-      return{
 
-         appoinmentData: appoinmentData,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalSchedules / limit),
-        totalSchedules,
-        hasNextPage: page < Math.ceil(totalSchedules / limit),
-        hasPreviousPage: page > 1,
-        limit
+
+
+
+      return {
+
+        appoinmentData: appoinmentData,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(totalSchedules / limit),
+          totalSchedules,
+          hasNextPage: page < Math.ceil(totalSchedules / limit),
+          hasPreviousPage: page > 1,
+          limit
+        }
       }
-      } 
     } catch (error) {
-      console.log("eddd",error);
-      
+      console.log(error);
+
+
       throw error;
     }
   }
@@ -457,12 +458,12 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   }
 
 
-  async fetchusers(doctorId: string) {
+  async fetchUsers(doctorId: string) {
     try {
-      console.log("Fetching booked users for doctor:", doctorId);
+
 
       const bookedUsers = await this._bookingModel.find({ doctorId }).populate("userId");
-      console.log("Booked Users:", bookedUsers);
+
 
       const uniqueUsersMap = new Map<string, any>();
 
@@ -482,13 +483,14 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
             name: user.name,
             email: user.email,
             profileImage: user.profileImage || "",
-            appoinmentId: booking.appoinmentId, 
+            appoinmentId: booking.appoinmentId,
             bookingDate: booking.bookingDate,
             startDate: booking.startDate,
             startTime: booking.startTime,
             endTime: booking.endTime,
             amount: booking.amount,
             paymentStatus: booking.paymentStatus,
+            bookingId:booking._id
           });
         }
       });
@@ -501,13 +503,28 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   }
 
 
-  async getAllBookings(doctor_id: string) {
+  async getAllBookings(doctor_id: string, page: number = 1, limit: number = 5, search: string = '') {
     try {
+       const skip = (page - 1) * limit;
       const bookings = await this._bookingModel.find({ doctorId: doctor_id })
         .populate("userId", "name email profileImage").sort({ createdAt: -1 })
         .exec();
 
-      const response = bookings.map((booking: any) => {
+         const filteredBookings = search
+      ? bookings.filter((booking: any) =>
+          booking.userId?.name?.toLowerCase().includes(search.toLowerCase())
+        )
+      : bookings;
+
+      
+
+    const totalBookings = filteredBookings.length;
+    const totalPages = Math.ceil(totalBookings / limit);
+
+ 
+    const paginatedBookings = filteredBookings.slice(skip, skip + limit);
+
+      const response = paginatedBookings.map((booking: any) => {
         return {
           ...booking.toObject(),
           userName: booking.userId ? booking.userId.name : "User not found",
@@ -516,26 +533,36 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
         };
       });
 
-      return response;
+      return {
+      bookings: response,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalBookings,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+        limit,
+      }
+    };
     } catch (error) {
       console.log("Error in fetching doctor bookings:", error);
     }
   }
 
-  async findByDoctorAndUser (
-  doctorId: string,
-  userId: string
-): Promise<any>{
-  return await this._bookingModel.find({ doctorId, userId });
-};
+  async findByDoctorAndUser(
+    doctorId: string,
+    userId: string
+  ): Promise<any> {
+    return await this._bookingModel.find({ doctorId, userId });
+  };
 
 
 
   async fetchNotifications(doctorId: string) {
-    console.log("fetching notificatin in repo");
+
 
     try {
-      console.log("fetching notificatin in repo try");
+
       const notificationsDoc = await this._notificationModel.findOne({ receiverId: doctorId });
       if (notificationsDoc && notificationsDoc.notifications) {
         notificationsDoc.notifications.sort((a, b) => {
@@ -581,36 +608,36 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
     }
   }
 
- async fetchWalletData(doctor_id: string, page: number = 1, limit: number = 5): Promise<PaginatedWalletResponse | null | undefined> {
-  try {
-    const wallet = await this._walletModel.findOne({ doctorId: doctor_id }).exec();
+  async fetchWalletData(doctor_id: string, page: number = 1, limit: number = 5): Promise<PaginatedWalletResponse | null | undefined> {
+    try {
+      const wallet = await this._walletModel.findOne({ doctorId: doctor_id }).exec();
 
-    if (!wallet) return null;
+      if (!wallet) return null;
 
-    const totalTransactions = wallet.transactions.length;
-    const skip = (page - 1) * limit;
+      const totalTransactions = wallet.transactions.length;
+      const skip = (page - 1) * limit;
 
-    const paginatedTransactions = wallet.transactions.slice(skip, skip + limit);
+      const paginatedTransactions = wallet.transactions.slice(skip, skip + limit);
 
-    return {
-      walletData: {
-        ...wallet.toObject(),
-        transactions: paginatedTransactions, 
-      },
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalTransactions / limit),
-        tatalTransctions:totalTransactions,
-        hasNextPage: page < Math.ceil(totalTransactions / limit),
-        hasPreviousPage: page > 1,
-        limit
-      }
-    };
-  } catch (error) {
-    console.error('Error fetching wallet data:', error);
-    return null;
+      return {
+        walletData: {
+          ...wallet.toObject(),
+          transactions: paginatedTransactions,
+        },
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(totalTransactions / limit),
+          tatalTransctions: totalTransactions,
+          hasNextPage: page < Math.ceil(totalTransactions / limit),
+          hasPreviousPage: page > 1,
+          limit
+        }
+      };
+    } catch (error) {
+      console.error('Error fetching wallet data:', error);
+      return null;
+    }
   }
-}
 
 
 
@@ -673,7 +700,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   }
 
   async saveOTP(email: string, OTP: string, OTPExpiry: Date): Promise<void> {
-    console.log("save otp");
+
 
     try {
       const newOtp = new this._otpModel({
@@ -690,7 +717,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
 
   async getOtpsByEmail(email: string): Promise<IOtp[]> {
-    console.log("Getting OTP for email:", email);
+
     try {
       const otps = await this._otpModel.find({ email: email });
       if (!otps || otps.length === 0) {
@@ -706,8 +733,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   }
 
   async saveResetPassword(email: string, hashedPassword: string) {
-    console.log("hee", email);
-    console.log("reset reached in repos", hashedPassword);
+
     try {
       const user = await this._doctorModel.findOne({ email });
       if (!user) {
@@ -722,7 +748,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
         throw new Error("Password update failed.");
       }
 
-      console.log("Password reset successfully for email:", email);
+
       return result;
     } catch (error) {
       console.log("Error in Resetting password", error);
@@ -731,65 +757,352 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   }
 
 
- async create(data: {
-  doctorId: string;
-  userId: string;
-  bookingId?: string;
-  specializationId?: string;
-  prescriptions: {
-    medicineName: string;
-    dosage: string;
-    frequency: string;
-    duration: string;
-    instruction: string;
-  }[];
-  patientDetails?: {
-    patientId: string;
-    patientName: string;
-    patientEmail?: string;
-    patientPhone?: string;
-    patientAge?: number;
-    patientAddress?: string;
-    appointmentId: string;
-    bookingAmount?: number;
-  };
-  doctorDetails?: {
+  async create(data: {
     doctorId: string;
-    doctorName?: string;
-    doctorImage?: string;
-  };
-}) {
-  const newPrescription = new this._prescriptionModel({
-    doctorId: data.doctorId,
-    userId: data.userId,
-    bookingId: data.bookingId,
-    specializationId: data.specializationId,
-    prescriptions: data.prescriptions,
-    patientDetails: data.patientDetails,
-    doctorDetails: data.doctorDetails,
-    createdAt: new Date()
-  });
-  
-  console.log("Creating new prescription:", newPrescription);
-  return await newPrescription.save();
-}
-  async getPrescriptionsByDoctor(doctorId: string) {
-    return await this._prescriptionModel.find({ doctorId })
-      .populate('userId', 'name')
-      .sort({ createdAt: -1 });
-  }
+    userId: string;
+    bookingId?: string;
+    specializationId?: string;
+    prescriptions: {
+      medicineName: string;
+      dosage: string;
+      frequency: string;
+      duration: string;
+      instruction: string;
+    }[];
+    patientDetails?: {
+      patientId: string;
+      patientName: string;
+      patientEmail?: string;
+      patientPhone?: string;
+      patientAge?: number;
+      patientAddress?: string;
+      appointmentId: string;
+      bookingAmount?: number;
+    };
+    doctorDetails?: {
+      doctorId: string;
+      doctorName?: string;
+      doctorImage?: string;
+    };
+  }) {
+    const newPrescription = new this._prescriptionModel({
+      doctorId: data.doctorId,
+      userId: data.userId,
+      bookingId: data.bookingId,
+      specializationId: data.specializationId,
+      prescriptions: data.prescriptions,
+      patientDetails: data.patientDetails,
+      doctorDetails: data.doctorDetails,
+      createdAt: new Date()
+    });
 
-  async getReportsByUserId(doctorId: string): Promise<IReportData[]> {
-  const report= await this._reportModel.find({ doctorId }).sort({ createdAt: -1 });
-  console.log("report",report);
-  return report
-  
+
+    return await newPrescription.save();
   }
+ async getPrescriptionsByDoctor(doctorId: string, page: number = 1, limit: number = 5, search: string = '') {
+  try {
+    const skip = (page - 1) * limit;
+
+  
+    const matchCondition: any = {
+      doctorId: new mongoose.Types.ObjectId(doctorId),
+    };
+
+  
+    if (search) {
+     
+      const allPrescriptions = await this._prescriptionModel.aggregate([
+        {
+          $match: matchCondition,
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'userDetails',
+          },
+        },
+        {
+          $unwind: {
+            path: '$userDetails',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: 'doctors',
+            localField: 'doctorId',
+            foreignField: '_id',
+            as: 'doctorDetails',
+          },
+        },
+        {
+          $unwind: {
+            path: '$doctorDetails',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: 'bookings',
+            localField: 'bookingId',
+            foreignField: 'appoinmentId',
+            as: 'bookingDetails',
+          },
+        },
+        {
+          $unwind: {
+            path: '$bookingDetails',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            userId: 1,
+            bookingId: 1,
+            prescriptions: 1,
+            createdAt: 1,
+            patientName: '$userDetails.name',
+            patientEmail: '$userDetails.email',
+            doctorName: '$doctorDetails.name',
+            specializationId: '$bookingDetails.specialization',
+            bookingAmount: '$bookingDetails.amount',
+            bookingStartDate: '$bookingDetails.startDate',
+            bookingEndTime: '$bookingDetails.endTime',
+            bookingStartTime: '$bookingDetails.startTime',
+            bookingDate: '$bookingDetails.bookingDate',
+          },
+        },
+        {
+          $sort: {
+            createdAt: -1,
+          },
+        },
+      ]);
+
+
+      const filteredPrescriptions = allPrescriptions.filter((prescription: any) => {
+        const searchTerm = search.toLowerCase();
+        
+ 
+        const patientNameMatch = prescription.patientName?.toLowerCase().includes(searchTerm);
+        
+    
+        const medicineNameMatch = prescription.prescriptions?.some((med: any) => 
+          med.medicineName?.toLowerCase().includes(searchTerm)
+        );
+        
+        return patientNameMatch || medicineNameMatch;
+      });
+
+      const totalCount = filteredPrescriptions.length;
+      const totalPages = Math.ceil(totalCount / limit);
+
+
+      const paginatedPrescriptions = filteredPrescriptions.slice(skip, skip + limit);
+
+      return {
+        prescriptions: paginatedPrescriptions,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalPrescriptions: totalCount,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+          limit
+        }
+      };
+    } else {
+   
+      const totalCount = await this._prescriptionModel.countDocuments(matchCondition);
+
+      const prescriptions = await this._prescriptionModel.aggregate([
+        {
+          $match: matchCondition,
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'userDetails',
+          },
+        },
+        {
+          $unwind: {
+            path: '$userDetails',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: 'doctors',
+            localField: 'doctorId',
+            foreignField: '_id',
+            as: 'doctorDetails',
+          },
+        },
+        {
+          $unwind: {
+            path: '$doctorDetails',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: 'bookings',
+            localField: 'bookingId',
+            foreignField: 'appoinmentId',
+            as: 'bookingDetails',
+          },
+        },
+        {
+          $unwind: {
+            path: '$bookingDetails',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            userId: 1,
+            bookingId: 1,
+            prescriptions: 1,
+            createdAt: 1,
+            patientName: '$userDetails.name',
+            patientEmail: '$userDetails.email',
+            doctorName: '$doctorDetails.name',
+            specializationId: '$bookingDetails.specialization',
+            bookingAmount: '$bookingDetails.amount',
+            bookingStartDate: '$bookingDetails.startDate',
+            bookingEndTime: '$bookingDetails.endTime',
+            bookingStartTime: '$bookingDetails.startTime',
+            bookingDate: '$bookingDetails.bookingDate',
+          },
+        },
+        {
+          $sort: {
+            createdAt: -1,
+          },
+        },
+        {
+          $skip: skip,
+        },
+        {
+          $limit: limit,
+        },
+      ]);
+
+      return {
+        prescriptions,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(totalCount / limit),
+          totalPrescriptions: totalCount,
+          hasNextPage: page < Math.ceil(totalCount / limit),
+          hasPreviousPage: page > 1,
+          limit
+        }
+      };
+    }
+
+  } catch (error) {
+    console.log("Error in fetching doctor prescriptions:", error);
+    throw error;
+  }
+}
+  async getReportsByUserId(doctorId: string, page: number = 1, limit: number = 10, search: string = '') {
+  try {
+    const skip = (page - 1) * limit;
+
+    // First, get all reports for the doctor with populated user data
+    const reports = await this._reportModel
+      .find({ doctorId })
+ 
+      .sort({ createdAt: -1 });
+
+    // Filter reports based on search query
+    const filteredReports = search
+      ? reports.filter((report: any) => {
+          const userName = report.userId?.name || report.user?.name || report.userName || report.patientName || '';
+          const userEmail = report.userId?.email || report.user?.email || '';
+          const patientId = report.patientId || report.userId?._id || report.user?._id || '';
+          
+          return (
+            userName.toLowerCase().includes(search.toLowerCase()) ||
+            userEmail.toLowerCase().includes(search.toLowerCase()) ||
+            patientId.toString().toLowerCase().includes(search.toLowerCase())
+          );
+        })
+      : reports;
+
+    const totalReports = filteredReports.length;
+    const totalPages = Math.ceil(totalReports / limit);
+
+    // Apply pagination to filtered results
+    const paginatedReports = filteredReports.slice(skip, skip + limit);
+
+    // Group reports by patient/user
+    const groupedReportsMap = new Map();
+    
+    paginatedReports.forEach((report: any) => {
+      const userId = report.userId?._id || report.user?._id || report.patientId || 'unknown';
+      const userName = report.userId?.name || report.user?.name || report.userName || report.patientName || `User ${userId}`;
+      
+      if (!groupedReportsMap.has(userId)) {
+        groupedReportsMap.set(userId, {
+          patientId: userId,
+          patientName: userName,
+          reports: [],
+          totalReports: 0,
+          lastUpload: null
+        });
+      }
+      
+      const group = groupedReportsMap.get(userId);
+      group.reports.push(report.toObject());
+      group.totalReports++;
+      
+      if (!group.lastUpload || new Date(report.createdAt) > new Date(group.lastUpload)) {
+        group.lastUpload = report.createdAt;
+      }
+    });
+
+    const groupedReports = Array.from(groupedReportsMap.values());
+
+    // Sort grouped reports by last upload date (most recent first)
+    groupedReports.sort((a, b) => {
+      if (!a.lastUpload && !b.lastUpload) return 0;
+      if (!a.lastUpload) return 1;
+      if (!b.lastUpload) return -1;
+      return new Date(b.lastUpload).getTime() - new Date(a.lastUpload).getTime();
+    });
+
+    return {
+      reports: paginatedReports.map((report: any) => report.toObject()),
+      groupedReports,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalReports,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+        limit,
+      }
+    };
+
+  } catch (error) {
+    console.log("Error in fetching report details", error);
+    throw error;
+  }
+}
 
   async getAllStatistics() {
 
 
-  
+
     const revenueData = await this._bookingModel.aggregate([
       { $match: { paymentStatus: "Confirmed" } },
       {
@@ -803,12 +1116,12 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
     const amount = revenueData.length > 0 ? revenueData[0].amount : 0;
     const doctorRevenue = revenueData.length > 0 ? revenueData[0].doctorRevenue : 0;
 
-    // Set date range
+
     const currentDate = new Date();
     const startDate = new Date();
     startDate.setMonth(currentDate.getMonth() - 12);
 
-    // Fetch user registration data
+
     const userRegistrationData = await this._userModel.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
       {
@@ -820,7 +1133,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
       { $sort: { "_id.year": 1, "_id.month": 1 } }
     ]);
 
-    // Initialize statistics for the last 12 months
+
     const monthlyStatistics: Record<string, {
       users: number;
       revenue: number;
@@ -839,7 +1152,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
       monthlyStatistics[key] = { users: 0, revenue: 0, amount: 0, doctorRevenue: 0, doctor: 0 };
     }
 
-    // Map user registration data to statistics
+
     userRegistrationData.forEach(userData => {
       const key = `${userData._id.year}-${userData._id.month < 10 ? '0' : ''}${userData._id.month}`;
       if (monthlyStatistics[key]) {
@@ -847,7 +1160,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
       }
     });
 
-    // Fetch revenue by month
+
     const revenueByMonth = await this._bookingModel.aggregate([
       { $match: { paymentStatus: "Confirmed", bookingDate: { $gte: startDate } } },
       {
@@ -862,7 +1175,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
 
 
-    // Fetch revenue by doctor
+
     const revenueByDoctor = await this._bookingModel.aggregate([
       { $match: { paymentStatus: "Confirmed", bookingDate: { $gte: startDate } } },
       {
@@ -877,7 +1190,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
     console.log("Doctor-wise Revenue:", revenueByDoctor);
 
-    // Process revenue by doctor
+
     const doctorWiseData: Record<string, { year: number; month: number; revenue: number; doctorRevenue: number }[]> = {};
 
     revenueByDoctor.forEach(data => {
@@ -898,7 +1211,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
 
 
 
-    // Map revenue data to statistics
+
     revenueByMonth.forEach(revenueData => {
       const key = `${revenueData._id.year}-${revenueData._id.month < 10 ? '0' : ''}${revenueData._id.month}`;
       if (monthlyStatistics[key]) {
@@ -908,7 +1221,7 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
       }
     });
 
-    // Prepare final response
+
     const userDoctorChartData = Object.keys(monthlyStatistics).map(key => {
       const [year, month] = key.split('-');
       return {
@@ -930,50 +1243,50 @@ class DoctorRepository extends BaseRepository<any>  implements IDoctorRepository
   }
 
   async cancelAppoinment(id: any): Promise<IAppoinment | null> {
-    return await this._appoinmentModel.findByIdAndUpdate(id, {$set : {status : "Cancelled"}})
+    return await this._appoinmentModel.findByIdAndUpdate(id, { $set: { status: "Cancelled" } })
   }
 
- async findAppointmentById(id: string): Promise<IAppoinment | null> {
-  return await this._appoinmentModel.findById(id);
-}
+  async findAppointmentById(id: string): Promise<IAppoinment | null> {
+    return await this._appoinmentModel.findById(id);
+  }
 
-async checkSchedulingConflicts(
-  doctorId: string | mongoose.Types.ObjectId, 
-  appointmentId: string,
-  date: string,
-  startTime: string,
-  endTime: string
-): Promise<IAppoinment[]> {
-  return await this._appoinmentModel.find({
-    doctorId,
-    selectedDate: date,
-    _id: { $ne: appointmentId }, 
-    $or: [
+  async checkSchedulingConflicts(
+    doctorId: string | mongoose.Types.ObjectId,
+    appointmentId: string,
+    date: string,
+    startTime: string,
+    endTime: string
+  ): Promise<IAppoinment[]> {
+    return await this._appoinmentModel.find({
+      doctorId,
+      selectedDate: date,
+      _id: { $ne: appointmentId },
+      $or: [
+        {
+          startTime: { $lt: endTime },
+          endTime: { $gt: startTime }
+        }
+      ]
+    });
+  }
+
+  async rescheduleAppointment(id: string, updatedData: any): Promise<IAppoinment | null> {
+    return await this._appoinmentModel.findByIdAndUpdate(
+      id,
       {
-        startTime: { $lt: endTime },
-        endTime: { $gt: startTime }
-      }
-    ]
-  });
-}
+        $set: {
+          selectedDate: updatedData.selectedDate,
+          startTime: updatedData.startTime,
+          endTime: updatedData.endTime,
+          price: updatedData.price,
+          specializationId: updatedData.specializationId,
+          status: "Pending"
 
-async rescheduleAppointment(id: string, updatedData: any): Promise<IAppoinment | null> {
-  return await this._appoinmentModel.findByIdAndUpdate(
-    id,
-    {
-      $set: {
-        selectedDate: updatedData.selectedDate,
-        startTime: updatedData.startTime,
-        endTime: updatedData.endTime,
-        price: updatedData.price,
-        specializationId: updatedData.specializationId,
-        status:"Pending"
-      
-      }
-    },
-    { new: true } 
-  );
-}
+        }
+      },
+      { new: true }
+    );
+  }
 
 }
 export default DoctorRepository

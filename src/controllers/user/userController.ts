@@ -2,7 +2,7 @@ import HTTP_statusCode from "../../enums/HttpStatusCode";
 import RESPONSE_MESSAGES from "../../enums/messages";
 import { IAuthService } from "../../interface/user/Auth.service.inerface"
 import { Request, Response, NextFunction } from "express";
-import { AuthService } from "../../service/user/Auth";
+import { AuthService } from "../../service/user/userService";
 import { ILoginUser, JwtPayload } from "../../interface/userInterface/interface"
 import { jwtDecode } from "jwt-decode"
 import { deleteFromCloudinary, uploadToCloudinary } from "../../config/cloudinary";
@@ -13,23 +13,21 @@ interface CustomRequest extends Request {
 }
 
 export class AuthController {
-  private authService: IAuthService;
+  private _authService: IAuthService;
   // private authService:AuthService
 
 
   constructor(authService: AuthService) {
-    this.authService = authService;
+    this._authService = authService;
   }
 
   async createUser(req: Request, res: Response): Promise<void> {
     try {
-      console.log("create user auth");
+
 
       const data = req.body;
-      console.log("hello,", data);
 
-      const response = await this.authService.signup(data);
-      console.log("yes respone kittiii", response)
+      const response = await this._authService.signUp(data);
 
 
 
@@ -53,9 +51,8 @@ export class AuthController {
   async verifyOtp(req: Request, res: Response, next: NextFunction) {
     try {
       const { userData, otp } = req.body;
-      console.log("the otp from frontend", otp)
-      let resp = await this.authService.verifyOTP(userData, otp);
-      console.log("--------------", resp)
+      let resp = await this._authService.verifyOTP(userData, otp);
+
 
       res
         .status(200)
@@ -77,12 +74,12 @@ export class AuthController {
 
 
   async verifyForgotOtp(req: Request, res: Response, next: NextFunction) {
-    console.log("verify otp controller");
+
     try {
-      console.log("verify otp controller");
+
       const { userData, otp } = req.body;
 
-      await this.authService.verifyForgotOTP(userData, otp);
+      await this._authService.verifyForgotOTP(userData, otp);
 
       res
         .status(HTTP_statusCode.OK)
@@ -108,8 +105,7 @@ export class AuthController {
   ): Promise<void> {
     try {
       const { email } = req.body;
-      console.log("Email in controller:", email);
-      await this.authService.resendOTP(email);
+      await this._authService.resendOTP(email);
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.OTP_RESEND });
     } catch (error) {
       console.error("Resend OTP Controller error:", error);
@@ -125,15 +121,15 @@ export class AuthController {
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, password }: ILoginUser = req.body;
-      const user = await this.authService.login(email, password);
-      console.log("????????????",user);
-      
+      const user = await this._authService.login(email, password);
+
+
 
       res.cookie("RefreshToken", user.refreshToken, {
         httpOnly: true,
         secure: true,
         sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: 1 * 24 * 60 * 60 * 1000,
       });
       res.cookie("AccessToken", user.accessToken, {
         httpOnly: true,
@@ -144,7 +140,7 @@ export class AuthController {
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.LOGIN_SUCCESS, user: user.user });
     } catch (error: any) {
       console.log("errrrrr", error.message);
-    
+
 
       if (error.message === RESPONSE_MESSAGES.ACCOUNT_BLOCKED) {
 
@@ -163,7 +159,7 @@ export class AuthController {
 
 
       const decodedToken: JwtPayload = jwtDecode(token)
-      const response = await this.authService.googleSignUpUser(decodedToken)
+      const response = await this._authService.googleSignUpUser(decodedToken)
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.SIGNUP_SUCCESS })
       return
     } catch (error) {
@@ -173,12 +169,11 @@ export class AuthController {
     }
   }
 
-  async forgotpassword(req: Request, res: Response, next: NextFunction): Promise<any> {
+  async forgotPassword(req: Request, res: Response, next: NextFunction): Promise<any> {
     try {
       const { emailData } = req.body
       console.log("got email from body", emailData)
-      const response = await this.authService.forgotpassword(emailData)
-      console.log("noll", response)
+      const response = await this._authService.forgotPassword(emailData)
       if (!response) {
         return res.status(HTTP_statusCode.BadRequest).json({ message: RESPONSE_MESSAGES.EMAIL_NOT_FOUND })
 
@@ -192,12 +187,11 @@ export class AuthController {
 
   async resetPassword(req: Request, res: Response, next: NextFunction): Promise<any> {
     try {
-      console.log("Request body:", req.body);
       const { userData, payload } = req.body
-      console.error("Missing required fields:", { userData, payload });
 
-      const result = await this.authService.resetapassword(userData, payload)
-      console.log("what is the response got?", result)
+
+      const result = await this._authService.resetPassword(userData, payload)
+
       if (result?.modifiedCount === 1) {
         return res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.PASSWORD_RESET_SUCCESS });
 
@@ -216,7 +210,7 @@ export class AuthController {
   async fetchAllSpecializations(req: Request, res: Response, next: NextFunction) {
 
     try {
-      const response = await this.authService.fetchSpecialization()
+      const response = await this._authService.fetchSpecialization()
 
       res.status(HTTP_statusCode.OK).json(response)
     } catch (error) {
@@ -226,9 +220,9 @@ export class AuthController {
 
 
   async getAllDoctors(req: Request, res: Response, next: NextFunction) {
-    console.log("ïn controller")
+
     try {
-      const allDoctors = await this.authService.getAllDoctors()
+      const allDoctors = await this._authService.getAllDoctors()
 
       res.status(HTTP_statusCode.OK).json(allDoctors)
 
@@ -249,7 +243,7 @@ export class AuthController {
         res.status(HTTP_statusCode.BadRequest).json({ message: RESPONSE_MESSAGES.DOCTOR_ID_REQUIRED });
       }
 
-      const doctor = await this.authService.getDoctor(doctorId);
+      const doctor = await this._authService.getDoctor(doctorId);
 
 
       if (!doctor) {
@@ -271,7 +265,7 @@ export class AuthController {
       }
 
       const userId = req.authData.id;
-      const userStatus = await this.authService.getUserStatus(userId);
+      const userStatus = await this._authService.getUserStatus(userId);
 
       res.status(HTTP_statusCode.OK).json(userStatus);
     } catch (error) {
@@ -282,7 +276,7 @@ export class AuthController {
 
   async getAppoinmentSchedules(req: Request, res: Response, next: NextFunction) {
     try {
-      const sessionSchedules = await this.authService.getAppoinmentSchedules();
+      const sessionSchedules = await this._authService.getAppoinmentSchedules();
       res.status(HTTP_statusCode.OK).json(sessionSchedules);
     } catch (error) {
       next(error)
@@ -296,7 +290,7 @@ export class AuthController {
       const userId = req.body.userData.id
       const appoinmentID = req.params.appoinmentId
 
-      const paymentResponse = await this.authService.checkoutPayment(appoinmentID, userId)
+      const paymentResponse = await this._authService.checkoutPayment(appoinmentID, userId)
 
       res.status(HTTP_statusCode.OK).json({ id: paymentResponse?.id });
     } catch (error) {
@@ -311,7 +305,7 @@ export class AuthController {
 
       const { sessionId, userId, stripe_session_id } = req.body;
 
-      const bookingDetails = await this.authService.findBookingDetails(
+      const bookingDetails = await this._authService.findBookingDetails(
         sessionId,
         userId,
         stripe_session_id
@@ -325,11 +319,10 @@ export class AuthController {
 
   }
 
-  async contact(req:Request,res:Response,next:NextFunction){
+  async contact(req: Request, res: Response, next: NextFunction) {
     try {
-      const { name, email, subject,phone,message,timestamp } = req.body;
-      console.log("contacts",name, email, subject,phone,message,timestamp);
-     const response = await this.authService.contact(
+      const { name, email, subject, phone, message, timestamp } = req.body;
+      const response = await this._authService.contact(
         name,
         email,
         subject,
@@ -337,25 +330,25 @@ export class AuthController {
         message,
         timestamp
       );
-         res.status(HTTP_statusCode.OK).json(response);
-      
+      res.status(HTTP_statusCode.OK).json(response);
+
     } catch (error) {
-      console.log("error in contact form",error);
-      
+      console.log("error in contact form", error);
+
     }
   }
 
   async getUser(req: Request, res: Response, next: NextFunction) {
-    console.log("bbbbb");
+
 
     try {
-      console.log("rrrr");
+
 
       const userId = req.params.userId
-      console.log("wwww", userId);
 
 
-      const response = await this.authService.fechtUserData(userId)
+
+      const response = await this._authService.fechtUserData(userId)
       res.status(HTTP_statusCode.OK).json({ response })
     } catch (error) {
 
@@ -363,20 +356,20 @@ export class AuthController {
 
   }
 
-  async getAllusers(req:Request,res:Response,next:NextFunction){
+  async getAllUsers(req: Request, res: Response, next: NextFunction) {
     try {
-      const response = await this.authService.getAllUsers();
-       res.status(HTTP_statusCode.OK).json({ response })
+      const response = await this._authService.getAllUsers();
+      res.status(HTTP_statusCode.OK).json({ response })
     } catch (error) {
-      console.log("error in controler",error);
-      
+      console.log("error in controler", error);
+
     }
   }
 
   async getNotifications(req: Request, res: Response, next: NextFunction) {
     try {
       const { user_id } = req.params;
-      const notifications = await this.authService.getNotifications(user_id);
+      const notifications = await this._authService.getNotifications(user_id);
       res.status(HTTP_statusCode.OK).json(notifications);
     } catch (error) {
       next(error);
@@ -386,7 +379,7 @@ export class AuthController {
   async clearNotifications(req: Request, res: Response, next: NextFunction) {
     try {
       const { user_id } = req.params;
-      await this.authService.clearNotifications(user_id);
+      await this._authService.clearNotifications(user_id);
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.NOTIFICATIONS_CLEAR_SUCCESS });
     } catch (error) {
       next(error);
@@ -394,54 +387,56 @@ export class AuthController {
   }
 
   async updateUserData(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    console.log("Updating user data");
+    try {
 
-    const userData = req.body;
-    const userId = req.body._id || req.body.id;
+      const userData = req.body;
+      const userId = req.body._id || req.body.id;
 
-    if (req.file) {
-      try {
-        const currentUser = await this.authService.getUserById(userId);
-        const uploadResult = await uploadToCloudinary(req.file.buffer, 'user_profiles');
+      if (req.file) {
+        try {
+          const currentUser = await this._authService.getUserById(userId);
+          const uploadResult = await uploadToCloudinary(req.file.buffer, 'user_profiles');
 
-        if (currentUser.profileImage) {
-          await deleteFromCloudinary(currentUser.profileImage);
+          if (currentUser.profileImage) {
+            await deleteFromCloudinary(currentUser.profileImage);
+          }
+
+          userData.profileImage = uploadResult.secure_url;
+        } catch (uploadError) {
+          console.error('Error uploading image to Cloudinary:', uploadError);
+          res.status(HTTP_statusCode.BadRequest).json({
+            message: 'Failed to upload profile image'
+          });
+          return;
         }
-
-        userData.profileImage = uploadResult.secure_url;
-      } catch (uploadError) {
-        console.error('Error uploading image to Cloudinary:', uploadError);
-        res.status(HTTP_statusCode.BadRequest).json({
-          message: 'Failed to upload profile image'
-        });
-        return; // Important: stop execution after sending response
       }
-    }
 
-    const updatedUser = await this.authService.editUserData(userId, userData);
-    res.status(HTTP_statusCode.OK).json({ 
-      message: RESPONSE_MESSAGES.USER_UPDATED,
-      user: updatedUser
-    });
-  } catch (error) {
-    next(error);
+      const updatedUser = await this._authService.editUserData(userId, userData);
+      res.status(HTTP_statusCode.OK).json({
+        message: RESPONSE_MESSAGES.USER_UPDATED,
+        user: updatedUser
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-}
 
 
   async getAllBookings(req: Request, res: Response, next: NextFunction) {
-  try {
-    const user_id = req.params.user_id;
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 5;
+    try {
+      const user_id = req.params.user_id;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 5;
+      const search = req.query.search as string || '';
 
-    const result = await this.authService.getAllBookings(user_id, page, limit);
-    res.status(HTTP_statusCode.OK).json(result);
-  } catch (error) {
-    next(error);
+      const result = await this._authService.getAllBookings(user_id, page, limit,search);
+      console.log("nnn",result);
+      
+      res.status(HTTP_statusCode.OK).json(result);
+    } catch (error) {
+      next(error);
+    }
   }
-}
 
 
   async cancelAppoinment(req: Request, res: Response, next: NextFunction) {
@@ -450,19 +445,17 @@ export class AuthController {
 
       const { appoinmentId, userId, doctorId } = req.body;
 
-      const cancelAndRefund = await this.authService.cancelAppoinment(appoinmentId, userId, doctorId);
+      const cancelAndRefund = await this._authService.cancelAppoinment(appoinmentId, userId, doctorId);
       res.status(HTTP_statusCode.OK).json(cancelAndRefund)
     } catch (error) {
       console.log("Error in cancel appoinment", error)
     }
 
   }
-  async getbookedDoctor(req: Request, res: Response, next: NextFunction): Promise<any> {
+  async getBookedDoctor(req: Request, res: Response, next: NextFunction): Promise<any> {
     try {
       const { userId } = req.params
-      console.log("????????", userId)
-      const doctors = await this.authService.getbookedDoctor(userId)
-      console.log("***********", doctors)
+      const doctors = await this._authService.getBookedDoctor(userId)
       return res.status(HTTP_statusCode.OK).json(doctors);
 
     } catch (error) {
@@ -475,16 +468,16 @@ export class AuthController {
 
 
   async getWalletData(req: Request, res: Response, next: NextFunction) {
-      try {
-        const userId = req.params.user_id
-         const page = parseInt(req.query.page as string) || 1;
-         const limit = parseInt(req.query.limit as string) || 5;
-        const walletData = await this.authService.getWallet(userId,page,limit)
-        res.status(HTTP_statusCode.OK).json(walletData)
-      } catch (error) {
-        next(error)
-      }
+    try {
+      const userId = req.params.user_id
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 5;
+      const walletData = await this._authService.getWallet(userId, page, limit)
+      res.status(HTTP_statusCode.OK).json(walletData)
+    } catch (error) {
+      next(error)
     }
+  }
 
 
 
@@ -492,7 +485,7 @@ export class AuthController {
     try {
       const { user_id } = req.params;
       const { currentPassword, newPassword } = req.body;
-      await this.authService.resetPasswords(
+      await this._authService.resetPasswords(
         user_id,
         currentPassword,
         newPassword
@@ -503,18 +496,55 @@ export class AuthController {
     }
   }
 
-  async getprescription(req: Request, res: Response, next: NextFunction): Promise<void> {
+
+
+
+async downloadPrescriptionPDF(req: Request, res: Response, next: NextFunction):Promise<any> {
+  try {
+    const { prescriptionId, userId } = req.params;
+
+    if (!prescriptionId || !userId) {
+      return res.status(HTTP_statusCode.BadRequest).json({ 
+        message: 'Prescription ID and User ID are required' 
+      });
+    }
+
+    const response = await this._authService.downloadPrescriptionPDF(prescriptionId, userId);
+
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=${response.filename}`);
+    res.setHeader('Content-Length', response.buffer.length);
+
+
+    res.send(response.buffer);
+
+  } catch (error) {
+    console.log("Error in downloading prescription PDF in controller", error);
+    
+   
+ 
+
+    
+    res.status(HTTP_statusCode.InternalServerError).json({ 
+      message: 'Error generating PDF'
+    });
+  }
+}
+
+  async getPrescription(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { user_id } = req.params;
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 5;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 5;
+      const search = req.query.search as string || '';
 
       if (!user_id) {
         res.status(HTTP_statusCode.BadRequest).json({ message: RESPONSE_MESSAGES.DOCTOR_ID_REQUIRED });
         return;
       }
 
-      const prescriptions = await this.authService.fetchPrescriptions(user_id,page,limit);
+      const prescriptions = await this._authService.fetchPrescriptions(user_id, page, limit,search);
 
       res.status(HTTP_statusCode.OK).json(prescriptions);
     } catch (error) {
@@ -523,11 +553,11 @@ export class AuthController {
     }
   }
 
-  async findbookings(req: Request, res: Response, next: NextFunction) {
+  async findBookings(req: Request, res: Response, next: NextFunction) {
 
     try {
       const { user_id, doctor_id } = req.params;
-      const bookingStatus = await this.authService.findBookings(
+      const bookingStatus = await this._authService.findBookings(
         user_id,
         doctor_id
       );
@@ -543,9 +573,11 @@ export class AuthController {
   async addReport(req: Request, res: Response): Promise<any> {
     try {
       const { userId, userName, userEmail, doctorId } = req.body;
+      console.log("docotr",doctorId);
+      
       const file = req.file;
 
-      const result = await this.authService.addReport(file!, { userId, userName, userEmail, doctorId });
+      const result = await this._authService.addReport(file!, { userId, userName, userEmail, doctorId });
 
       return res.status(HTTP_statusCode.OK).json({
         message: RESPONSE_MESSAGES.REPORT_UPLOAD_SUCCESS,
@@ -562,7 +594,7 @@ export class AuthController {
     try {
       const userId = req.params.userId;
 
-      const reports = await this.authService.getReportsByUserId(userId);
+      const reports = await this._authService.getReportsByUserId(userId);
 
       res.status(HTTP_statusCode.OK).json({
         message: RESPONSE_MESSAGES.REPORT_FETCH_SUCCESS,
@@ -578,10 +610,9 @@ export class AuthController {
 
   async addReview(req: Request, res: Response, next: NextFunction) {
     try {
-      console.log("mmmm");
-      
+
       const { reviewComment, selectedRating, userId, doctorId } = req.body;
-      const response = await this.authService.addReview(
+      const response = await this._authService.addReview(
         reviewComment,
         selectedRating,
         userId,
@@ -589,8 +620,8 @@ export class AuthController {
       );
 
       let reviewId = response._id;
-      console.log("ii",reviewId);
-      
+
+
       res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.REVIEW_ADD_SUCCESS, reviewId });
     } catch (error) {
       next(error);
@@ -600,7 +631,7 @@ export class AuthController {
   async getReivew(req: Request, res: Response, next: NextFunction) {
     try {
       const { doctor_id } = req.params;
-      const reviews = await this.authService.reviews(doctor_id);
+      const reviews = await this._authService.reviews(doctor_id);
       res.status(HTTP_statusCode.OK).json(reviews);
     } catch (error) {
       next(error);
@@ -608,20 +639,20 @@ export class AuthController {
   }
 
   async editReview(req: Request, res: Response, next: NextFunction) {
-    console.log("hello");
-    
+
+
     try {
-      console.log("hi");
-      
+
+
       const { reviewComment, selectedRating, reviewId } = req.body;
-      console.log("333",reviewComment,selectedRating,reviewId);
-      
-      const response = await this.authService.editReview(
+
+
+      const response = await this._authService.editReview(
         reviewComment,
         selectedRating,
         reviewId
       );
-      res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.REVIEW_EDIT_SUCCESS,response });
+      res.status(HTTP_statusCode.OK).json({ message: RESPONSE_MESSAGES.REVIEW_EDIT_SUCCESS, response });
     } catch (error) {
       next(error);
     }
@@ -630,7 +661,7 @@ export class AuthController {
   async getReivewSummary(req: Request, res: Response, next: NextFunction) {
     try {
       const { doctor_id } = req.params;
-      const reviewsAndAvgRating = await this.authService.getReivewSummary(
+      const reviewsAndAvgRating = await this._authService.getReivewSummary(
         doctor_id
       );
       res.status(HTTP_statusCode.OK).json(reviewsAndAvgRating);
@@ -642,6 +673,8 @@ export class AuthController {
 
 
   logout = async (req: Request, res: Response): Promise<void> => {
+
+
     try {
       res.clearCookie("AccessToken", {
         httpOnly: true,

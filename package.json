@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon server.ts",
-    "dev": "nodemon server.ts"
+    "dev": "nodemon server.ts",
+    "lint": "eslint ."
   },
   "author": "",
   "license": "ISC",
@@ -14,10 +15,15 @@
     "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.17",
     "@types/jsonwebtoken": "^9.0.7",
+    "@types/jspdf": "^1.3.3",
+    "@types/morgan": "^1.9.10",
     "@types/multer": "^1.4.12",
     "@types/node": "^22.10.2",
     "@types/nodemailer": "^6.4.17",
     "@types/redux-persist": "^4.3.1",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
+    "eslint": "^9.32.0",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
@@ -38,6 +44,7 @@
     "moment": "^2.30.1",
     "mongoose": "^8.9.3",
     "moongoose": "^0.0.5",
+    "morgan": "^1.10.1",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.16",
     "redux-persist": "^6.0.0",

@@ -1,6 +1,6 @@
 // BaseRepository.ts
 import { Model, Document } from 'mongoose';
-import { IBaseRepository } from '../../interface/baserepositoryinterface/baserepositoryinterface'; 
+import { IBaseRepository } from '../../interface/baserepositoryinterface/baserepositoryinterface';
 
 class BaseRepository<T extends Document> implements IBaseRepository<T> {
   private _model: Model<T>;

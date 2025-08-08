@@ -1,50 +1,51 @@
 
-import { User } from "../userInterface/interface";
-import { IUser, JwtPayload } from "../common";
-import { PaginatedWalletResponse } from "../doctor/doctor_interface";
+import { BookingListResponse, CancelAppointmentResponse, cancelBooking, Doctor, IDoctors, IReportData, Specialization, UpdateResult, User, userProfileUpdate } from "../userInterface/interface";
+import { IDoctor, INotification, IUser, JwtPayload } from "../common";
+import { Interface_Doctor, PaginatedWalletResponse } from "../doctor/doctor_interface";
 import { UserDTO } from "../../dtos/user.dto";
 
 export interface IAuthService {
-    signup(userData: {name: string;email: string;phone: string;password: string;confirmpassword: string;}): Promise<{token:string}>;
-    verifyOTP(userData:IUser,otp:string):Promise<void>
-    verifyForgotOTP(userData: string, otp: string):Promise<void>
-    resendOTP(email: string):Promise<void>
-    login(email: string, password: string):Promise<any>
-    googleSignUpUser(decodedToken: JwtPayload):Promise<any>
-    forgotpassword(emailData:string):Promise<any>
-    resetapassword(userData: string, payload: { newPassword: string} ):Promise<any>
-    getAllDoctors():Promise<any>
-    getAppoinmentSchedules():Promise<any>
-    getDoctor(doctorId:string):Promise<any>
-    checkoutPayment(appoinmentid:string,userId:string):Promise<any>
-    findBookingDetails(session_id: string, user_id: string, stripe_session_id: string):Promise<any>
-    fetchSpecialization():Promise<any>
-   fechtUserData(userId: string): Promise<UserDTO | null>
+  signUp(userData: { name: string; email: string; phone: string; password: string; confirmpassword: string; }): Promise<{ token: string }>;
+  verifyOTP(userData: IUser, otp: string): Promise<void>
+  verifyForgotOTP(userData: string, otp: string): Promise<void>
+  resendOTP(email: string): Promise<void>
+  login(email: string, password: string): Promise<any>
+  googleSignUpUser(decodedToken: JwtPayload): Promise<any>
+  forgotPassword(emailData: string): Promise<IUser|null>
+  resetPassword(userData: string, payload: { newPassword: string }): Promise<UpdateResult|undefined>
+  getAllDoctors(): Promise<Interface_Doctor[]|undefined>
+  getAppoinmentSchedules(): Promise<any>
+  getDoctor(doctorId: string): Promise<any>
+  checkoutPayment(appoinmentid: string, userId: string): Promise<any>
+  findBookingDetails(session_id: string, user_id: string, stripe_session_id: string): Promise<any>
+  fetchSpecialization(): Promise<Specialization[]|undefined>
+  fechtUserData(userId: string): Promise<UserDTO | null>
 
-    getAllUsers():Promise<any>
-    contact(name:string, email:string, subject:string,phone:string,message:string,timestamp:string):Promise<any>
-    // getBookedsessionData(userId:string|undefined):Promise<any>
-    // findBookings(user_id:string,doctor_id:string):Promise<any>
-    getUserStatus(userId: string): Promise<{ isBlocked: boolean }>;
-    editUserData(userId:string,userData:User):Promise<any>
-    getUserById(userId:string):Promise<any>
-    getAllBookings(user_id:string|undefined,page?: number, limit?: number):Promise<any>
-    cancelAppoinment(appoinmentId:string,userId:string,doctorId:string):Promise<any>
-    getWallet(userId: string,page?:number,limit?:number): Promise<PaginatedWalletResponse | null | undefined>
-    getbookedDoctor(userId:string):Promise<any>
-    resetPasswords(user_id:string,currentPassword:string,newPassword:string):Promise<any>
-    fetchPrescriptions(user_id:string,page?: number, limit?: number):Promise<any>
-    findBookings(user_id:string,doctor_id:string):Promise<any>
-    addReview(reviewComment:any,selectedRating:any,userId:any,doctorId:any):Promise<any>
-    reviews(doctor_id:string):Promise<any>
-    getNotifications(user_id:any):Promise<any>
-    clearNotifications(user_id:any):Promise<any>
-    editReview(reviewComment:any,selectedRating:any,userReviewId:any):Promise<any>
-    getReivewSummary(doctor_id:string):Promise<any>
-    addReport(
+  getAllUsers(): Promise<any>
+  contact(name: string, email: string, subject: string, phone: string, message: string, timestamp: string): Promise<any>
+  // getBookedsessionData(userId:string|undefined):Promise<any>
+  // findBookings(user_id:string,doctor_id:string):Promise<any>
+  getUserStatus(userId: string): Promise<{ isBlocked: boolean }>;
+  editUserData(userId: string, userData: User): Promise<userProfileUpdate|null>
+  getUserById(userId: string): Promise<any>
+  getAllBookings(user_id: string | undefined, page?: number, limit?: number,search?:string): Promise<BookingListResponse>
+  cancelAppoinment(appoinmentId: string, userId: string, doctorId: string): Promise<CancelAppointmentResponse>
+  getWallet(userId: string, page?: number, limit?: number): Promise<PaginatedWalletResponse | null | undefined>
+  getBookedDoctor(userId: string): Promise<IDoctors[]|undefined>
+  resetPasswords(user_id: string, currentPassword: string, newPassword: string): Promise<any>
+  downloadPrescriptionPDF(prescriptionId: string, userId: string): Promise<{buffer: Buffer, filename: string}>
+  fetchPrescriptions(user_id: string, page?: number, limit?: number,search?:string): Promise<any>
+  findBookings(user_id: string, doctor_id: string): Promise<any>
+  addReview(reviewComment: any, selectedRating: any, userId: any, doctorId: any): Promise<any>
+  reviews(doctor_id: string): Promise<any>
+  getNotifications(user_id: any): Promise<INotification|null>
+  clearNotifications(user_id: any): Promise<any>
+  editReview(reviewComment: any, selectedRating: any, userReviewId: any): Promise<any>
+  getReivewSummary(doctor_id: string): Promise<any>
+  addReport(
     file: Express.Multer.File,
-    userData: { userId: string; userName?: string; userEmail?: string,doctorId:string }
+    userData: { userId: string; userName?: string; userEmail?: string, doctorId: string }
   ): Promise<{ cloudinaryUrl: string; documentId: string }>;
-  getReportsByUserId(userId:string):Promise<any>
-    
- };
+  getReportsByUserId(userId: string): Promise<IReportData[]>
+
+};

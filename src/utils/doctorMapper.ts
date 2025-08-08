@@ -1,5 +1,6 @@
 
-import { DoctorDTO, DoctorProfileDTO } from "../../src/dtos/doctor.dto";
+import { DoctorDTO, DoctorProfileDTO, DoctorResponseDTO } from "../../src/dtos/doctor.dto";
+import { IDoctorDocument } from "../interface/doctor/doctor_interface";
 
 export function toDoctorDTO(doctor: any): DoctorDTO {
   return {
@@ -38,5 +39,15 @@ export function toDoctorProfileDTO(doctor: any): DoctorProfileDTO {
     yearsOfExperience: doctor.yearsOfExperience,
     gender: doctor.gender,
     specializationDetails: doctor.specializationDetails || [],
+  };
+}
+
+
+export function mapDoctorToDTO(doctor: IDoctorDocument): DoctorResponseDTO {
+  return {
+    id: doctor._id.toString(),
+    name: doctor.name,
+    email: doctor.email,
+    isAdmin: doctor.isAdmin,
   };
 }

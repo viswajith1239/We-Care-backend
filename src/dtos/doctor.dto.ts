@@ -1,4 +1,4 @@
-// dto/doctor.dto.ts
+
 export interface DoctorDTO {
   id: string;
   name: string;
@@ -31,5 +31,25 @@ export interface DoctorProfileDTO {
   profileImage: string;
   yearsOfExperience: number;
   gender: string;
+}
+
+export interface DoctorResponseDTO {
+  id: string;
+  name: string;
+  email: string;
+  isAdmin: boolean;
+}
+
+
+export interface PaginatedDoctorResponse {
+  doctors: DoctorResponseDTO[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalDoctors: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+    limit: number;
+  };
 }
 

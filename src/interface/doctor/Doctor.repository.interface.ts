@@ -4,28 +4,30 @@ import { IOtp, IUser } from "../common"
 import mongoose from "mongoose"
 export interface IDoctorRepository {
 
-    findAllSpecializations(): Promise<any>
-    getDoctorStatus(doctorId: string): Promise<any>
-    existsDoctor(DoctorData: Interface_Doctor): Promise<any>
+    
+   
     saveOtp(email: string, OTP: string, OTPExpirey: Date): Promise<void>
     getOtpByEmail(email: string): Promise<IOtp[] | []>
-    createNewUser(trainerData: Interface_Doctor): Promise<any>
+    createNewUser(newUserData: Interface_Doctor): Promise<any>
     deleteOtpById(otpId?: mongoose.Types.ObjectId): Promise<any>
     findDoctor(email: string): Promise<Interface_Doctor | null>
     saveKyc(formData: any, documents: any): Promise<any>
     changeKycStatus(doctorId: string, profileImage: string | undefined): Promise<string | undefined>
-    getSpecialization(trainerid: string): Promise<any>
+    getSpecialization(doctorId: string): Promise<any>
     createNewAppoinment(sessiondata: IAppoinment): Promise<any>
-    fetchAppoinmentData(doctor_id: string,page?: number, limit?: number): Promise<any>
+    fetchAppoinmentData(doctor_id: string, page?: number, limit?: number): Promise<any>
     fecthBookingDetails(doctor_id: string): Promise<any>
     existingUser(email: string): Promise<Interface_Doctor | null>;
+     existsDoctor(DoctorData: Interface_Doctor): Promise<any>
     createUsers(user: { email: string; name: string; password: string | null; }): Promise<any>
-    fetchusers(doctorId: string): Promise<any>
-    getAllBookings(doctor_Id: string): Promise<any>
+    fetchUsers(doctorId: string): Promise<any>
+    getAllBookings(doctor_Id: string , page?: number, limit?: number,search?: string): Promise<any>
     createMultipleAppointments(appointments: IAppoinment[]): Promise<IAppoinment[]>;
+    findAllSpecializations(): Promise<any>
+    getDoctorStatus(doctorId: string): Promise<any>
     findConflictingAppointments(appointmentData: Partial<IAppoinment>): Promise<IAppoinment[]>;
     getDoctor(doctor_id: string): Promise<any>
-    fetchWalletData(doctor_id: string,page?:number,limit?:number): Promise<PaginatedWalletResponse | null | undefined>
+    fetchWalletData(doctor_id: string, page?: number, limit?: number): Promise<PaginatedWalletResponse | null | undefined>
     withdrawMoney(doctor_id: any, amount: any): Promise<any>
     getDoctorProfile(doctor_id: string): Promise<any>
     updateDoctorData(doctor_id: string): Promise<any>
@@ -36,7 +38,7 @@ export interface IDoctorRepository {
     fetchNotifications(doctorId: any): Promise<any>
     deleteDoctorNotifications(doctorId: any): Promise<any>
     create(data: PrescriptionData): Promise<any>
-    getPrescriptionsByDoctor(doctor_id: string): Promise<any>
+    getPrescriptionsByDoctor(doctor_id: string, page?: number, limit?: number,search?: string): Promise<any>
     getAllStatistics(): Promise<any>
     cancelAppoinment(id: any): Promise<IAppoinment | null>
     findAppointmentById(id: string): Promise<IAppoinment | null>;
@@ -49,6 +51,6 @@ export interface IDoctorRepository {
         endTime: string
     ): Promise<IAppoinment[]>;
     rescheduleAppointment(id: string, updatedData: any): Promise<IAppoinment | null>;
-     getReportsByUserId(doctorId:string):Promise<any>
-     findByDoctorAndUser(doctorId:string,userId:string):Promise<any>
+    getReportsByUserId(doctorId: string, page?: number, limit?: number,search?: string): Promise<any>
+    findByDoctorAndUser(doctorId: string, userId: string): Promise<any>
 }

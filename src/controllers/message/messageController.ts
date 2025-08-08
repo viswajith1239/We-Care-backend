@@ -11,21 +11,20 @@ const messageService = new MessageService();
 export class MessageController {
   async sendMessage(req: Request, res: Response): Promise<any> {
     try {
-      const { senderId, receiverId, message,mediaUrl,read } = req.body;
-      console.log("uuu",receiverId);
-      console.log("readsss",read);
-      
-      console.log("Media URL received:", mediaUrl);
+      const { senderId, receiverId, message, mediaUrl, read } = req.body;
+
+
+
 
       if (!receiverId || receiverId.length !== 24) {
         return res.status(400).json({ success: false, message: "Invalid receiverId" });
       }
-      
 
-     
-      const newMessage = await messageService.sendMessage({ senderId, receiverId,message,imageUrl:mediaUrl});
-      console.log("Status",newMessage);
-      
+
+
+      const newMessage = await messageService.sendMessage({ senderId, receiverId, message, imageUrl: mediaUrl });
+
+
 
       res.status(201).json({ success: true, message: "Message sent!", data: newMessage });
     } catch (error) {
@@ -38,12 +37,12 @@ export class MessageController {
   async getMessages(req: Request, res: Response) {
     try {
       const { id } = req.params
-      const {ids}=req.params
+      const { ids } = req.params
 
-      console.log(")))))))))",ids)
-      const messages = await messageService.fetchMessages(id,ids);
-      console.log("lll",messages);
-      
+
+      const messages = await messageService.fetchMessages(id, ids);
+
+
       res.status(200).json(messages);
     } catch (error) {
       res.status(500).json({ error: "Internal Server Error" });
@@ -51,16 +50,16 @@ export class MessageController {
   }
 
 
-  
+
   async deleteMessage(req: Request, res: Response): Promise<any> {
     try {
-      const { id } = req.params; 
+      const { id } = req.params;
 
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ success: false, message: "Invalid message ID" });
       }
 
-    
+
       const result = await messageService.deleteMessage(id);
 
       if (!result) {
