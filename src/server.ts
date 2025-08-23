@@ -24,7 +24,7 @@ ConnectDB();
 
 
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN,
+  origin: ["https://www.viswajith.site"], // frontend domain
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   allowedHeaders: ['Origin', 'Content-Type', 'Accept', 'Authorization'],
   credentials: true,
