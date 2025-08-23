@@ -823,4 +823,4 @@ class DoctorController {
 
 }
 
-export default DoctorController
+export { DoctorController}
