@@ -2,9 +2,11 @@ import { Router } from "express";
 import upload from "../utils/multer"
 import DoctorRepository from "../repositories/doctor/doctorRepository"
 import DoctorService from "../service/doctor/doctorService";
-import DoctorController from "../controllers/doctor/doctorController";
+import DoctorController from "../controllers/doctor/doctorController"
 import authMiddlewares from "../middlewares/authmiddleware";
 import { verifyToken } from "../config/JwtConfig";
+
+console.log("DoctorController",DoctorController);
 
 const uploadDoctorDataFiles = upload.fields([
   { name: 'profileImage', maxCount: 1 },
