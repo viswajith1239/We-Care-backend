@@ -9,14 +9,14 @@ import fs from "fs";
 dotenv.config();
 
 
-import ConnectDB from "./src/config/db";
-import { app, server } from "./src/socket/socket";
+import ConnectDB from "./config/db";
+import { app, server } from "./socket/socket";
 
 
-import userRoute from "./src/routes/userRoute";
-import adminRoute from "./src/routes/adminRoute";
-import doctorRoute from "./src/routes/doctorRoute";
-import messageRoute from "./src/routes/messageRoute";
+import userRoute from "./routes/userRoute";
+import adminRoute from "./routes/adminRoute";
+import doctorRoute from "./routes/doctorRoute";
+import messageRoute from "./routes/messageRoute";
 import morgan from "morgan";
 
 
