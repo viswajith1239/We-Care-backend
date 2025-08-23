@@ -434,7 +434,9 @@ export class AuthService implements IAuthService {
         payment_method_types: ['card'],
         line_items: lineItems,
         mode: 'payment',
-        success_url: `http://localhost:5173/paymentSuccess?session_id=${appoinmentData._id}&user_id=${userId}&stripe_session_id={CHECKOUT_SESSION_ID}`,
+        success_url: `https://we-care-frontend-zeta.vercel.app/paymentSuccess?session_id=${appoinmentData._id}&user_id=${userId}&stripe_session_id={CHECKOUT_SESSION_ID}`,
+        // cancel_url: `http://localhost:5173/paymentFailed`,
+        //  success_url: `http://localhost:5173/paymentSuccess?session_id=${appoinmentData._id}&user_id=${userId}&stripe_session_id={CHECKOUT_SESSION_ID}`,
         // cancel_url: `http://localhost:5173/paymentFailed`,
       });
       return session;

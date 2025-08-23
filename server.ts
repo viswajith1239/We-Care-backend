@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
 import dotenv from "dotenv";
+import fs from "fs";
 
 
 dotenv.config();
@@ -37,8 +38,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use(morgan('dev'));
+const logDirectory = path.join(__dirname, "src", "logs");
 
+if (!fs.existsSync(logDirectory)) {
+  fs.mkdirSync(logDirectory, { recursive: true });
+}
+
+const accessLogStream = fs.createWriteStream(
+  path.join(logDirectory, "access.log"),
+  { flags: "a" } 
+);
+
+
+app.use(morgan("dev"));
+
+app.use(morgan("combined", { stream: accessLogStream }));
 
 app.use('/api/user', userRoute);
 app.use('/api/admin', adminRoute);

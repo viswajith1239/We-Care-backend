@@ -16,7 +16,7 @@ export interface DoctorDTO {
 }
 
 
-// dto/doctor.dto.ts
+
 export interface DoctorProfileDTO {
   id: string;
   name: string;
