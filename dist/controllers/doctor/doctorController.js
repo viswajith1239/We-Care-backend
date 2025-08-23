@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.DoctorController = void 0;
 const HttpStatusCode_1 = __importDefault(require("../../enums/HttpStatusCode"));
 const messages_1 = __importDefault(require("../../enums/messages"));
 const jwt_decode_1 = require("jwt-decode");
@@ -634,4 +635,4 @@ class DoctorController {
         }
     }
 }
-exports.default = DoctorController;
+exports.DoctorController = DoctorController;

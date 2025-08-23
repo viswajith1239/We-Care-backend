@@ -7,8 +7,9 @@ const express_1 = require("express");
 const multer_1 = __importDefault(require("../utils/multer"));
 const doctorRepository_1 = __importDefault(require("../repositories/doctor/doctorRepository"));
 const doctorService_1 = __importDefault(require("../service/doctor/doctorService"));
-const doctorController_1 = __importDefault(require("../controllers/doctor/doctorController"));
+const doctorcontroller_1 = require("../controllers/doctor/doctorcontroller");
 const JwtConfig_1 = require("../config/JwtConfig");
+console.log("DoctorController", doctorcontroller_1.DoctorController);
 const uploadDoctorDataFiles = multer_1.default.fields([
     { name: 'profileImage', maxCount: 1 },
     { name: "aadhaarFrontSide", maxCount: 1 },
@@ -18,7 +19,7 @@ const uploadDoctorDataFiles = multer_1.default.fields([
 const router = (0, express_1.Router)();
 const doctorRepository = new doctorRepository_1.default();
 const doctorService = new doctorService_1.default(doctorRepository);
-const doctorController = new doctorController_1.default(doctorService);
+const doctorController = new doctorcontroller_1.DoctorController(doctorService);
 router.post('/signup', doctorController.registerDoctor.bind(doctorController));
 router.get('/specializations', doctorController.getAllSpecializations.bind(doctorController));
 router.post('/verifyotp', doctorController.verifyOtp.bind(doctorController));
