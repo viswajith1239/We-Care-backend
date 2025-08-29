@@ -16,7 +16,7 @@ export interface IDoctorService {
     resetPassword(doctorData: string, payload: { newPassword: string }): Promise<any>
     kycStatus(doctorId: string): Promise<IKYC[]>
     getSpecialization(doctorId: string): Promise<ISpecialization>
-    getAppoinmentSchedules(doctor_id: string, page?: number, limit?: number): Promise<Interface_Doctor>
+    getAppoinmentSchedules(doctor_id: string, page?: number, limit?: number,search?:string): Promise<Interface_Doctor>
     storeAppoinmentData(appoinmentData: IAppoinment): Promise<IAppoinment>
     fetchBookingDetails(doctor_id: string): Promise<IBooking>
     googleSignUpUser(decodedToken: JwtPayloads): Promise<any>

@@ -420,6 +420,7 @@ class AuthRepository extends baseRepository_1.default {
                 .find({ userId: user_id })
                 .populate("doctorId", "name profileImage")
                 .sort({ createdAt: -1 });
+            console.log("mmm", bookings);
             const filteredBookings = search
                 ? bookings.filter((booking) => booking.doctorId?.name?.toLowerCase().includes(search.toLowerCase()))
                 : bookings;

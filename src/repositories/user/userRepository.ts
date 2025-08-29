@@ -541,6 +541,9 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
       .populate("doctorId", "name profileImage")
       .sort({ createdAt: -1 });
 
+    console.log("mmm",bookings);
+    
+
     
     const filteredBookings = search
       ? bookings.filter((booking: any) =>

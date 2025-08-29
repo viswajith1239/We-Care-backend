@@ -1,7 +1,7 @@
 import mongoose, { Schema, model } from "mongoose";
 import { IBooking } from "../interface/userInterface/interface";
 const bookingSchema = new Schema<IBooking>({
-    appoinmentId: { type: Schema.Types.ObjectId, ref: "Session", required: false },
+    appoinmentId: { type: Schema.Types.ObjectId, ref: "Appoinment", required: false },
     doctorId: { type: Schema.Types.ObjectId, ref: "Doctor" },
     userId: { type: Schema.Types.ObjectId, ref: "User" },
     specialization: { type: String, required: false },

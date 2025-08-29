@@ -15,7 +15,7 @@ export interface IDoctorRepository {
     changeKycStatus(doctorId: string, profileImage: string | undefined): Promise<string | undefined>
     getSpecialization(doctorId: string): Promise<any>
     createNewAppoinment(sessiondata: IAppoinment): Promise<any>
-    fetchAppoinmentData(doctor_id: string, page?: number, limit?: number): Promise<any>
+    fetchAppoinmentData(doctor_id: string, page?: number, limit?: number,search?: string): Promise<any>
     fecthBookingDetails(doctor_id: string): Promise<any>
     existingUser(email: string): Promise<Interface_Doctor | null>;
      existsDoctor(DoctorData: Interface_Doctor): Promise<any>

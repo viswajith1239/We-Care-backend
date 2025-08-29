@@ -398,42 +398,72 @@ class DoctorRepository extends BaseRepository<any> implements IDoctorRepository 
   }
 
 
-  async fetchAppoinmentData(doctor_id: string, page: number = 1, limit: number = 5) {
-    try {
-      const skip = (page - 1) * limit;
+  async fetchAppoinmentData(
+  doctor_id: string,
+  page: number = 1,
+  limit: number = 5,
+  search: string = ''
+) {
+  try {
+    const skip = (page - 1) * limit;
 
-      const totalSchedules = await this._appoinmentModel.countDocuments({ doctorId: doctor_id });
-      const appoinmentData = await this._appoinmentModel
-        .find({
-          doctorId: doctor_id,
-        })
-        .populate("specializationId")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
+    // Base query
+    const searchQuery: any = { doctorId: doctor_id };
+    console.log("ss",searchQuery);
+    
 
+    if (search && search.trim()) {
+      const regex = new RegExp(search.trim(), "i");
 
+      // Try to parse search as a date
+      const searchDate = new Date(search);
+      let dateQuery: any = null;
 
+      if (!isNaN(searchDate.getTime())) {
+        // If valid date → match the whole day
+        const startOfDay = new Date(searchDate.setHours(0, 0, 0, 0));
+        const endOfDay = new Date(searchDate.setHours(23, 59, 59, 999));
 
-      return {
-
-        appoinmentData: appoinmentData,
-        pagination: {
-          currentPage: page,
-          totalPages: Math.ceil(totalSchedules / limit),
-          totalSchedules,
-          hasNextPage: page < Math.ceil(totalSchedules / limit),
-          hasPreviousPage: page > 1,
-          limit
-        }
+        dateQuery = { createdAt: { $gte: startOfDay, $lte: endOfDay } };
       }
-    } catch (error) {
-      console.log(error);
 
-
-      throw error;
+      // Combine conditions
+      searchQuery.$or = [
+        { patientName: regex },
+        { patientEmail: regex },
+        { appointmentReason: regex },
+        { status: regex },
+        ...(dateQuery ? [dateQuery] : []), // add date filter if valid
+      ];
     }
+
+    const totalSchedules = await this._appoinmentModel.countDocuments(searchQuery);
+
+    const appoinmentData = await this._appoinmentModel
+      .find(searchQuery)
+      .populate("specializationId")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+      console.log("00000",appoinmentData);
+      
+
+    return {
+      appoinmentData,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalSchedules / limit),
+        totalSchedules,
+        hasNextPage: page < Math.ceil(totalSchedules / limit),
+        hasPreviousPage: page > 1,
+        limit,
+      },
+    };
+  } catch (error) {
+    console.log(error);
+    throw error;
   }
+}
 
 
   async fecthBookingDetails(doctorId: string) {
@@ -1271,22 +1301,66 @@ class DoctorRepository extends BaseRepository<any> implements IDoctorRepository 
   }
 
   async rescheduleAppointment(id: string, updatedData: any): Promise<IAppoinment | null> {
-    return await this._appoinmentModel.findByIdAndUpdate(
-      id,
-      {
-        $set: {
-          selectedDate: updatedData.selectedDate,
-          startTime: updatedData.startTime,
-          endTime: updatedData.endTime,
-          price: updatedData.price,
-          specializationId: updatedData.specializationId,
-          status: "Pending"
+    const session = await mongoose.startSession();
+    
+    try {
+        return await session.withTransaction(async () => {
+            // Update the appointment
+            const updatedAppointment = await this._appoinmentModel.findByIdAndUpdate(
+                id,
+                {
+                    $set: {
+                        selectedDate: updatedData.selectedDate,
+                        startTime: updatedData.startTime,
+                        endTime: updatedData.endTime,
+                        price: updatedData.price,
+                        specializationId: updatedData.specializationId,
+                        status: "Pending"
+                    }
+                },
+              
+                
+                { new: true, session }
+            );
 
-        }
-      },
-      { new: true }
-    );
-  }
+              console.log("88888",updatedAppointment);
+
+            if (!updatedAppointment) {
+                throw new Error("Appointment not found");
+            }
+
+            // Update the corresponding booking
+            const updatedBooking = await this._bookingModel.findOneAndUpdate(
+                { appoinmentId: id },
+                {
+                    $set: {
+                        bookingDate: updatedData.selectedDate,
+                        startDate: updatedData.selectedDate,
+                        startTime: updatedData.startTime,
+                        endTime: updatedData.endTime,
+                        amount: updatedData.price,
+                        // Reset payment status if needed
+                        // paymentStatus: "Pending"
+                    }
+                },
+                { session }
+            );
+            console.log("updddd",updatedBooking);
+            
+
+            if (!updatedBooking) {
+                throw new Error("Corresponding booking not found");
+            }
+
+            return updatedAppointment;
+        });
+    } catch (error) {
+        console.error("Error rescheduling appointment:", error);
+        throw error;
+    } finally {
+        await session.endSession();
+    }
+}
 
 }
 export default DoctorRepository

@@ -12,21 +12,70 @@ const adminService = new AdminService(adminRepository)
 const adminController = new AdminController(adminService)
 
 
-router.post("/loginadmin", adminController.adminLogin.bind(adminController))
-router.post('/logout', adminController.logoutAdmin.bind(adminController));
-router.post("/specialization", adminController.addSpecialization.bind(adminController));
-router.get("/users", verifyToken('admin'), adminController.getAllUsers.bind(adminController))
-router.get("/doctors", verifyToken('admin'), adminController.getAllDoctors.bind(adminController))
-router.get('/specialization', verifyToken('admin'), adminController.getAllSpecializations.bind(adminController))
-router.patch('/user/:user_id/block-unblock', verifyToken('admin'), adminController.blockUnblockUser.bind(adminController))
-router.patch('/doctor/:doctor_id/block-unblock', verifyToken('admin'), adminController.blockUnblockDoctor.bind(adminController))
-router.put("/specialization/:id", verifyToken('admin'), adminController.updateSpecialisation.bind(adminController))
-router.delete("/specializations/:id", adminController.deleteSpecialization.bind(adminController))
-router.get("/doctor/kyc", verifyToken('admin'), adminController.getAllDoctorKycDatas.bind(adminController))
-router.get('/doctors/kyc/:doctor_id', verifyToken('admin'), adminController.doctorsKycData.bind(adminController));
-router.patch('/kyc-status-update/:doctor_id', verifyToken('admin'), adminController.changeKycStatus.bind(adminController));
-router.get("/contact", verifyToken('admin'), adminController.getAllContact.bind(adminController))
-router.delete("/submissions/:id", verifyToken('admin'), adminController.deleteSubmission.bind(adminController))
-router.get('/dashboardData', verifyToken('admin'), adminController.getDashboardData.bind(adminController));
+router
+  .route("/loginadmin")
+  .post(adminController.adminLogin.bind(adminController));
+
+router
+  .route("/logout")
+  .post(adminController.logoutAdmin.bind(adminController));
+
+
+router
+  .route("/specialization")
+  .post(adminController.addSpecialization.bind(adminController))
+  .get(verifyToken("admin"), adminController.getAllSpecializations.bind(adminController));
+
+router
+  .route("/specialization/:id")
+  .put(verifyToken("admin"), adminController.updateSpecialisation.bind(adminController));
+
+router
+  .route("/specializations/:id")
+  .delete(adminController.deleteSpecialization.bind(adminController));
+
+
+router
+  .route("/users")
+  .get(verifyToken("admin"), adminController.getAllUsers.bind(adminController));
+
+router
+  .route("/user/:user_id/block-unblock")
+  .patch(verifyToken("admin"), adminController.blockUnblockUser.bind(adminController));
+
+
+router
+  .route("/doctors")
+  .get(verifyToken("admin"), adminController.getAllDoctors.bind(adminController));
+
+router
+  .route("/doctor/:doctor_id/block-unblock")
+  .patch(verifyToken("admin"), adminController.blockUnblockDoctor.bind(adminController));
+
+router
+  .route("/doctor/kyc")
+  .get(verifyToken("admin"), adminController.getAllDoctorKycDatas.bind(adminController));
+
+router
+  .route("/doctors/kyc/:doctor_id")
+  .get(verifyToken("admin"), adminController.doctorsKycData.bind(adminController));
+
+router
+  .route("/kyc-status-update/:doctor_id")
+  .patch(verifyToken("admin"), adminController.changeKycStatus.bind(adminController));
+
+
+router
+  .route("/contact")
+  .get(verifyToken("admin"), adminController.getAllContact.bind(adminController));
+
+router
+  .route("/submissions/:id")
+  .delete(verifyToken("admin"), adminController.deleteSubmission.bind(adminController));
+
+
+router
+  .route("/dashboardData")
+  .get(verifyToken("admin"), adminController.getDashboardData.bind(adminController));
 
 export default router; 

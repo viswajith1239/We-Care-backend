@@ -322,28 +322,50 @@ class DoctorRepository extends baseRepository_1.default {
             ]
         });
     }
-    async fetchAppoinmentData(doctor_id, page = 1, limit = 5) {
+    async fetchAppoinmentData(doctor_id, page = 1, limit = 5, search = '') {
         try {
             const skip = (page - 1) * limit;
-            const totalSchedules = await this._appoinmentModel.countDocuments({ doctorId: doctor_id });
+            // Base query
+            const searchQuery = { doctorId: doctor_id };
+            console.log("ss", searchQuery);
+            if (search && search.trim()) {
+                const regex = new RegExp(search.trim(), "i");
+                // Try to parse search as a date
+                const searchDate = new Date(search);
+                let dateQuery = null;
+                if (!isNaN(searchDate.getTime())) {
+                    // If valid date → match the whole day
+                    const startOfDay = new Date(searchDate.setHours(0, 0, 0, 0));
+                    const endOfDay = new Date(searchDate.setHours(23, 59, 59, 999));
+                    dateQuery = { createdAt: { $gte: startOfDay, $lte: endOfDay } };
+                }
+                // Combine conditions
+                searchQuery.$or = [
+                    { patientName: regex },
+                    { patientEmail: regex },
+                    { appointmentReason: regex },
+                    { status: regex },
+                    ...(dateQuery ? [dateQuery] : []), // add date filter if valid
+                ];
+            }
+            const totalSchedules = await this._appoinmentModel.countDocuments(searchQuery);
             const appoinmentData = await this._appoinmentModel
-                .find({
-                doctorId: doctor_id,
-            })
+                .find(searchQuery)
                 .populate("specializationId")
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(limit);
+            console.log("00000", appoinmentData);
             return {
-                appoinmentData: appoinmentData,
+                appoinmentData,
                 pagination: {
                     currentPage: page,
                     totalPages: Math.ceil(totalSchedules / limit),
                     totalSchedules,
                     hasNextPage: page < Math.ceil(totalSchedules / limit),
                     hasPreviousPage: page > 1,
-                    limit
-                }
+                    limit,
+                },
             };
         }
         catch (error) {
@@ -1016,16 +1038,50 @@ class DoctorRepository extends baseRepository_1.default {
         });
     }
     async rescheduleAppointment(id, updatedData) {
-        return await this._appoinmentModel.findByIdAndUpdate(id, {
-            $set: {
-                selectedDate: updatedData.selectedDate,
-                startTime: updatedData.startTime,
-                endTime: updatedData.endTime,
-                price: updatedData.price,
-                specializationId: updatedData.specializationId,
-                status: "Pending"
-            }
-        }, { new: true });
+        const session = await mongoose_1.default.startSession();
+        try {
+            return await session.withTransaction(async () => {
+                // Update the appointment
+                const updatedAppointment = await this._appoinmentModel.findByIdAndUpdate(id, {
+                    $set: {
+                        selectedDate: updatedData.selectedDate,
+                        startTime: updatedData.startTime,
+                        endTime: updatedData.endTime,
+                        price: updatedData.price,
+                        specializationId: updatedData.specializationId,
+                        status: "Pending"
+                    }
+                }, { new: true, session });
+                console.log("88888", updatedAppointment);
+                if (!updatedAppointment) {
+                    throw new Error("Appointment not found");
+                }
+                // Update the corresponding booking
+                const updatedBooking = await this._bookingModel.findOneAndUpdate({ appoinmentId: id }, {
+                    $set: {
+                        bookingDate: updatedData.selectedDate,
+                        startDate: updatedData.selectedDate,
+                        startTime: updatedData.startTime,
+                        endTime: updatedData.endTime,
+                        amount: updatedData.price,
+                        // Reset payment status if needed
+                        // paymentStatus: "Pending"
+                    }
+                }, { session });
+                console.log("updddd", updatedBooking);
+                if (!updatedBooking) {
+                    throw new Error("Corresponding booking not found");
+                }
+                return updatedAppointment;
+            });
+        }
+        catch (error) {
+            console.error("Error rescheduling appointment:", error);
+            throw error;
+        }
+        finally {
+            await session.endSession();
+        }
     }
 }
 exports.default = DoctorRepository;

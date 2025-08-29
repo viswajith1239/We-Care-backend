@@ -24,7 +24,8 @@ ConnectDB();
 
 
 const corsOptions = {
-  origin: ["https://www.viswajith.site"], // frontend domain
+  origin: ["https://www.viswajith.site","http://localhost:5173"], 
+  //  origin: "http://localhost:5173", 
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   allowedHeaders: ['Origin', 'Content-Type', 'Accept', 'Authorization'],
   credentials: true,

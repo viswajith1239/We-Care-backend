@@ -424,11 +424,11 @@ class Doctorservice implements IDoctorService {
   }
 
 
-  async getAppoinmentSchedules(doctor_id: string, page: number = 1, limit: number = 5) {
+  async getAppoinmentSchedules(doctor_id: string, page: number = 1, limit: number = 5,search: string = '') {
     try {
 
 
-      return await this._doctorRepository.fetchAppoinmentData(doctor_id, page, limit)
+      return await this._doctorRepository.fetchAppoinmentData(doctor_id, page, limit,search)
     } catch (error) {
       throw new Error("Error getting sessin shedule data");
     }

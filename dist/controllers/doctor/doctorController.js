@@ -330,7 +330,8 @@ class DoctorController {
             const doctor_id = req.params.doctorId;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 5;
-            const sheduleData = await this._doctorService.getAppoinmentSchedules(doctor_id, page, limit);
+            const search = req.query.search || '';
+            const sheduleData = await this._doctorService.getAppoinmentSchedules(doctor_id, page, limit, search);
             res
                 .status(HttpStatusCode_1.default.OK)
                 .json({ message: messages_1.default.SESSION_FETCH_SUCCESS, sheduleData });

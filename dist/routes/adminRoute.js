@@ -12,20 +12,50 @@ const router = (0, express_1.Router)();
 const adminRepository = new adminRepository_1.default();
 const adminService = new adminService_1.default(adminRepository);
 const adminController = new adminController_1.default(adminService);
-router.post("/loginadmin", adminController.adminLogin.bind(adminController));
-router.post('/logout', adminController.logoutAdmin.bind(adminController));
-router.post("/specialization", adminController.addSpecialization.bind(adminController));
-router.get("/users", (0, JwtConfig_1.verifyToken)('admin'), adminController.getAllUsers.bind(adminController));
-router.get("/doctors", (0, JwtConfig_1.verifyToken)('admin'), adminController.getAllDoctors.bind(adminController));
-router.get('/specialization', (0, JwtConfig_1.verifyToken)('admin'), adminController.getAllSpecializations.bind(adminController));
-router.patch('/user/:user_id/block-unblock', (0, JwtConfig_1.verifyToken)('admin'), adminController.blockUnblockUser.bind(adminController));
-router.patch('/doctor/:doctor_id/block-unblock', (0, JwtConfig_1.verifyToken)('admin'), adminController.blockUnblockDoctor.bind(adminController));
-router.put("/specialization/:id", (0, JwtConfig_1.verifyToken)('admin'), adminController.updateSpecialisation.bind(adminController));
-router.delete("/specializations/:id", adminController.deleteSpecialization.bind(adminController));
-router.get("/doctor/kyc", (0, JwtConfig_1.verifyToken)('admin'), adminController.getAllDoctorKycDatas.bind(adminController));
-router.get('/doctors/kyc/:doctor_id', (0, JwtConfig_1.verifyToken)('admin'), adminController.doctorsKycData.bind(adminController));
-router.patch('/kyc-status-update/:doctor_id', (0, JwtConfig_1.verifyToken)('admin'), adminController.changeKycStatus.bind(adminController));
-router.get("/contact", (0, JwtConfig_1.verifyToken)('admin'), adminController.getAllContact.bind(adminController));
-router.delete("/submissions/:id", (0, JwtConfig_1.verifyToken)('admin'), adminController.deleteSubmission.bind(adminController));
-router.get('/dashboardData', (0, JwtConfig_1.verifyToken)('admin'), adminController.getDashboardData.bind(adminController));
+router
+    .route("/loginadmin")
+    .post(adminController.adminLogin.bind(adminController));
+router
+    .route("/logout")
+    .post(adminController.logoutAdmin.bind(adminController));
+router
+    .route("/specialization")
+    .post(adminController.addSpecialization.bind(adminController))
+    .get((0, JwtConfig_1.verifyToken)("admin"), adminController.getAllSpecializations.bind(adminController));
+router
+    .route("/specialization/:id")
+    .put((0, JwtConfig_1.verifyToken)("admin"), adminController.updateSpecialisation.bind(adminController));
+router
+    .route("/specializations/:id")
+    .delete(adminController.deleteSpecialization.bind(adminController));
+router
+    .route("/users")
+    .get((0, JwtConfig_1.verifyToken)("admin"), adminController.getAllUsers.bind(adminController));
+router
+    .route("/user/:user_id/block-unblock")
+    .patch((0, JwtConfig_1.verifyToken)("admin"), adminController.blockUnblockUser.bind(adminController));
+router
+    .route("/doctors")
+    .get((0, JwtConfig_1.verifyToken)("admin"), adminController.getAllDoctors.bind(adminController));
+router
+    .route("/doctor/:doctor_id/block-unblock")
+    .patch((0, JwtConfig_1.verifyToken)("admin"), adminController.blockUnblockDoctor.bind(adminController));
+router
+    .route("/doctor/kyc")
+    .get((0, JwtConfig_1.verifyToken)("admin"), adminController.getAllDoctorKycDatas.bind(adminController));
+router
+    .route("/doctors/kyc/:doctor_id")
+    .get((0, JwtConfig_1.verifyToken)("admin"), adminController.doctorsKycData.bind(adminController));
+router
+    .route("/kyc-status-update/:doctor_id")
+    .patch((0, JwtConfig_1.verifyToken)("admin"), adminController.changeKycStatus.bind(adminController));
+router
+    .route("/contact")
+    .get((0, JwtConfig_1.verifyToken)("admin"), adminController.getAllContact.bind(adminController));
+router
+    .route("/submissions/:id")
+    .delete((0, JwtConfig_1.verifyToken)("admin"), adminController.deleteSubmission.bind(adminController));
+router
+    .route("/dashboardData")
+    .get((0, JwtConfig_1.verifyToken)("admin"), adminController.getDashboardData.bind(adminController));
 exports.default = router;

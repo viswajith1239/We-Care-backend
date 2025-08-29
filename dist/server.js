@@ -19,7 +19,8 @@ const messageRoute_1 = __importDefault(require("./routes/messageRoute"));
 const morgan_1 = __importDefault(require("morgan"));
 (0, db_1.default)();
 const corsOptions = {
-    origin: process.env.CORS_ORIGIN,
+    origin: ["https://www.viswajith.site", "http://localhost:5173"],
+    //  origin: "http://localhost:5173", 
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ['Origin', 'Content-Type', 'Accept', 'Authorization'],
     credentials: true,

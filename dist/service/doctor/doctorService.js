@@ -291,9 +291,9 @@ class Doctorservice {
         }
         return appointmentData;
     }
-    async getAppoinmentSchedules(doctor_id, page = 1, limit = 5) {
+    async getAppoinmentSchedules(doctor_id, page = 1, limit = 5, search = '') {
         try {
-            return await this._doctorRepository.fetchAppoinmentData(doctor_id, page, limit);
+            return await this._doctorRepository.fetchAppoinmentData(doctor_id, page, limit, search);
         }
         catch (error) {
             throw new Error("Error getting sessin shedule data");

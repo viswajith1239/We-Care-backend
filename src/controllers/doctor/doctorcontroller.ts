@@ -444,10 +444,11 @@ class DoctorController {
 
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 5;
+       const search = req.query.search as string || '';
 
 
       const sheduleData = await this._doctorService.getAppoinmentSchedules(
-        doctor_id, page, limit
+        doctor_id, page, limit,search
       );
 
 
