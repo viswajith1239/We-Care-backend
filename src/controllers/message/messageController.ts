@@ -3,12 +3,19 @@ import jwt from "jsonwebtoken";
 import mongoose from 'mongoose';
 
 import MessageService from "../../service/message/messageService";
+import { IMessageService } from "../../interface/message/message.service.interface";
 
-const messageService = new MessageService();
+// const messageService = new MessageService();
 
 
 
 export class MessageController {
+
+   private _messageService: IMessageService;
+
+  constructor(messageService: IMessageService) {
+    this._messageService = messageService;
+  }
   async sendMessage(req: Request, res: Response): Promise<any> {
     try {
       const { senderId, receiverId, message, mediaUrl, read } = req.body;
@@ -22,7 +29,7 @@ export class MessageController {
 
 
 
-      const newMessage = await messageService.sendMessage({ senderId, receiverId, message, imageUrl: mediaUrl });
+      const newMessage = await this._messageService.sendMessage({ senderId, receiverId, message, imageUrl: mediaUrl });
 
 
 
@@ -40,7 +47,7 @@ export class MessageController {
       const { ids } = req.params
 
 
-      const messages = await messageService.fetchMessages(id, ids);
+      const messages = await this._messageService.fetchMessages(id, ids);
 
 
       res.status(200).json(messages);
@@ -60,7 +67,7 @@ export class MessageController {
       }
 
 
-      const result = await messageService.deleteMessage(id);
+      const result = await this._messageService.deleteMessage(id);
 
       if (!result) {
         return res.status(404).json({ success: false, message: "Message not found" });

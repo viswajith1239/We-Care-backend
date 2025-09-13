@@ -1,24 +1,32 @@
 
 import { IMessage } from "../../interface/common";
-import { MessageRepository } from "../../repositories/message/messageRepository";
+import { IMessageRepository } from "../../interface/message/message.repository.interface";
+import { IMessageService } from "../../interface/message/message.service.interface";
+// import { MessageRepository } from "../../repositories/message/messageRepository";
 
 
-const messageRepository = new MessageRepository();
+// const messageRepository = new MessageRepository();
 
 
-export class MessageService {
+export class MessageService implements IMessageService {
+
+   private _messageRepository: IMessageRepository;
+
+   constructor(messageRepository: IMessageRepository) {
+      this._messageRepository = messageRepository;
+    }
   async sendMessage(messageData: IMessage) {
 
-    return await messageRepository.saveMessage(messageData);
+    return await this._messageRepository.saveMessage(messageData);
 
   }
 
   async fetchMessages(id: string, ids: string) {
-    return await messageRepository.getMessages(id, ids);
+    return await this. _messageRepository.getMessages(id, ids);
   }
 
   async deleteMessage(messageId: string) {
-    return await messageRepository.deleteMessage(messageId);
+    return await this._messageRepository.deleteMessage(messageId);
   }
 }
 export default MessageService  

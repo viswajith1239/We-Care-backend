@@ -7,7 +7,7 @@ import dotenv from "dotenv"
 import { IAdminRepository } from "../../interface/admin/Admin.repository.interface";
 import { IAdminService } from "../../interface/admin/Admin.service.interface";
 import { IUser } from "../../interface/common";
-import { PaginatedUserResponse, UserResponseDTO } from "../../dtos/user.dto";
+import {  PaginatedUserResponse, UserDTO, UserResponseDTO } from "../../dtos/user.dto";
 import { mapUserToDTO } from "../../utils/userMapper";
 import { IUserDocument } from "../../models/userModel";
 import { mapDoctorToDTO } from "../../utils/doctorMapper";
@@ -162,7 +162,11 @@ class AdminService implements IAdminService {
 
   async blockUnblockUser(user_id: string, userState: boolean): Promise<any> {
     return await this._adminRepository.blockUnblockUser(user_id, userState);
+
+
   }
+
+  
 
    async blockUnblockDoctor(doctor_id: string, doctorState: boolean): Promise<any> {
     return await this._adminRepository.blockUnblockDoctor(doctor_id, doctorState);

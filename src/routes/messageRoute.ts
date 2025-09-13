@@ -1,12 +1,19 @@
-import express from "express";
-const router = express.Router()
+import { Router } from "express";
+// const router = express.Router()
 import MessageController from "../controllers/message/messageController"
-const messagecontroller = new MessageController()
+import MessageService from "../service/message/messageService";
+import MessageRepository from "../repositories/message/messageRepository"
+const router = Router();
+
+// dependency injection
+const messageRepository = new MessageRepository();
+const messageService = new MessageService(messageRepository);
+const messageController = new MessageController(messageService);
 
 
-router.post('/send', messagecontroller.sendMessage)
-router.get('/:id/:ids', messagecontroller.getMessages)
-router.delete('/:id', messagecontroller.deleteMessage)
+router.post('/send', messageController.sendMessage.bind(MessageController))
+router.get('/:id/:ids', messageController.getMessages.bind(MessageController))
+router.delete('/:id', messageController.deleteMessage.bind(MessageController))
 
 
 export default router

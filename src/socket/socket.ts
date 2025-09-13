@@ -1,65 +1,7 @@
 
 
 
-// import { Server as SocketServer } from "socket.io";
-// import { Server as HttpServer } from "http";
 
-// let io: SocketServer;
-
-// const configSocketIO = (server: HttpServer) => {
-
-
-
-//       io = new SocketServer(server, {
-//         cors: {
-//            origin: "http://localhost:5173",
-//            credentials:true
-//       },
-// });
-
-
-// const userSocketMap: Record<string, string> = {}; 
-
-
-//  const getReceiverSocketId=(receiverId:string)=>{
-
-//     return userSocketMap[receiverId]
-// }
-
-// io.on("connection", (socket) => {
-//     const userId = socket.handshake.query.userId as string; 
-//     console.log("$$$$$$$$$$$$$",userId);
-
-
-
-// if (userId) {
-
-//     userSocketMap[userId] = socket.id; 
-//     console.log(`User ${userId} connected with socket ${socket.id}`);
-// }
-// socket.on("disconnect", () => {
-//     console.log(`User ${userId} disconnected`);
-//     if (userId && userSocketMap[userId]) {
-//       delete userSocketMap[userId];
-//       console.log(`User with ID: ${userId} disconnected and removed from socket map`);
-//     }});
-
-// socket.on('sendMessage', (data) => {
-//     if (userId) {
-
-
-//       io.emit('messageUpdate',data) 
-//     } else {
-//       console.error("receiverId is missing in sendMessage data");
-//     }
-//   });
-// })
-
-// }
-
-
-
-// export { configSocketIO, io}
 
 import { Server } from "socket.io";
 import http from "http";
@@ -101,7 +43,7 @@ io.on("connection", (socket) => {
     userSocketMap[userId].push(socket.id);
     console.log("Updated userSocketMap:", userSocketMap);
 
-    // Notify all clients of online users
+   
     io.emit("getonline", Object.keys(userSocketMap));
   }
 
@@ -129,7 +71,7 @@ io.on("connection", (socket) => {
       receiverSocketIds.forEach((socketId) => {
         io.to(socketId).emit("messageUpdate", data);
       });
-      // Also emit to sender's sockets to confirm message delivery
+      
       const senderSocketIds = getReceiverSocketId(data.senderId);
       senderSocketIds.forEach((socketId) => {
         io.to(socketId).emit("messageUpdate", data);
@@ -143,7 +85,7 @@ io.on("connection", (socket) => {
   socket.on("messageDeleted", (data) => {
     console.log(`Message deleted: ${data.messageId} by user: ${data.senderId}`);
 
-    // Send to receiver
+   
     const receiverSocketIds = getReceiverSocketId(data.receiverId);
     if (receiverSocketIds.length > 0) {
       receiverSocketIds.forEach((socketId) => {
@@ -151,14 +93,14 @@ io.on("connection", (socket) => {
       });
     }
 
-    // Also send to sender's other sockets (if they have multiple tabs open)
+    
     const senderSocketIds = getReceiverSocketId(data.senderId);
     senderSocketIds.forEach((socketId) => {
       io.to(socketId).emit("messageDeleted", { messageId: data.messageId });
     });
   });
 
-  // New messageRead event handler
+ 
   socket.on("markMessageRead", ({ messageId, senderId }) => {
     console.log(`Message read: ${messageId} by sender: ${senderId}`);
     const senderSocketIds = getReceiverSocketId(senderId);
