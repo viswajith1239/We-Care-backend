@@ -511,7 +511,7 @@ class DoctorRepository extends baseRepository_1.default {
                 return null;
             const totalTransactions = wallet.transactions.length;
             const skip = (page - 1) * limit;
-            const paginatedTransactions = wallet.transactions.slice(skip, skip + limit);
+            const paginatedTransactions = wallet.transactions.sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0)).slice(skip, skip + limit);
             return {
                 walletData: {
                     ...wallet.toObject(),

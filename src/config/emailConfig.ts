@@ -1,11 +1,16 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 
-dotenv.config();
+// dotenv.config();
 
 const sendMail = async (email: string, subject: string, text: string): Promise<boolean> => {
-    console.log("Sending email to:", email); 
+    console.log("Sending email tooooooooooooooooooo:", email); 
+      console.log("EMAIL:", process.env.EMAIL);
+console.log("PASSWORD:", process.env.PASSWORD);
+
   return new Promise((resolve, reject) => {
+      console.log("EMAILssssssssssss:", process.env.EMAIL);
+console.log("PASSWORDssssssssssssss:", process.env.PASSWORD);
    
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -14,6 +19,8 @@ const sendMail = async (email: string, subject: string, text: string): Promise<b
         pass: process.env.PASSWORD as string,
       },
     });
+  
+
    
     
     const mailOptions = {

@@ -1,6 +1,6 @@
-import { Document } from "mongoose";
+import { ClientSession, Document } from "mongoose";
 import { BookingListResponse, cancelBooking, Doctor, IReportData, IReportDatas, Specialization, User, userType, IDoctors, UpdateResult, userProfileUpdate} from "../userInterface/interface";
-import { IUser, IOtp, IBooking, IUsers, IDoctor, INotification } from "../common";
+import { IUser, IOtp, IBooking, IUsers, IDoctor, INotification, wallet } from "../common";
 import mongoose, { Types } from "mongoose";
 import { Interface_Doctor, IAppoinment, PaginatedWalletResponse } from "../doctor/doctor_interface";
 
@@ -25,6 +25,9 @@ export interface IAuthRepository {
   findSessionDetails(appoinmentid: string): Promise<any>
   findExistingBooking(bookingDetails: IBooking): Promise<any>
   createBooking(bookingDetails: IBooking): Promise<IBooking>
+  createWalletBooking(bookingDetails: IBooking,session?: mongoose.ClientSession): Promise<IBooking>;
+  getUserWallet(userId: string, session?: ClientSession): Promise<{ balance: number } | null>;
+  updateUserWalletBalance( userId: string, newBalance: number,deductedAmount: number,appointmentData: any,session?: mongoose.ClientSession): Promise<mongoose.UpdateWriteOpResult>;
   fetchSpecializations(): Promise<Specialization[]|undefined>
   contact(name: string, email: string, subject: string, phone: string, message: string, timestamp: string): Promise<any>//any mattanam
   fetchUserData(userId: string): Promise<User | null>

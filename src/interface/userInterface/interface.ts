@@ -98,6 +98,7 @@ export interface IBooking {
   createdAt: Date;
   updatedAt: Date;
   payment_intent?: string;
+  paymentMethod:"wallet"|"stripe"
 
 
 
@@ -119,6 +120,14 @@ export interface IBookings {
   createdAt: Date;
   updatedAt: Date;
   payment_intent?: string;
+}
+
+
+export interface WalletPaymentResponse {
+  redirectUrl: any;
+  message: string;
+  booking: IBookings;  
+  remainingBalance: number;
 }
 
 

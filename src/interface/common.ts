@@ -128,3 +128,8 @@ export interface IUsers {
   gender?: string
 }
 
+export interface wallet{
+  balance:number
+  userId:string
+}
+

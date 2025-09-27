@@ -434,9 +434,9 @@ export class AuthService implements IAuthService {
         payment_method_types: ['card'],
         line_items: lineItems,
         mode: 'payment',
-        success_url: `https://www.viswajith.site/paymentSuccess?session_id=${appoinmentData._id}&user_id=${userId}&stripe_session_id={CHECKOUT_SESSION_ID}`,
+        // success_url: `https://www.viswajith.site/paymentSuccess?session_id=${appoinmentData._id}&user_id=${userId}&stripe_session_id={CHECKOUT_SESSION_ID}`,
         // cancel_url: `http://localhost:5173/paymentFailed`,
-        //  success_url: `http://localhost:5173/paymentSuccess?session_id=${appoinmentData._id}&user_id=${userId}&stripe_session_id={CHECKOUT_SESSION_ID}`,
+         success_url: `http://localhost:5173/paymentSuccess?session_id=${appoinmentData._id}&user_id=${userId}&stripe_session_id={CHECKOUT_SESSION_ID}`,
         // cancel_url: `http://localhost:5173/paymentFailed`,
       });
       return session;
@@ -445,6 +445,107 @@ export class AuthService implements IAuthService {
       throw error;
     }
   }
+
+
+  async processWalletPayment(appointmentId: string, userId: string, amount: number) {
+  try {
+  
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+    
+      const appointmentData = await this._authRepository.findSessionDetails(appointmentId);
+      if (!appointmentData || !appointmentData.doctorId || !appointmentData.price) {
+        throw new Error("Missing session data, doctor ID, or price");
+      }
+
+     
+      if (appointmentData.isBooked) {
+        throw new Error("This slot is already booked");
+      }
+
+  
+      const userWallet = await this._authRepository.getUserWallet(userId, session);
+      const currentBalance = userWallet?.balance || 0;
+
+    
+      if (currentBalance < amount) {
+        throw new Error(`Insufficient wallet balance. Current balance: ₹${currentBalance}, Required: ₹${amount}`);
+      }
+
+    
+      const newBalance = currentBalance - amount;
+      await this._authRepository.updateUserWalletBalance(userId, newBalance, amount, appointmentData, session);
+
+   
+      appointmentData.isBooked = true;
+      appointmentData.status = "Confirmed";  
+      await appointmentData.save({ session });
+
+      // Get doctor details
+      const doctorId = appointmentData.doctorId.toString();
+      const Doctor = await this.getDoctor(doctorId);
+
+      if (!Doctor || Doctor.length === 0) {
+        throw new Error("Doctor not found.");
+      }
+
+
+      const bookingDetails: IBooking = {
+        appoinmentId: new mongoose.Types.ObjectId(appointmentData._id),
+        doctorId: new mongoose.Types.ObjectId(Doctor[0]._id),
+        userId: new mongoose.Types.ObjectId(userId),
+        bookingDate: new Date(),
+        startDate: appointmentData.selectedDate || appointmentData.startDate,
+        startTime: appointmentData.startTime,
+        endTime: appointmentData.endTime,
+        amount: appointmentData.price,
+        paymentStatus: "Confirmed",
+        paymentMethod: "wallet", 
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      
+      const bookingData = await this._authRepository.createWalletBooking(bookingDetails, session);
+      
+    
+      await this._authRepository.createNotification(bookingData);
+
+
+      await session.commitTransaction();
+      const redirectUrl = `http://localhost:5173/paymentSuccess?session_id=${appointmentId}&user_id=${userId}&paymentMethod=wallet`
+
+      return {
+        message: "Booking confirmed successfully! Payment deducted from wallet.",
+        booking: bookingData,
+        remainingBalance: newBalance,
+        redirectUrl: redirectUrl
+      };
+
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
+
+  } catch (error) {
+    console.error("Error processing wallet payment:", error);
+    throw error;
+  }
+}
+
+async getUserWalletBalance(userId: string) {
+  try {
+    const userWallet = await this._authRepository.getUserWallet(userId);
+    return userWallet?.balance || 0;
+  } catch (error) {
+    console.error("Error getting user wallet balance:", error);
+    throw error;
+  }
+}
 
   async findBookingDetails(session_id: string, user_id: string, stripe_session_id: string) {
 
@@ -480,6 +581,7 @@ export class AuthService implements IAuthService {
         endTime: session.endTime,
         amount: session.price,
         paymentStatus: "Confirmed",
+         paymentMethod: "stripe", 
         createdAt: new Date(),
         updatedAt: new Date(),
         payment_intent: sessionData.payment_intent ? sessionData.payment_intent.toString() : undefined,
@@ -735,8 +837,8 @@ private async generatePrescriptionPDF(prescriptionData: any): Promise<Buffer> {
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'normal');
   pdf.text(`Consultation Fee: ${prescriptionData.bookingId?.amount || 'N/A'}`, 20, yPosition + 24);
-  pdf.text(`Prescription ID: ${prescriptionData._id}`, pageWidth - 20, yPosition, { align: 'right' });
-  pdf.text(`Booking ID: ${prescriptionData.bookingId._id || 'N/A'}`, pageWidth - 20, yPosition + 8, { align: 'right' });
+  pdf.text(`Prescription ID: ${Math.floor(Math.random() * 1000000)}`, pageWidth - 20, yPosition, { align: 'right' });
+  pdf.text(`Booking ID: ${Math.floor(Math.random() * 1000000) || 'N/A'}`, pageWidth - 20, yPosition + 8, { align: 'right' });
 
   yPosition += 40;
   pdf.setDrawColor(borderColor[0], borderColor[1], borderColor[2]);
@@ -755,7 +857,7 @@ private async generatePrescriptionPDF(prescriptionData: any): Promise<Buffer> {
   yPosition += 20;
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'normal');
-  pdf.text(`Patient ID: ${prescriptionData.userId?._id || prescriptionData.userId || 'N/A'}`, 20, yPosition);
+  pdf.text(`Patient ID: ${Math.floor(Math.random() * 1000000) || Math.floor(Math.random() * 1000000) || 'N/A'}`, 20, yPosition);
   pdf.text(`Patient Name: ${prescriptionData.userId?.name || prescriptionData.userName || 'N/A'}`, 20, yPosition + 8);
   
 

@@ -23,5 +23,5 @@ export interface IAdminRepository {
     deleteKyc(doctor_id: string): Promise<void>
     deleteSpecializationRepository(id: string): Promise<any>
     deleteSubmission(id: string): Promise<any>
-    getAllStatistics(): Promise<any>
+    getAllStatistics(startDate:string,endDate:string): Promise<any>
 }

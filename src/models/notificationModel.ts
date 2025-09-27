@@ -19,7 +19,7 @@ const notificationSchema = new Schema<INotification>(
   { timestamps: true }
 );
 
-notificationSchema.index({ receiverId: 1 }); // Index for fast retrieval by receiverId
+notificationSchema.index({ receiverId: 1 }); 
 
 const NotificationModel = model<INotification>("Notification", notificationSchema);
 export default NotificationModel;

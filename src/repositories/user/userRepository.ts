@@ -342,6 +342,118 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
   }
 
 
+  async createWalletBooking(bookingDetails: IBooking, session?: any) {
+  try {
+    const bookingArray = [bookingDetails];
+    const options = session ? { session } : {};
+    
+    const booking = await this._bookingModel.create(bookingArray, options);
+    const bookingnew = booking[0];
+
+   
+    if (bookingDetails.amount) {
+      const transactionAmount = 0.9 * bookingDetails.amount;
+      const transactionId = "txn_" + Date.now() + Math.floor(Math.random() * 10000);
+
+      let wallet = await this._walletModel.findOne({ doctorId: bookingDetails.doctorId.toString() });
+      if (session) {
+        wallet = await this._walletModel.findOne({ doctorId: bookingDetails.doctorId.toString() }).session(session);
+      }
+      
+      const transaction: ITransaction = {
+        amount: transactionAmount,
+        transactionId: transactionId,
+        transactionType: "credit",
+        bookingId: bookingnew._id.toString(),
+        date: new Date(),
+      };
+
+      if (wallet) {
+        wallet.transactions.push(transaction);
+        wallet.balance += transactionAmount;
+        if (session) {
+          await wallet.save({ session });
+        } else {
+          await wallet.save();
+        }
+      } else {
+        const newWallet = new this._walletModel({
+          doctorId: bookingDetails.doctorId.toString(),
+          balance: transactionAmount,
+          transactions: [transaction],
+        });
+        if (session) {
+          await newWallet.save({ session });
+        } else {
+          await newWallet.save();
+        }
+      }
+    }
+
+    return bookingnew;
+  } catch (error) {
+    console.error("Error creating wallet booking:", error);
+    throw error;
+  }
+}
+
+async updateUserWalletBalance(userId: string, newBalance: number, deductedAmount: number, appointmentData: any, session?: any) {
+  try {
+
+    const transactionId = "txn_" + Date.now() + Math.floor(Math.random() * 10000);
+    const transaction: ITransactions = {
+      amount: deductedAmount,
+      transactionId: transactionId,
+      transactionType: "debit",
+      description: `Doctor appointment booking - ${appointmentData.type || 'Appointment'}`,
+      bookingId: appointmentData._id.toString(),
+      date: new Date()
+    };
+
+   
+    const updateOperation = {
+      $set: { 
+        balance: newBalance, 
+        updatedAt: new Date() 
+      },
+      $push: { 
+        transactions: transaction 
+      }
+    };
+
+    const options: any = { 
+      upsert: true,
+      new: true
+    };
+    if (session) {
+      options.session = session;
+    }
+
+    return await this._walletModel.updateOne(
+      { userId: userId },
+      updateOperation,
+      options
+    );
+  } catch (error) {
+    console.log("Error updating user wallet balance:", error);
+    throw error;
+  }
+}
+
+async getUserWallet(userId: string, session?: any) {
+  try {
+    const query = this._walletModel.findOne({ userId: userId });
+    if (session) {
+      query.session(session);
+    }
+    return await query.exec();
+  } catch (error) {
+    console.log("Error getting user wallet:", error);
+    throw error;
+  }
+}
+
+
   async contact(
     name: string,
     email: string,
@@ -611,7 +723,7 @@ export class AuthRepository extends BaseRepository<any> implements IAuthReposito
           { $set: { status: "Cancelled", isBooked: false } }
         );
       }
-console.log("ooo",bookingDetails);
+
 
       return bookingDetails;
     } catch (error) {
@@ -652,7 +764,7 @@ console.log("ooo",bookingDetails);
 
       wallet.transactions.push(refundTransaction);
       await wallet.save();
-      console.log("8888",wallet);
+     
       
       return wallet;
     } catch (error) {
@@ -671,7 +783,9 @@ console.log("ooo",bookingDetails);
       const totalTransactions = wallet.transactions.length;
       const skip = (page - 1) * limit;
 
-      const paginatedTransactions = wallet.transactions.slice(skip, skip + limit);
+      const paginatedTransactions = wallet.transactions
+      .sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0))
+      .slice(skip, skip + limit);
 
       return {
         walletData: {
@@ -1031,7 +1145,7 @@ console.log("ooo",bookingDetails);
         .find({ doctorId: doctor_id })
         .populate({
           path: "userId",
-          select: "name image",
+          select: "name  profileImage",
         })
         .sort({ createdAt: -1 });
 

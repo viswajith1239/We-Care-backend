@@ -307,15 +307,91 @@ class AuthService {
                 payment_method_types: ['card'],
                 line_items: lineItems,
                 mode: 'payment',
-                success_url: `https://www.viswajith.site/paymentSuccess?session_id=${appoinmentData._id}&user_id=${userId}&stripe_session_id={CHECKOUT_SESSION_ID}`,
+                // success_url: `https://www.viswajith.site/paymentSuccess?session_id=${appoinmentData._id}&user_id=${userId}&stripe_session_id={CHECKOUT_SESSION_ID}`,
                 // cancel_url: `http://localhost:5173/paymentFailed`,
-                //  success_url: `http://localhost:5173/paymentSuccess?session_id=${appoinmentData._id}&user_id=${userId}&stripe_session_id={CHECKOUT_SESSION_ID}`,
+                success_url: `http://localhost:5173/paymentSuccess?session_id=${appoinmentData._id}&user_id=${userId}&stripe_session_id={CHECKOUT_SESSION_ID}`,
                 // cancel_url: `http://localhost:5173/paymentFailed`,
             });
             return session;
         }
         catch (error) {
             console.error("Error creating Stripe session:", error);
+            throw error;
+        }
+    }
+    async processWalletPayment(appointmentId, userId, amount) {
+        try {
+            const session = await mongoose_1.default.startSession();
+            session.startTransaction();
+            try {
+                const appointmentData = await this._authRepository.findSessionDetails(appointmentId);
+                if (!appointmentData || !appointmentData.doctorId || !appointmentData.price) {
+                    throw new Error("Missing session data, doctor ID, or price");
+                }
+                if (appointmentData.isBooked) {
+                    throw new Error("This slot is already booked");
+                }
+                const userWallet = await this._authRepository.getUserWallet(userId, session);
+                const currentBalance = userWallet?.balance || 0;
+                if (currentBalance < amount) {
+                    throw new Error(`Insufficient wallet balance. Current balance: ₹${currentBalance}, Required: ₹${amount}`);
+                }
+                const newBalance = currentBalance - amount;
+                await this._authRepository.updateUserWalletBalance(userId, newBalance, amount, appointmentData, session);
+                appointmentData.isBooked = true;
+                appointmentData.status = "Confirmed";
+                await appointmentData.save({ session });
+                // Get doctor details
+                const doctorId = appointmentData.doctorId.toString();
+                const Doctor = await this.getDoctor(doctorId);
+                if (!Doctor || Doctor.length === 0) {
+                    throw new Error("Doctor not found.");
+                }
+                const bookingDetails = {
+                    appoinmentId: new mongoose_1.default.Types.ObjectId(appointmentData._id),
+                    doctorId: new mongoose_1.default.Types.ObjectId(Doctor[0]._id),
+                    userId: new mongoose_1.default.Types.ObjectId(userId),
+                    bookingDate: new Date(),
+                    startDate: appointmentData.selectedDate || appointmentData.startDate,
+                    startTime: appointmentData.startTime,
+                    endTime: appointmentData.endTime,
+                    amount: appointmentData.price,
+                    paymentStatus: "Confirmed",
+                    paymentMethod: "wallet",
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                };
+                const bookingData = await this._authRepository.createWalletBooking(bookingDetails, session);
+                await this._authRepository.createNotification(bookingData);
+                await session.commitTransaction();
+                const redirectUrl = `http://localhost:5173/paymentSuccess?session_id=${appointmentId}&user_id=${userId}&paymentMethod=wallet`;
+                return {
+                    message: "Booking confirmed successfully! Payment deducted from wallet.",
+                    booking: bookingData,
+                    remainingBalance: newBalance,
+                    redirectUrl: redirectUrl
+                };
+            }
+            catch (error) {
+                await session.abortTransaction();
+                throw error;
+            }
+            finally {
+                session.endSession();
+            }
+        }
+        catch (error) {
+            console.error("Error processing wallet payment:", error);
+            throw error;
+        }
+    }
+    async getUserWalletBalance(userId) {
+        try {
+            const userWallet = await this._authRepository.getUserWallet(userId);
+            return userWallet?.balance || 0;
+        }
+        catch (error) {
+            console.error("Error getting user wallet balance:", error);
             throw error;
         }
     }
@@ -347,6 +423,7 @@ class AuthService {
                 endTime: session.endTime,
                 amount: session.price,
                 paymentStatus: "Confirmed",
+                paymentMethod: "stripe",
                 createdAt: new Date(),
                 updatedAt: new Date(),
                 payment_intent: sessionData.payment_intent ? sessionData.payment_intent.toString() : undefined,
@@ -557,8 +634,8 @@ class AuthService {
         pdf.setFontSize(10);
         pdf.setFont('helvetica', 'normal');
         pdf.text(`Consultation Fee: ${prescriptionData.bookingId?.amount || 'N/A'}`, 20, yPosition + 24);
-        pdf.text(`Prescription ID: ${prescriptionData._id}`, pageWidth - 20, yPosition, { align: 'right' });
-        pdf.text(`Booking ID: ${prescriptionData.bookingId._id || 'N/A'}`, pageWidth - 20, yPosition + 8, { align: 'right' });
+        pdf.text(`Prescription ID: ${Math.floor(Math.random() * 1000000)}`, pageWidth - 20, yPosition, { align: 'right' });
+        pdf.text(`Booking ID: ${Math.floor(Math.random() * 1000000) || 'N/A'}`, pageWidth - 20, yPosition + 8, { align: 'right' });
         yPosition += 40;
         pdf.setDrawColor(borderColor[0], borderColor[1], borderColor[2]);
         pdf.setLineWidth(0.5);
@@ -572,7 +649,7 @@ class AuthService {
         yPosition += 20;
         pdf.setFontSize(10);
         pdf.setFont('helvetica', 'normal');
-        pdf.text(`Patient ID: ${prescriptionData.userId?._id || prescriptionData.userId || 'N/A'}`, 20, yPosition);
+        pdf.text(`Patient ID: ${Math.floor(Math.random() * 1000000) || Math.floor(Math.random() * 1000000) || 'N/A'}`, 20, yPosition);
         pdf.text(`Patient Name: ${prescriptionData.userId?.name || prescriptionData.userName || 'N/A'}`, 20, yPosition + 8);
         const consultationDate = prescriptionData.bookingDate ? new Date(prescriptionData.bookingDate).toLocaleDateString() : 'N/A';
         const prescribedDate = prescriptionData.createdAt ? new Date(prescriptionData.createdAt).toLocaleDateString() : consultationDate;

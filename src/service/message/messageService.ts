@@ -21,8 +21,8 @@ export class MessageService implements IMessageService {
 
   }
 
-  async fetchMessages(id: string, ids: string) {
-    return await this. _messageRepository.getMessages(id, ids);
+  async fetchMessages(id: string, ids: string,limit?:number,sort?:string) {
+    return await this. _messageRepository.getMessages(id, ids,limit,sort);
   }
 
   async deleteMessage(messageId: string) {

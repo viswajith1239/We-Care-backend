@@ -157,9 +157,9 @@ class AdminService {
             console.error("Error updating KYC status:", error);
         }
     }
-    async getDashboardData() {
+    async getDashboardData(startDate, endDate) {
         try {
-            return await this._adminRepository.getAllStatistics();
+            return await this._adminRepository.getAllStatistics(startDate, endDate);
         }
         catch (error) {
             throw Error(error);

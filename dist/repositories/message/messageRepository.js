@@ -3,20 +3,34 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MessageRepository = void 0;
 const messageModel_1 = __importDefault(require("../../models/messageModel"));
-class MessageRepository {
-    async saveMessage(data) {
-        return await new messageModel_1.default(data).save();
+const baseRepository_1 = __importDefault(require("../base/baseRepository"));
+class MessageRepository extends baseRepository_1.default {
+    constructor() {
+        super(messageModel_1.default);
     }
-    async getMessages(senderId, receiverId) {
+    async saveMessage(data) {
+        const saved = await new messageModel_1.default(data).save();
+        return saved.toObject();
+    }
+    async getMessages(senderId, receiverId, limit, sort) {
         try {
-            return await messageModel_1.default.find({
+            let query = messageModel_1.default.find({
                 $or: [
                     { senderId, receiverId },
                     { senderId: receiverId, receiverId: senderId },
                 ],
-            }).sort({ createdAt: 1 });
+            });
+            if (sort === 'desc') {
+                query = query.sort({ createdAt: -1 });
+            }
+            else {
+                query = query.sort({ createdAt: 1 });
+            }
+            if (limit) {
+                query = query.limit(limit);
+            }
+            return await query.lean();
         }
         catch (error) {
             console.error("Error fetching messages:", error);
@@ -25,7 +39,7 @@ class MessageRepository {
     }
     async deleteMessage(messageId) {
         try {
-            const result = await messageModel_1.default.findByIdAndDelete(messageId);
+            const result = await messageModel_1.default.findByIdAndDelete(messageId).lean();
             return result;
         }
         catch (error) {
@@ -34,4 +48,4 @@ class MessageRepository {
         }
     }
 }
-exports.MessageRepository = MessageRepository;
+exports.default = MessageRepository;

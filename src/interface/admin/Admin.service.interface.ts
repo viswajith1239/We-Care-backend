@@ -22,5 +22,5 @@ export interface IAdminService {
     fetchKycData(doctorId: string): Promise<IKYC | undefined | null>
     deleteSpecializationService(id: string): Promise<any>
     deleteSubmission(id: string): Promise<any>
-    getDashboardData(): Promise<any>
+    getDashboardData(startDate:string,endtDate:string): Promise<any>
 }

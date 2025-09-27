@@ -5,16 +5,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MessageController = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
-const messageService_1 = __importDefault(require("../../service/message/messageService"));
-const messageService = new messageService_1.default();
+// const messageService = new MessageService();
 class MessageController {
+    constructor(messageService) {
+        this._messageService = messageService;
+    }
     async sendMessage(req, res) {
         try {
             const { senderId, receiverId, message, mediaUrl, read } = req.body;
             if (!receiverId || receiverId.length !== 24) {
                 return res.status(400).json({ success: false, message: "Invalid receiverId" });
             }
-            const newMessage = await messageService.sendMessage({ senderId, receiverId, message, imageUrl: mediaUrl });
+            const newMessage = await this._messageService.sendMessage({ senderId, receiverId, message, imageUrl: mediaUrl });
             res.status(201).json({ success: true, message: "Message sent!", data: newMessage });
         }
         catch (error) {
@@ -24,9 +26,9 @@ class MessageController {
     }
     async getMessages(req, res) {
         try {
-            const { id } = req.params;
-            const { ids } = req.params;
-            const messages = await messageService.fetchMessages(id, ids);
+            const { id, ids } = req.params;
+            const { limit, sort } = req.query;
+            const messages = await this._messageService.fetchMessages(id, ids, limit ? parseInt(limit) : undefined, sort);
             res.status(200).json(messages);
         }
         catch (error) {
@@ -39,7 +41,7 @@ class MessageController {
             if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
                 return res.status(400).json({ success: false, message: "Invalid message ID" });
             }
-            const result = await messageService.deleteMessage(id);
+            const result = await this._messageService.deleteMessage(id);
             if (!result) {
                 return res.status(404).json({ success: false, message: "Message not found" });
             }

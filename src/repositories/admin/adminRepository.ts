@@ -369,112 +369,181 @@ class AdminRepository extends BaseRepository<any> implements IAdminRepository {
   }
 
 
-  async getAllStatistics() {
-    const totalDoctors = await this._doctorModel.countDocuments()
-    const activeDoctors = await this._doctorModel.countDocuments({ isBlocked: false });
-    const totalUsers = await this._userModel.countDocuments();
-    const activeUsers = await this._userModel.countDocuments({ isBlocked: false });
-    const totalBookings = await this._bookingModel.countDocuments()
-    const revenueData = await this._bookingModel.aggregate([
-      { $match: { paymentStatus: "Confirmed" } },
-      {
-        $group: {
-          _id: null, amount: { $sum: "$amount" },
-          doctorRevenue: { $sum: { $multiply: ["$amount", 0.9] } },
-          adminRevenue: { $sum: { $multiply: ["$amount", 0.1] } }
+  async getAllStatistics(startDateStr?: string, endDateStr?: string) {
+    
+  const totalDoctors = await this._doctorModel.countDocuments()
+  const activeDoctors = await this._doctorModel.countDocuments({ isBlocked: false });
+  const totalUsers = await this._userModel.countDocuments();
+  const activeUsers = await this._userModel.countDocuments({ isBlocked: false });
+  const totalBookings = await this._bookingModel.countDocuments()
 
-        }
-      }
-    ])
+  // Set up date range for filtering
+  let dateFilter: any = { paymentStatus: "Confirmed" };
+  let chartStartDate = new Date();
+  chartStartDate.setMonth(chartStartDate.getMonth() - 12);
 
-    const amount = revenueData.length > 0 ? revenueData[0].amount : 0;
-    const doctorRevenue = revenueData.length > 0 ? revenueData[0].doctorRevenue : 0;
-    const adminRevenue = revenueData.length > 0 ? revenueData[0].adminRevenue : 0;
-    const currentDate = new Date();
-    const startDate = new Date();
-    startDate.setMonth(currentDate.getMonth() - 12)
-
-    const userAndDoctorRegistartionData = await Promise.all([
-      this._userModel.aggregate([
-        { $match: { createdAt: { $gte: startDate } } },
-        {
-          $group: {
-            _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
-            count: { $sum: 1 }
-          }
-        },
-        { $sort: { "_id.year": 1, "_id.month": 1 } }
-      ]),
-
-      this._doctorModel.aggregate([
-        { $match: { createdAt: { $gte: startDate } } },
-        {
-          $group: {
-            _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
-            count: { $sum: 1 }
-          }
-        },
-        { $sort: { "_id.year": 1, "_id.month": 1 } }
-      ])
-    ])
-    const monthlyStatistics: { [key: string]: MonthlyStats } = {};
-    for (let monthOffset = 0; monthOffset < 12; monthOffset++) {
-      const monthDate = new Date();
-      monthDate.setMonth(currentDate.getMonth() - monthOffset);
-      const year = monthDate.getFullYear();
-      const month = monthDate.getMonth() + 1;
-      const key = `${year}-${month < 10 ? '0' : ''}${month}`;
-
-      monthlyStatistics[key] = {
-        users: 0,
-        doctor: 0,
-        revenue: 0,
-        amount: 0,
-        doctorRevenue: 0,
-        adminRevenue: 0
-      };
+  // If custom date range is provided, use it for revenue calculations
+  if (startDateStr || endDateStr) {
+    const customDateFilter: any = {};
+    
+    if (startDateStr) {
+      customDateFilter.$gte = new Date(startDateStr);
     }
-
-    userAndDoctorRegistartionData[0].forEach(userData => {
-      const key = `${userData._id.year}-${userData._id.month < 10 ? '0' : ''}${userData._id.month}`;
-      if (monthlyStatistics[key]) {
-        monthlyStatistics[key].users = userData.count;
+    if (endDateStr) {
+      const endDate = new Date(endDateStr);
+      endDate.setHours(23, 59, 59, 999); // Include the entire end date
+      customDateFilter.$lte = endDate;
+    }
+    
+    if (Object.keys(customDateFilter).length > 0) {
+      dateFilter.bookingDate = customDateFilter;
+      // Also update chart start date if startDate is provided
+      if (startDateStr) {
+        chartStartDate = new Date(startDateStr);
       }
-    });
+    }
+  }
 
-    userAndDoctorRegistartionData[1].forEach(doctorData => {
-      const key = `${doctorData._id.year}-${doctorData._id.month < 10 ? '0' : ''}${doctorData._id.month}`;
-      if (monthlyStatistics[key]) {
-        monthlyStatistics[key].doctor = doctorData.count;
+  // Revenue calculation with date filter
+  const revenueData = await this._bookingModel.aggregate([
+    { $match: dateFilter },
+    {
+      $group: {
+        _id: null, 
+        amount: { $sum: "$amount" },
+        doctorRevenue: { $sum: { $multiply: ["$amount", 0.9] } },
+        adminRevenue: { $sum: { $multiply: ["$amount", 0.1] } }
       }
-    });
-    const revenueByMonth = await BookingModel.aggregate([
-      { $match: { paymentStatus: "Confirmed", bookingDate: { $gte: startDate } } },
+    }
+  ]);
+
+  const amount = revenueData.length > 0 ? revenueData[0].amount : 0;
+  const doctorRevenue = revenueData.length > 0 ? revenueData[0].doctorRevenue : 0;
+  const adminRevenue = revenueData.length > 0 ? revenueData[0].adminRevenue : 0;
+
+  // User and Doctor registration data (always show last 12 months for consistency)
+  const userAndDoctorRegistrationData = await Promise.all([
+    this._userModel.aggregate([
+      { $match: { createdAt: { $gte: chartStartDate } } },
       {
         $group: {
-          _id: {
-            year: { $year: "$bookingDate" },
-            month: { $month: "$bookingDate" }
-          },
-          amount: { $sum: "$amount" },
-          doctorRevenue: { $sum: { $multiply: ["$amount", 0.9] } },
-          adminRevenue: { $sum: { $multiply: ["$amount", 0.1] } }
+          _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
+          count: { $sum: 1 }
         }
       },
       { $sort: { "_id.year": 1, "_id.month": 1 } }
-    ]);
+    ]),
 
+    this._doctorModel.aggregate([
+      { $match: { createdAt: { $gte: chartStartDate } } },
+      {
+        $group: {
+          _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } }
+    ])
+  ]);
 
-    revenueByMonth.forEach(revenueData => {
-      const key = `${revenueData._id.year}-${revenueData._id.month < 10 ? '0' : ''}${revenueData._id.month}`;
-      if (monthlyStatistics[key]) {
-        monthlyStatistics[key].revenue = revenueData.amount;
-        monthlyStatistics[key].amount = revenueData.amount;
-        monthlyStatistics[key].doctorRevenue = revenueData.doctorRevenue;
-        monthlyStatistics[key].adminRevenue = revenueData.adminRevenue;
+  // Initialize monthly statistics
+  const monthlyStatistics: { [key: string]: MonthlyStats } = {};
+  const currentDate = new Date();
+  
+  // Determine the range for monthly statistics
+  let monthsToShow = 12;
+  if (startDateStr || endDateStr) {
+    const start = startDateStr ? new Date(startDateStr) : chartStartDate;
+    const end = endDateStr ? new Date(endDateStr) : currentDate;
+    monthsToShow = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 30)) || 12;
+    monthsToShow = Math.min(monthsToShow, 24); // Cap at 24 months for performance
+  }
+
+  for (let monthOffset = 0; monthOffset < monthsToShow; monthOffset++) {
+    const monthDate = new Date(currentDate);
+    monthDate.setMonth(currentDate.getMonth() - monthOffset);
+    const year = monthDate.getFullYear();
+    const month = monthDate.getMonth() + 1;
+    const key = `${year}-${month < 10 ? '0' : ''}${month}`;
+
+    monthlyStatistics[key] = {
+      users: 0,
+      doctor: 0,
+      revenue: 0,
+      amount: 0,
+      doctorRevenue: 0,
+      adminRevenue: 0
+    };
+  }
+
+  // Populate user registration data
+  userAndDoctorRegistrationData[0].forEach(userData => {
+    const key = `${userData._id.year}-${userData._id.month < 10 ? '0' : ''}${userData._id.month}`;
+    if (monthlyStatistics[key]) {
+      monthlyStatistics[key].users = userData.count;
+    }
+  });
+
+  // Populate doctor registration data
+  userAndDoctorRegistrationData[1].forEach(doctorData => {
+    const key = `${doctorData._id.year}-${doctorData._id.month < 10 ? '0' : ''}${doctorData._id.month}`;
+    if (monthlyStatistics[key]) {
+      monthlyStatistics[key].doctor = doctorData.count;
+    }
+  });
+
+  // Revenue by month with custom date filter
+  let revenueMatchFilter: any = { paymentStatus: "Confirmed" };
+  
+  if (startDateStr || endDateStr) {
+    const revenueDateFilter: any = {};
+    
+    if (startDateStr) {
+      revenueDateFilter.$gte = new Date(startDateStr);
+    }
+    if (endDateStr) {
+      const endDate = new Date(endDateStr);
+      endDate.setHours(23, 59, 59, 999);
+      revenueDateFilter.$lte = endDate;
+    }
+    
+    if (Object.keys(revenueDateFilter).length > 0) {
+      revenueMatchFilter.bookingDate = revenueDateFilter;
+    }
+  } else {
+    revenueMatchFilter.bookingDate = { $gte: chartStartDate };
+  }
+
+  const revenueByMonth = await this._bookingModel.aggregate([
+    { $match: revenueMatchFilter },
+    {
+      $group: {
+        _id: {
+          year: { $year: "$bookingDate" },
+          month: { $month: "$bookingDate" }
+        },
+        amount: { $sum: "$amount" },
+        doctorRevenue: { $sum: { $multiply: ["$amount", 0.9] } },
+        adminRevenue: { $sum: { $multiply: ["$amount", 0.1] } }
       }
-    });
-    const userDoctorChartData = Object.keys(monthlyStatistics).map(key => {
+    },
+    { $sort: { "_id.year": 1, "_id.month": 1 } }
+  ]);
+
+  // Populate revenue data
+  revenueByMonth.forEach(revenueData => {
+    const key = `${revenueData._id.year}-${revenueData._id.month < 10 ? '0' : ''}${revenueData._id.month}`;
+    if (monthlyStatistics[key]) {
+      monthlyStatistics[key].revenue = revenueData.amount;
+      monthlyStatistics[key].amount = revenueData.amount;
+      monthlyStatistics[key].doctorRevenue = revenueData.doctorRevenue;
+      monthlyStatistics[key].adminRevenue = revenueData.adminRevenue;
+    }
+  });
+
+  // Convert to chart data format
+  const userDoctorChartData = Object.keys(monthlyStatistics)
+    .map(key => {
       const [year, month] = key.split('-');
       return {
         year: parseInt(year, 10),
@@ -486,19 +555,30 @@ class AdminRepository extends BaseRepository<any> implements IAdminRepository {
         doctorRevenue: monthlyStatistics[key].doctorRevenue,
         adminRevenue: monthlyStatistics[key].adminRevenue
       };
+    })
+    .sort((a, b) => {
+      if (a.year !== b.year) return a.year - b.year;
+      return a.month - b.month;
     });
-    return {
-      totalDoctors,
-      activeDoctors,
-      totalUsers,
-      activeUsers,
-      doctorRevenue,
-      adminRevenue,
-      totalRevenue: amount,
-      userDoctorChartData,
-      totalBookings
+
+  return {
+    totalDoctors,
+    activeDoctors,
+    totalUsers,
+    activeUsers,
+    doctorRevenue,
+    adminRevenue,
+    totalRevenue: amount,
+    userDoctorChartData,
+    totalBookings,
+    // Add filter information for frontend reference
+    dateFilter: {
+      startDate: startDateStr,
+      endDate: endDateStr,
+      isFiltered: !!(startDateStr || endDateStr)
     }
   }
+}
 
 }
 

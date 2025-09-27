@@ -4,11 +4,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const nodemailer_1 = __importDefault(require("nodemailer"));
-const dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config();
+// dotenv.config();
 const sendMail = async (email, subject, text) => {
-    console.log("Sending email to:", email);
+    console.log("Sending email tooooooooooooooooooo:", email);
+    console.log("EMAIL:", process.env.EMAIL);
+    console.log("PASSWORD:", process.env.PASSWORD);
     return new Promise((resolve, reject) => {
+        console.log("EMAILssssssssssss:", process.env.EMAIL);
+        console.log("PASSWORDssssssssssssss:", process.env.PASSWORD);
         const transporter = nodemailer_1.default.createTransport({
             service: "gmail",
             auth: {

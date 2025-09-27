@@ -10,6 +10,6 @@ const notificationSchema = new mongoose_1.Schema({
     receiverId: { type: mongoose_1.Schema.Types.ObjectId, required: true, ref: "User" },
     notifications: [notificationContentSchema],
 }, { timestamps: true });
-notificationSchema.index({ receiverId: 1 }); // Index for fast retrieval by receiverId
+notificationSchema.index({ receiverId: 1 });
 const NotificationModel = (0, mongoose_1.model)("Notification", notificationSchema);
 exports.default = NotificationModel;

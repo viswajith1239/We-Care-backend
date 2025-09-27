@@ -196,7 +196,8 @@ class AdminController {
     }
     async getDashboardData(req, res, next) {
         try {
-            const response = await this._adminService.getDashboardData();
+            const { startDate, endDate } = req.query;
+            const response = await this._adminService.getDashboardData(startDate, endDate);
             res.status(HttpStatusCode_1.default.OK).json({ data: response });
         }
         catch (error) {

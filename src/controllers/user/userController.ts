@@ -319,6 +319,47 @@ export class AuthController {
 
   }
 
+
+
+  async walletPayment(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = req.body.userData.id;
+    const appointmentId = req.params.appointmentId;
+    const amount = req.body.amount;
+
+    const paymentResponse = await this._authService.processWalletPayment(appointmentId, userId, amount);
+
+    res.status(HTTP_statusCode.OK).json({
+      success: true,
+      message: paymentResponse.message,
+      booking: paymentResponse.booking,
+      remainingBalance: paymentResponse.remainingBalance,
+      redirectUrl:paymentResponse.redirectUrl
+    });
+  } catch (error:any) {
+    console.log("Error while wallet payment in controller", error);
+    res.status(HTTP_statusCode.BadRequest).json({
+      success: false,
+      message: error.message || "Wallet payment failed"
+    });
+  }
+}
+
+async getWalletBalance(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = req.params.userId;
+    
+    const balance = await this._authService.getUserWalletBalance(userId);
+    
+    res.status(HTTP_statusCode.OK).json({ balance });
+  } catch (error) {
+    console.log("Error getting wallet balance in controller", error);
+    res.status(HTTP_statusCode.InternalServerError).json({
+      message: "Error fetching wallet balance"
+    });
+  }
+}
+
   async contact(req: Request, res: Response, next: NextFunction) {
     try {
       const { name, email, subject, phone, message, timestamp } = req.body;

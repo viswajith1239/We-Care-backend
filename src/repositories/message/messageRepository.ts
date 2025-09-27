@@ -19,19 +19,33 @@ import exp from "constants";
     return saved.toObject<IMessage>(); 
   }
 
-  async getMessages(senderId: string, receiverId: string) {
-    try {
-      return await MessageModel.find({
-        $or: [
-          { senderId, receiverId },
-          { senderId: receiverId, receiverId: senderId },
-        ],
-      }).sort({ createdAt: 1 })  .lean<IMessage[]>(); ;
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      throw new Error("Could not fetch messages");
+  async getMessages(senderId: string, receiverId: string, limit?: number, sort?: string) {
+  try {
+    let query = MessageModel.find({
+      $or: [
+        { senderId, receiverId },
+        { senderId: receiverId, receiverId: senderId },
+      ],
+    });
+
+  
+    if (sort === 'desc') {
+      query = query.sort({ createdAt: -1 });
+    } else {
+      query = query.sort({ createdAt: 1 });
     }
+
+   
+    if (limit) {
+      query = query.limit(limit);
+    }
+
+    return await query.lean<IMessage[]>();
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    throw new Error("Could not fetch messages");
   }
+}
 
   async deleteMessage(messageId: string) {
     try {

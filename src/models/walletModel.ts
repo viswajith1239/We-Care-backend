@@ -15,6 +15,7 @@ export interface ITransactions {
     date?: Date;
     bookingId?: string;
     description: string
+    
 }
 
 export interface IWallet {

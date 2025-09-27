@@ -28,6 +28,8 @@ router.get("/doctors/:doctorId", (0, JwtConfig_1.verifyToken)('user'), AuthContr
 router.get("/status", AuthControllerInstance.getUserStatus.bind(AuthControllerInstance));
 router.get("/schedules", (0, JwtConfig_1.verifyToken)('user'), AuthControllerInstance.getAppoinmentSchedules.bind(AuthControllerInstance));
 router.post("/payment/:appoinmentId", (0, JwtConfig_1.verifyToken)('user'), AuthControllerInstance.checkoutPayment.bind(AuthControllerInstance));
+router.post('/wallet-payment/:appointmentId', (0, JwtConfig_1.verifyToken)('user'), AuthControllerInstance.walletPayment.bind(AuthControllerInstance));
+router.get('/wallet/balance/:userId', (0, JwtConfig_1.verifyToken)('user'), AuthControllerInstance.getWalletBalance.bind(AuthControllerInstance));
 router.post("/bookings", (0, JwtConfig_1.verifyToken)('user'), AuthControllerInstance.createBooking.bind(AuthControllerInstance));
 router.get('/users/:userId', (0, JwtConfig_1.verifyToken)('user'), AuthControllerInstance.getUser.bind(AuthControllerInstance));
 router.get('/users', (0, JwtConfig_1.verifyToken)('user'), AuthControllerInstance.getAllUsers.bind(AuthControllerInstance));

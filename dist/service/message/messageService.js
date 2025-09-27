@@ -1,17 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MessageService = void 0;
-const messageRepository_1 = require("../../repositories/message/messageRepository");
-const messageRepository = new messageRepository_1.MessageRepository();
+// import { MessageRepository } from "../../repositories/message/messageRepository";
+// const messageRepository = new MessageRepository();
 class MessageService {
-    async sendMessage(messageData) {
-        return await messageRepository.saveMessage(messageData);
+    constructor(messageRepository) {
+        this._messageRepository = messageRepository;
     }
-    async fetchMessages(id, ids) {
-        return await messageRepository.getMessages(id, ids);
+    async sendMessage(messageData) {
+        return await this._messageRepository.saveMessage(messageData);
+    }
+    async fetchMessages(id, ids, limit, sort) {
+        return await this._messageRepository.getMessages(id, ids, limit, sort);
     }
     async deleteMessage(messageId) {
-        return await messageRepository.deleteMessage(messageId);
+        return await this._messageRepository.deleteMessage(messageId);
     }
 }
 exports.MessageService = MessageService;

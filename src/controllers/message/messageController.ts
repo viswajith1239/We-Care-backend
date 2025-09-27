@@ -41,20 +41,23 @@ export class MessageController {
   }
 
 
-  async getMessages(req: Request, res: Response) {
-    try {
-      const { id } = req.params
-      const { ids } = req.params
+ async getMessages(req: Request, res: Response) {
+  try {
+    const { id, ids } = req.params;
+    const { limit, sort } = req.query;
 
+    const messages = await this._messageService.fetchMessages(
+      id, 
+      ids, 
+      limit ? parseInt(limit as string) : undefined,
+      sort as string
+    );
 
-      const messages = await this._messageService.fetchMessages(id, ids);
-
-
-      res.status(200).json(messages);
-    } catch (error) {
-      res.status(500).json({ error: "Internal Server Error" });
-    }
+    res.status(200).json(messages);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
+}
 
 
 

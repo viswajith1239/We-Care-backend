@@ -13,6 +13,7 @@ const bookingSchema = new mongoose_1.Schema({
     endTime: { type: String, required: true },
     amount: { type: Number, required: true },
     paymentStatus: { type: String, enum: ["Confirmed", "Cancelled", "Completed"], default: "Confirmed" },
+    paymentMethod: { type: String, enum: ["stripe", "wallet"], default: "stripe" },
     payment_intent: { type: String, required: false },
 }, { timestamps: true });
 const BookingModel = (0, mongoose_1.model)("Booking", bookingSchema);

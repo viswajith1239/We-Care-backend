@@ -8,7 +8,7 @@ export interface IMessageService {
     imageUrl?: string;
   }): Promise<IMessage>;
 
-  fetchMessages(senderId: string, receiverId: string): Promise<IMessage[]>;
+  fetchMessages(id: string, ids: string, limit?: number, sort?: string): Promise<IMessage[]>;
 
   deleteMessage(messageId: string): Promise<IMessage|null>;
 }

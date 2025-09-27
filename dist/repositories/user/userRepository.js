@@ -266,6 +266,104 @@ class AuthRepository extends baseRepository_1.default {
             throw new Error("Failed to create booking.");
         }
     }
+    async createWalletBooking(bookingDetails, session) {
+        try {
+            const bookingArray = [bookingDetails];
+            const options = session ? { session } : {};
+            const booking = await this._bookingModel.create(bookingArray, options);
+            const bookingnew = booking[0];
+            if (bookingDetails.amount) {
+                const transactionAmount = 0.9 * bookingDetails.amount;
+                const transactionId = "txn_" + Date.now() + Math.floor(Math.random() * 10000);
+                let wallet = await this._walletModel.findOne({ doctorId: bookingDetails.doctorId.toString() });
+                if (session) {
+                    wallet = await this._walletModel.findOne({ doctorId: bookingDetails.doctorId.toString() }).session(session);
+                }
+                const transaction = {
+                    amount: transactionAmount,
+                    transactionId: transactionId,
+                    transactionType: "credit",
+                    bookingId: bookingnew._id.toString(),
+                    date: new Date(),
+                };
+                if (wallet) {
+                    wallet.transactions.push(transaction);
+                    wallet.balance += transactionAmount;
+                    if (session) {
+                        await wallet.save({ session });
+                    }
+                    else {
+                        await wallet.save();
+                    }
+                }
+                else {
+                    const newWallet = new this._walletModel({
+                        doctorId: bookingDetails.doctorId.toString(),
+                        balance: transactionAmount,
+                        transactions: [transaction],
+                    });
+                    if (session) {
+                        await newWallet.save({ session });
+                    }
+                    else {
+                        await newWallet.save();
+                    }
+                }
+            }
+            return bookingnew;
+        }
+        catch (error) {
+            console.error("Error creating wallet booking:", error);
+            throw error;
+        }
+    }
+    async updateUserWalletBalance(userId, newBalance, deductedAmount, appointmentData, session) {
+        try {
+            const transactionId = "txn_" + Date.now() + Math.floor(Math.random() * 10000);
+            const transaction = {
+                amount: deductedAmount,
+                transactionId: transactionId,
+                transactionType: "debit",
+                description: `Doctor appointment booking - ${appointmentData.type || 'Appointment'}`,
+                bookingId: appointmentData._id.toString(),
+                date: new Date()
+            };
+            const updateOperation = {
+                $set: {
+                    balance: newBalance,
+                    updatedAt: new Date()
+                },
+                $push: {
+                    transactions: transaction
+                }
+            };
+            const options = {
+                upsert: true,
+                new: true
+            };
+            if (session) {
+                options.session = session;
+            }
+            return await this._walletModel.updateOne({ userId: userId }, updateOperation, options);
+        }
+        catch (error) {
+            console.log("Error updating user wallet balance:", error);
+            throw error;
+        }
+    }
+    async getUserWallet(userId, session) {
+        try {
+            const query = this._walletModel.findOne({ userId: userId });
+            if (session) {
+                query.session(session);
+            }
+            return await query.exec();
+        }
+        catch (error) {
+            console.log("Error getting user wallet:", error);
+            throw error;
+        }
+    }
     async contact(name, email, subject, phone, message, timestamp) {
         try {
             console.log("entered in to contact form repository");
@@ -467,7 +565,6 @@ class AuthRepository extends baseRepository_1.default {
                 await bookingDetails.save();
                 await this._appoinmetModel.updateOne({ _id: bookingDetails.appoinmentId }, { $set: { status: "Cancelled", isBooked: false } });
             }
-            console.log("ooo", bookingDetails);
             return bookingDetails;
         }
         catch (error) {
@@ -496,7 +593,6 @@ class AuthRepository extends baseRepository_1.default {
             };
             wallet.transactions.push(refundTransaction);
             await wallet.save();
-            console.log("8888", wallet);
             return wallet;
         }
         catch (error) {
@@ -511,7 +607,9 @@ class AuthRepository extends baseRepository_1.default {
                 return null;
             const totalTransactions = wallet.transactions.length;
             const skip = (page - 1) * limit;
-            const paginatedTransactions = wallet.transactions.slice(skip, skip + limit);
+            const paginatedTransactions = wallet.transactions
+                .sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0))
+                .slice(skip, skip + limit);
             return {
                 walletData: {
                     ...wallet.toObject(),
@@ -809,7 +907,7 @@ class AuthRepository extends baseRepository_1.default {
                 .find({ doctorId: doctor_id })
                 .populate({
                 path: "userId",
-                select: "name image",
+                select: "name  profileImage",
             })
                 .sort({ createdAt: -1 });
             {

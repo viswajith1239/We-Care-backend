@@ -1,6 +1,6 @@
 
-import { BookingListResponse, CancelAppointmentResponse, cancelBooking, Doctor, IDoctors, IReportData, Specialization, UpdateResult, User, userProfileUpdate } from "../userInterface/interface";
-import { IDoctor, INotification, IUser, JwtPayload } from "../common";
+import { BookingListResponse, CancelAppointmentResponse, cancelBooking, Doctor, IDoctors, IReportData, Specialization, UpdateResult, User, userProfileUpdate, WalletPaymentResponse } from "../userInterface/interface";
+import { IDoctor, INotification, IUser, JwtPayload, wallet } from "../common";
 import { Interface_Doctor, PaginatedWalletResponse } from "../doctor/doctor_interface";
 import { UserDTO } from "../../dtos/user.dto";
 
@@ -17,6 +17,8 @@ export interface IAuthService {
   getAppoinmentSchedules(): Promise<any>
   getDoctor(doctorId: string): Promise<any>
   checkoutPayment(appoinmentid: string, userId: string): Promise<any>
+  processWalletPayment(appointmentId: string,userId: string,amount: number): Promise<WalletPaymentResponse>;
+  getUserWalletBalance(userId:string):Promise<number>
   findBookingDetails(session_id: string, user_id: string, stripe_session_id: string): Promise<any>
   fetchSpecialization(): Promise<Specialization[]|undefined>
   fechtUserData(userId: string): Promise<UserDTO | null>

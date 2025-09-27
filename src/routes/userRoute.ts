@@ -29,6 +29,8 @@ router.get("/doctors/:doctorId", verifyToken('user'), AuthControllerInstance.get
 router.get("/status", AuthControllerInstance.getUserStatus.bind(AuthControllerInstance));
 router.get("/schedules", verifyToken('user'), AuthControllerInstance.getAppoinmentSchedules.bind(AuthControllerInstance))
 router.post("/payment/:appoinmentId", verifyToken('user'), AuthControllerInstance.checkoutPayment.bind(AuthControllerInstance))
+router.post('/wallet-payment/:appointmentId', verifyToken('user'),AuthControllerInstance.walletPayment.bind(AuthControllerInstance));
+router.get('/wallet/balance/:userId', verifyToken('user'), AuthControllerInstance.getWalletBalance.bind(AuthControllerInstance));
 router.post("/bookings", verifyToken('user'), AuthControllerInstance.createBooking.bind(AuthControllerInstance))
 router.get('/users/:userId', verifyToken('user'), AuthControllerInstance.getUser.bind(AuthControllerInstance))
 router.get('/users', verifyToken('user'), AuthControllerInstance.getAllUsers.bind(AuthControllerInstance))
