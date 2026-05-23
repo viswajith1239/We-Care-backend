@@ -58,7 +58,7 @@ const handleRefreshToken = async (req, res, next) => {
                     res.cookie("AccessToken", newAccessToken, {
                         httpOnly: true,
                         sameSite: 'strict',
-                        maxAge: 24 * 60 * 60 * 1000,
+                        maxAge: 24 * 60 * 60 * 10,
                     });
                     next();
                 }

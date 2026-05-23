@@ -104,6 +104,7 @@ export class AuthService implements IAuthService {
     }
   }
 
+  
 
   async verifyOTP(userData: IUser, otp: string): Promise<any> {
 
@@ -434,10 +435,9 @@ export class AuthService implements IAuthService {
         payment_method_types: ['card'],
         line_items: lineItems,
         mode: 'payment',
-        success_url: `https://www.viswajith.site/paymentSuccess?session_id=${appoinmentData._id}&user_id=${userId}&stripe_session_id={CHECKOUT_SESSION_ID}`,
-        // cancel_url: `http://localhost:5173/paymentFailed`,
-        //  success_url: `http://localhost:5173/paymentSuccess?session_id=${appoinmentData._id}&user_id=${userId}&stripe_session_id={CHECKOUT_SESSION_ID}`,
-        // cancel_url: `http://localhost:5173/paymentFailed`,
+        
+         success_url: `http://localhost:5173/paymentSuccess?session_id=${appoinmentData._id}&user_id=${userId}&stripe_session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `http://localhost:5173/paymentFailed`,
       });
       return session;
     } catch (error) {
@@ -515,8 +515,8 @@ export class AuthService implements IAuthService {
 
 
       await session.commitTransaction();
-      // const redirectUrl = `http://localhost:5173/paymentSuccess?session_id=${appointmentId}&user_id=${userId}&paymentMethod=wallet`
-      const redirectUrl = `https://www.viswajith.site/paymentSuccess?session_id=${appointmentId}&user_id=${userId}&paymentMethod=wallet`
+      const redirectUrl = `http://localhost:5173/paymentSuccess?session_id=${appointmentId}&user_id=${userId}&paymentMethod=wallet`
+      // const redirectUrl = `https://www.viswajith.site/paymentSuccess?session_id=${appointmentId}&user_id=${userId}&paymentMethod=wallet`
 
       return {
         message: "Booking confirmed successfully! Payment deducted from wallet.",

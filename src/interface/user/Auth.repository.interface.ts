@@ -58,6 +58,7 @@ export interface IAuthRepository {
     imageUrl: string;
   }): Promise<IReportData>;
   getReportsByUserId(userId: string): Promise<IReportData[]>
+  
 
 
 };

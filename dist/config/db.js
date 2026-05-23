@@ -12,14 +12,14 @@ const ConnectDB = async () => {
         console.log(process.env.MONGO_URL);
         // await mongoose.connect(process.env.MONGO_URL as string );
         await mongoose_1.default.connect(process.env.MONGO_URL, {
-            retryWrites: true,
-            w: "majority",
+            // retryWrites: true,
+            // w: "majority",
             serverSelectionTimeoutMS: 5000,
             connectTimeoutMS: 10000,
-            socketTimeoutMS: 45000,
-            tls: true,
+            // socketTimeoutMS: 45000,
+            // tls: true,
             //   minTLSVersion: "TLSv1.2",  // Force TLS 1.2+
-            tlsAllowInvalidCertificates: true, // For testing only; remove in production
+            // tlsAllowInvalidCertificates: true,  // For testing only; remove in production
         });
         console.log("Database connected successfully");
     }

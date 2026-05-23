@@ -87,7 +87,7 @@ class AuthController {
                 .json({ message: messages_1.default.OTP_VERIFIED, user: userData });
         }
         catch (error) {
-            console.error("OTP Verification Controller error:", error);
+            // console.error("OTP Verification Controller error:", error);
             if (error.message === messages_1.default.OTP_EXPIRED) {
                 res.status(HttpStatusCode_1.default.BadRequest).json({ message: messages_1.default.OTP_EXPIRED });
             }

@@ -17,7 +17,7 @@ export class AuthController {
   // private authService:AuthService
 
 
-  constructor(authService: AuthService) {
+  constructor(authService: IAuthService) {
     this._authService = authService;
   }
 
@@ -85,7 +85,7 @@ export class AuthController {
         .status(HTTP_statusCode.OK)
         .json({ message: RESPONSE_MESSAGES.OTP_VERIFIED, user: userData });
     } catch (error) {
-      console.error("OTP Verification Controller error:", error);
+      // console.error("OTP Verification Controller error:", error);
       if ((error as Error).message === RESPONSE_MESSAGES.OTP_EXPIRED) {
         res.status(HTTP_statusCode.BadRequest).json({ message: RESPONSE_MESSAGES.OTP_EXPIRED });
       } else if ((error as Error).message === RESPONSE_MESSAGES.INVALID_OTP) {

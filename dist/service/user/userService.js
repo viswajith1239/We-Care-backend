@@ -307,10 +307,8 @@ class AuthService {
                 payment_method_types: ['card'],
                 line_items: lineItems,
                 mode: 'payment',
-                success_url: `https://www.viswajith.site/paymentSuccess?session_id=${appoinmentData._id}&user_id=${userId}&stripe_session_id={CHECKOUT_SESSION_ID}`,
-                // cancel_url: `http://localhost:5173/paymentFailed`,
-                //  success_url: `http://localhost:5173/paymentSuccess?session_id=${appoinmentData._id}&user_id=${userId}&stripe_session_id={CHECKOUT_SESSION_ID}`,
-                // cancel_url: `http://localhost:5173/paymentFailed`,
+                success_url: `http://localhost:5173/paymentSuccess?session_id=${appoinmentData._id}&user_id=${userId}&stripe_session_id={CHECKOUT_SESSION_ID}`,
+                cancel_url: `http://localhost:5173/paymentFailed`,
             });
             return session;
         }
@@ -364,8 +362,8 @@ class AuthService {
                 const bookingData = await this._authRepository.createWalletBooking(bookingDetails, session);
                 await this._authRepository.createNotification(bookingData);
                 await session.commitTransaction();
-                // const redirectUrl = `http://localhost:5173/paymentSuccess?session_id=${appointmentId}&user_id=${userId}&paymentMethod=wallet`
-                const redirectUrl = `https://www.viswajith.site/paymentSuccess?session_id=${appointmentId}&user_id=${userId}&paymentMethod=wallet`;
+                const redirectUrl = `http://localhost:5173/paymentSuccess?session_id=${appointmentId}&user_id=${userId}&paymentMethod=wallet`;
+                // const redirectUrl = `https://www.viswajith.site/paymentSuccess?session_id=${appointmentId}&user_id=${userId}&paymentMethod=wallet`
                 return {
                     message: "Booking confirmed successfully! Payment deducted from wallet.",
                     booking: bookingData,
